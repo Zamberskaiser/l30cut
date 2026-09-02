@@ -37,6 +37,8 @@ interface Props {
   /** Ghost offsets while a gesture is running (never mutates the project). */
   ghostDeltaUs?: number | undefined;
   ghostTrim?: { edge: "start" | "end"; toUs: number } | null | undefined;
+  /** Asset peaks (real when decodable, synthesized otherwise). */
+  peaks?: PeakData | undefined;
   onPointerDown: (event: React.PointerEvent, clip: Clip) => void;
   actions: ClipActions;
 }
@@ -51,6 +53,7 @@ export function TimelineClip({
   pro,
   ghostDeltaUs = 0,
   ghostTrim = null,
+  peaks,
   onPointerDown,
   actions,
 }: Props) {
