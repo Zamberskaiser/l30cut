@@ -36,5 +36,6 @@
 - [x] Automação de ganho com interpolação linear aplicada ao volume da reprodução demo
 
 - [x] Waveforms reais nos clips de áudio (Web Audio no browser; ffmpeg no Tauri segue contrato)
+- [x] Fluxo pós-build: instruções no BAT, run-windows.bat, README e /download explicam como instalar e rodar
 - [ ] Persistência de atalhos e perfis via Tauri (arquivo em %APPDATA%)
-- [ ] Instalador Windows: validar build-windows.bat em máquina real / release CI
+- [ ] Instalador Windows: validar build-windows.bat end-to-end em máquina Windows real / release CI
