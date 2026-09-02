@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Pause, Play, SkipBack, SkipForward, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import {
   type Aspect,
 } from "@/core/contracts/domain";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
+import { useUi } from "@/core/store/uiStore";
 
 const ASPECTS: Aspect[] = ["16:9", "9:16", "1:1", "4:5"];
 
@@ -24,7 +25,9 @@ export function PreviewMonitor() {
   const { project, playheadUs, setPlayhead, run, selection, runtime } = useEditor();
   const sequence = useActiveSequence();
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
+  const ui = useUi();
+  const playing = ui.playing;
+  const setPlaying = ui.setPlaying;
   const total = sequenceDuration(sequence);
 
   const activeClip = useMemo(
@@ -52,28 +55,30 @@ export function PreviewMonitor() {
     let raf = 0;
     let last = performance.now();
     const tick = (now: number) => {
-      const delta = (now - last) * 1000;
+      const delta = (now - last) * 1000 * ui.playRate;
       last = now;
       setPlayhead((prev) => {
         const next = prev + delta;
+        if (next <= 0) return 0;
         return next >= total ? total : next;
       });
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [playing, total, setPlayhead]);
+  }, [playing, total, setPlayhead, ui.playRate]);
 
   useEffect(() => {
     const el = videoRef.current;
     if (!el) return;
-    if (playing && activeClip) void el.play().catch(() => setPlaying(false));
+    el.playbackRate = Math.min(4, Math.max(0.25, Math.abs(ui.playRate)));
+    if (playing && activeClip && ui.playRate > 0) void el.play().catch(() => setPlaying(false));
     else el.pause();
-  }, [playing, activeClip]);
+  }, [playing, activeClip, ui.playRate, setPlaying]);
 
   useEffect(() => {
     if (playheadUs >= total && total > 0) setPlaying(false);
-  }, [playheadUs, total]);
+  }, [playheadUs, total, setPlaying]);
 
   function splitAtPlayhead() {
     const clip =
@@ -177,6 +182,9 @@ export function PreviewMonitor() {
         <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={splitAtPlayhead}>
           <Scissors className="size-3.5" /> Cortar
         </Button>
+        {playing && ui.playRate !== 1 ? (
+          <span className="tabular text-[10px] text-accent">{ui.playRate}×</span>
+        ) : null}
         <span className="tabular ml-auto text-xs text-foreground">
           {formatTimecode(playheadUs, sequence.fpsNum)}
         </span>

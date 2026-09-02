@@ -1,14 +1,16 @@
 import { Link } from "@tanstack/react-router";
-import { Activity, Clapperboard, Download, Redo2, Save, Undo2, GraduationCap } from "lucide-react";
+import { Activity, Clapperboard, Download, Keyboard, Redo2, Save, Undo2, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useEditor } from "@/core/store/editorStore";
+import { useUi } from "@/core/store/uiStore";
 import { ExportDialog } from "@/features/export/ExportDialog";
 import { DiagnosticsDialog } from "@/features/setup/DiagnosticsDialog";
 
 export function TopBar() {
   const { project, history, undo, redo, save, dirty, runtime } = useEditor();
+  const ui = useUi();
 
   return (
     <header className="chrome-surface flex h-12 shrink-0 items-center gap-3 border-b px-3">
@@ -63,6 +65,31 @@ export function TopBar() {
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <div className="flex items-center rounded-sm border border-border p-0.5">
+          {(["essential", "pro"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={ui.mode === mode}
+              onClick={() => ui.setMode(mode)}
+              className={`rounded-sm px-2 py-0.5 text-[11px] ${
+                ui.mode === mode
+                  ? "bg-primary/20 text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {mode === "essential" ? "Essencial" : "Pro"}
+            </button>
+          ))}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-1.5"
+          onClick={() => ui.setShortcutsOpen(true)}
+        >
+          <Keyboard className="size-4" /> Atalhos
+        </Button>
         <Badge
           variant="outline"
           className={
