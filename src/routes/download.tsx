@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Cpu, HardDrive, Monitor, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Cpu, Download, HardDrive, Monitor, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
