@@ -203,6 +203,19 @@ pub enum AiEditCommand {
         track_id: String,
         muted: bool,
     },
+    #[serde(rename = "linkClips")]
+    LinkClips {
+        #[serde(rename = "clipIds")]
+        clip_ids: Vec<String>,
+        #[serde(rename = "linkGroupId")]
+        link_group_id: Option<String>,
+    },
+    #[serde(rename = "unlinkClips")]
+    UnlinkClips {
+        #[serde(rename = "clipId")]
+        clip_id: String,
+    },
+
     #[serde(rename = "createSequence")]
     CreateSequence {
         #[serde(rename = "sequenceId")]
