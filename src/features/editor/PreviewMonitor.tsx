@@ -61,7 +61,6 @@ export function PreviewMonitor() {
     el.volume = Math.min(1, Math.max(0, dbToAmplitude(db)));
   }, [activeClip, playheadUs]);
 
-
   useEffect(() => {
     if (!playing) return;
     let raf = 0;

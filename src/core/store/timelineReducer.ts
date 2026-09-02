@@ -64,7 +64,6 @@ function linkedPartners(seq: Sequence, clip: Clip): Clip[] {
   );
 }
 
-
 /** Timeline-space edge trim: start edge moves startUs AND sourceInUs together. */
 function applyEdgeTrim(
   project: Project,
@@ -157,7 +156,6 @@ export function applyCommand(project: Project, command: EditCommand): Project {
           }
         }
       });
-
 
     case "rippleTrimClip":
       return withSequence(project, (seq, next) => {
@@ -332,7 +330,6 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         requireUnlockedTrack(seq, clip.trackId);
         const remove = new Set([clip.id, ...linkedPartners(seq, clip).map((c) => c.id)]);
         seq.clips = seq.clips.filter((c) => !remove.has(c.id));
-
       });
 
     case "rippleDelete":
@@ -422,8 +419,6 @@ export function applyCommand(project: Project, command: EditCommand): Project {
           if (c.linkGroupId === groupId) delete c.linkGroupId;
         }
       });
-
-
 
     case "setSequenceAspect":
       return withSequence(project, (seq) => {

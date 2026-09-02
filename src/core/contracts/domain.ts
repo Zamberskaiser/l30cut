@@ -128,7 +128,6 @@ export function clipGainDbAt(c: Clip, offsetUs: Micros): number {
 /** Linear amplitude multiplier for a dB value (0 dB → 1). */
 export const dbToAmplitude = (db: number): number => 10 ** (db / 20);
 
-
 export const CaptionSegmentSchema = z
   .object({
     id: IdSchema,

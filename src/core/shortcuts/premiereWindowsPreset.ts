@@ -61,7 +61,6 @@ export const PREMIERE_WINDOWS_PRESET: BindingMap = {
   "clip.link": ["Ctrl+KeyL"],
   "clip.unlink": ["Ctrl+Shift+KeyL"],
 
-
   // View
   "timeline.toggleSnap": ["KeyS"],
   "view.zoomIn": ["Equal", "NumpadAdd"],

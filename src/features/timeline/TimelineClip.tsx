@@ -25,7 +25,6 @@ export interface ClipActions {
   onUnlink: (clip: Clip) => void;
 }
 
-
 interface Props {
   clip: Clip;
   asset?: MediaAsset | undefined;
@@ -156,7 +155,6 @@ export function TimelineClip({
             </ContextMenuItem>
           )}
           <ContextMenuItem onSelect={() => actions.onReveal(clip)}>Revelar mídia</ContextMenuItem>
-
         </ContextMenuContent>
       </ContextMenu>
 

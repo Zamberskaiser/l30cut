@@ -441,7 +441,6 @@ export function buildEditorCommands(): EditorCommand[] {
       },
     },
     {
-
       id: "clip.speed",
       label: "Velocidade / duração",
       description: "Aplica rate stretch de 10% mais lento no clip",

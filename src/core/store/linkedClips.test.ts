@@ -31,8 +31,8 @@ function linkedProject(): { project: Project; ids: [string, string] } {
   return { project, ids: [a.id, "clip_audio"] };
 }
 
-
-const find = (project: Project, id: string) => activeSequence(project).clips.find((c) => c.id === id);
+const find = (project: Project, id: string) =>
+  activeSequence(project).clips.find((c) => c.id === id);
 
 describe("A/V linked clips", () => {
   it("assigns a shared link group to the selected clips", () => {
