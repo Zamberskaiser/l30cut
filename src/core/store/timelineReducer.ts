@@ -400,6 +400,31 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         track.muted = command.muted;
       });
 
+    case "linkClips":
+      return withSequence(project, (seq) => {
+        const clips = command.clipIds.map((id) => requireClip(seq, id));
+        for (const clip of clips) requireUnlockedTrack(seq, clip.trackId);
+        const unique = new Set(command.clipIds);
+        if (unique.size !== command.clipIds.length) {
+          throw new CommandError("ids repetidos no vínculo");
+        }
+        const groupId = command.linkGroupId ?? newId("link");
+        for (const clip of clips) clip.linkGroupId = groupId;
+      });
+
+    case "unlinkClips":
+      return withSequence(project, (seq) => {
+        const clip = requireClip(seq, command.clipId);
+        requireUnlockedTrack(seq, clip.trackId);
+        if (!clip.linkGroupId) throw new CommandError("clip não está vinculado");
+        const groupId = clip.linkGroupId;
+        for (const c of seq.clips) {
+          if (c.linkGroupId === groupId) delete c.linkGroupId;
+        }
+      });
+
+
+
     case "setSequenceAspect":
       return withSequence(project, (seq) => {
         seq.aspect = command.aspect;
