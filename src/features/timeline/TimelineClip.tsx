@@ -139,18 +139,6 @@ export function TimelineClip({
                 {rate !== 1 ? ` · ${Math.round(rate * 100)}%` : ""}
               </span>
             )}
-            {wavePoints ? (
-              <svg
-                className={`pointer-events-none absolute inset-0 size-full ${
-                  peaks?.simulated ? "text-track-audio/70" : "text-track-audio"
-                }`}
-                preserveAspectRatio="none"
-                viewBox={`0 0 ${Math.max(1, width)} 32`}
-                aria-hidden
-              >
-                <polygon points={wavePoints} fill="currentColor" fillOpacity={0.55} />
-              </svg>
-            ) : null}
             {trackKind === "audio" && clip.gainKeyframes?.length ? (
               <svg
                 className="pointer-events-none absolute inset-0 size-full text-accent"
