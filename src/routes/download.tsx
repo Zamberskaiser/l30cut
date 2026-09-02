@@ -122,7 +122,9 @@ function DownloadPage() {
               size="sm"
               variant="outline"
               className="gap-1.5"
-              onClick={() => document.getElementById("como-instalar")?.scrollIntoView({ behavior: "smooth" })}
+              onClick={() =>
+                document.getElementById("como-instalar")?.scrollIntoView({ behavior: "smooth" })
+              }
             >
               Como instalar
             </Button>
@@ -159,9 +161,9 @@ function DownloadPage() {
           <h3 className="text-xs font-semibold text-foreground">Depois de instalar</h3>
           <ol className="mt-2 list-decimal space-y-1.5 pl-4">
             <li>
-              <strong className="text-foreground">Instale o app.</strong> Dê dois cliques no
-              arquivo <span className="tabular">.msi</span> gerado pelo build e siga o assistente.
-              Um atalho <span className="italic">L30 CUT AI</span> aparece no menu Iniciar.
+              <strong className="text-foreground">Instale o app.</strong> Dê dois cliques no arquivo{" "}
+              <span className="tabular">.msi</span> gerado pelo build e siga o assistente. Um atalho{" "}
+              <span className="italic">L30 CUT AI</span> aparece no menu Iniciar.
             </li>
             <li>
               <strong className="text-foreground">Abra o app.</strong> Na primeira execução, a tela
@@ -172,17 +174,17 @@ function DownloadPage() {
               Alta qualidade. O app baixa e verifica os componentes automaticamente.
             </li>
             <li>
-              <strong className="text-foreground">Crie um projeto</strong> e importe sua mídia.
-              Os arquivos originais nunca são modificados — todas as edições são não destrutivas.
+              <strong className="text-foreground">Crie um projeto</strong> e importe sua mídia. Os
+              arquivos originais nunca são modificados — todas as edições são não destrutivas.
             </li>
             <li>
-              <strong className="text-foreground">Use o chat</strong> para pedir cortes, legendas
-              ou ajustes. Revise o plano antes de aplicar.
+              <strong className="text-foreground">Use o chat</strong> para pedir cortes, legendas ou
+              ajustes. Revise o plano antes de aplicar.
             </li>
           </ol>
           <p className="mt-3">
-            Dica: dentro do pacote-fonte, <span className="tabular">run-windows.bat</span> localiza o
-            app instalado e o abre para você.
+            Dica: dentro do pacote-fonte, <span className="tabular">run-windows.bat</span> localiza
+            o app instalado e o abre para você.
           </p>
           <p className="mt-1">
             Verifique a integridade comparando o SHA-256 do arquivo baixado com o publicado no
