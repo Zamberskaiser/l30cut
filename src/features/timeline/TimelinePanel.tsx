@@ -47,6 +47,20 @@ export function TimelinePanel() {
         [{ type: "changeGain", clipId: clip.id, gainDb: clip.gainDb === 0 ? -6 : 0 }],
         "Ajustar ganho",
       ),
+    onLink: (clip) => {
+      const ids = Array.from(new Set([clip.id, ...editor.selection])).slice(0, 12);
+      if (ids.length < 2) {
+        toast.info("Selecione ao menos dois clips para vincular", {
+          description: "Use Ctrl+clique para somar clips à seleção.",
+        });
+        return;
+      }
+      editor.run([{ type: "linkClips", clipIds: ids }], "Vincular clips");
+    },
+    onUnlink: (clip) => {
+      if (!clip.linkGroupId) return;
+      editor.run([{ type: "unlinkClips", clipId: clip.id }], "Desvincular clips");
+    },
     onReveal: (clip) => {
       const asset = editor.project.assets.find((a) => a.id === clip.assetId);
       toast.info(asset ? `Mídia: ${asset.name}` : "Mídia não encontrada", {

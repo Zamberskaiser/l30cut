@@ -52,6 +52,18 @@ function assetDurationUs(project: Project, clip: Clip): number | null {
   return asset ? asset.durationUs : null;
 }
 
+/**
+ * Clips linked to `clip` (same linkGroupId, different id) whose track is not
+ * locked. Locked linked partners are skipped instead of blocking the gesture.
+ */
+function linkedPartners(seq: Sequence, clip: Clip): Clip[] {
+  if (!clip.linkGroupId) return [];
+  const lockedTracks = new Set(seq.tracks.filter((t) => t.locked).map((t) => t.id));
+  return seq.clips.filter(
+    (c) => c.id !== clip.id && c.linkGroupId === clip.linkGroupId && !lockedTracks.has(c.trackId),
+  );
+}
+
 /** Timeline-space edge trim: start edge moves startUs AND sourceInUs together. */
 function applyEdgeTrim(
   project: Project,
@@ -90,19 +102,29 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       return withSequence(project, (seq) => {
         const clip = requireClip(seq, command.clipId);
         requireUnlockedTrack(seq, clip.trackId);
-        const offset = command.atUs - clip.startUs;
-        if (offset <= MIN_CLIP_US || offset >= clipDuration(clip) - MIN_CLIP_US) {
-          throw new CommandError("split point is outside the clip body");
+        // Linked partners split at the same timeline point; the right halves
+        // form their own link group so both sides stay in sync.
+        const targets = [clip, ...linkedPartners(seq, clip)];
+        const rightGroupId = clip.linkGroupId ? newId("link") : undefined;
+        for (const target of targets) {
+          const offset = command.atUs - target.startUs;
+          if (offset <= MIN_CLIP_US || offset >= clipDuration(target) - MIN_CLIP_US) {
+            if (target.id === clip.id) {
+              throw new CommandError("split point is outside the clip body");
+            }
+            continue;
+          }
+          const sourceOffset = Math.round(offset * clipRate(target));
+          const right: Clip = {
+            ...target,
+            id: newId("clip"),
+            startUs: command.atUs,
+            sourceInUs: target.sourceInUs + sourceOffset,
+            ...(rightGroupId ? { linkGroupId: rightGroupId } : {}),
+          };
+          target.sourceOutUs = target.sourceInUs + sourceOffset;
+          seq.clips.push(right);
         }
-        const sourceOffset = Math.round(offset * clipRate(clip));
-        const right: Clip = {
-          ...clip,
-          id: newId("clip"),
-          startUs: command.atUs,
-          sourceInUs: clip.sourceInUs + sourceOffset,
-        };
-        clip.sourceOutUs = clip.sourceInUs + sourceOffset;
-        seq.clips.push(right);
       });
 
     case "trimClip":
@@ -125,6 +147,14 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       return withSequence(project, (seq, next) => {
         const clip = requireClip(seq, command.clipId);
         applyEdgeTrim(next, seq, clip, command.edge, command.toUs);
+        // Linked partners follow the same edge, when their media allows it.
+        for (const partner of linkedPartners(seq, clip)) {
+          try {
+            applyEdgeTrim(next, seq, partner, command.edge, command.toUs);
+          } catch {
+            /* a partner without enough media keeps its own edge */
+          }
+        }
       });
 
     case "rippleTrimClip":
@@ -257,6 +287,13 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         const clip = requireClip(seq, command.clipId);
         requireUnlockedTrack(seq, clip.trackId);
         if (command.toStartUs < 0) throw new CommandError("negative timeline position");
+        const partners = linkedPartners(seq, clip);
+        const delta = command.toStartUs - clip.startUs;
+        for (const partner of partners) {
+          if (partner.startUs + delta < 0) {
+            throw new CommandError("clip vinculado ficaria antes do início");
+          }
+        }
         if (command.toTrackId) {
           const track = seq.tracks.find((t) => t.id === command.toTrackId);
           if (!track) throw new CommandError(`track not found: ${command.toTrackId}`);
@@ -264,6 +301,10 @@ export function applyCommand(project: Project, command: EditCommand): Project {
           clip.trackId = track.id;
         }
         clip.startUs = command.toStartUs;
+        // Linked partners keep their own track but follow the same offset.
+        for (const partner of partners) {
+          partner.startUs += delta;
+        }
       });
 
     case "duplicateClip":
@@ -277,6 +318,8 @@ export function applyCommand(project: Project, command: EditCommand): Project {
           trackId: targetTrackId,
           startUs: command.toStartUs ?? clipEnd(clip),
         };
+        // A copy starts independent: linking is always an explicit action.
+        delete copy.linkGroupId;
         if (copy.startUs < 0) throw new CommandError("negative timeline position");
         seq.clips.push(copy);
       });
@@ -285,7 +328,8 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       return withSequence(project, (seq) => {
         const clip = requireClip(seq, command.clipId);
         requireUnlockedTrack(seq, clip.trackId);
-        seq.clips = seq.clips.filter((c) => c.id !== command.clipId);
+        const remove = new Set([clip.id, ...linkedPartners(seq, clip).map((c) => c.id)]);
+        seq.clips = seq.clips.filter((c) => !remove.has(c.id));
       });
 
     case "rippleDelete":
@@ -351,6 +395,29 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         const track = seq.tracks.find((t) => t.id === command.trackId);
         if (!track) throw new CommandError(`track not found: ${command.trackId}`);
         track.muted = command.muted;
+      });
+
+    case "linkClips":
+      return withSequence(project, (seq) => {
+        const clips = command.clipIds.map((id) => requireClip(seq, id));
+        for (const clip of clips) requireUnlockedTrack(seq, clip.trackId);
+        const unique = new Set(command.clipIds);
+        if (unique.size !== command.clipIds.length) {
+          throw new CommandError("ids repetidos no vínculo");
+        }
+        const groupId = command.linkGroupId ?? newId("link");
+        for (const clip of clips) clip.linkGroupId = groupId;
+      });
+
+    case "unlinkClips":
+      return withSequence(project, (seq) => {
+        const clip = requireClip(seq, command.clipId);
+        requireUnlockedTrack(seq, clip.trackId);
+        if (!clip.linkGroupId) throw new CommandError("clip não está vinculado");
+        const groupId = clip.linkGroupId;
+        for (const c of seq.clips) {
+          if (c.linkGroupId === groupId) delete c.linkGroupId;
+        }
       });
 
     case "setSequenceAspect":

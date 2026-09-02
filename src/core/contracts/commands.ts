@@ -127,6 +127,15 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
+      type: z.literal("linkClips"),
+      clipIds: z.array(IdSchema).min(2).max(12),
+      linkGroupId: IdSchema.optional(),
+    })
+    .strict(),
+  z.object({ type: z.literal("unlinkClips"), clipId: IdSchema }).strict(),
+
+  z
+    .object({
       type: z.literal("createSequence"),
       sequenceId: IdSchema,
       name: z.string().min(1),

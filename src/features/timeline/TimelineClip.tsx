@@ -21,6 +21,8 @@ export interface ClipActions {
   onRippleDelete: (clip: Clip) => void;
   onGain: (clip: Clip) => void;
   onReveal: (clip: Clip) => void;
+  onLink: (clip: Clip) => void;
+  onUnlink: (clip: Clip) => void;
 }
 
 interface Props {
@@ -69,7 +71,7 @@ export function TimelineClip({
             type="button"
             data-clip-id={clip.id}
             aria-pressed={selected}
-            aria-label={`${label} — ${formatTimecode(duration)}`}
+            aria-label={`${label} — ${formatTimecode(duration)}${clip.linkGroupId ? " — vinculado A/V" : ""}`}
             onPointerDown={(event) => onPointerDown(event, clip)}
             className={`absolute top-1.5 h-8 select-none overflow-hidden rounded-sm border px-1.5 text-left transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               trackKind === "audio"
@@ -79,7 +81,15 @@ export function TimelineClip({
             style={{ left, width }}
             title={`${label} — ${formatTimecode(duration)}`}
           >
-            <span className="block truncate text-[10px] leading-4">{label}</span>
+            <span className="block truncate text-[10px] leading-4">
+              {clip.linkGroupId ? (
+                <span aria-hidden className="mr-1 text-muted-foreground">
+                  ⛓
+                </span>
+              ) : null}
+              {label}
+            </span>
+
             {pro ? (
               <span className="tabular block truncate text-[9px] text-muted-foreground">
                 {formatTimecode(clip.sourceInUs).slice(3)} →{" "}
@@ -134,6 +144,16 @@ export function TimelineClip({
             Ripple delete
           </ContextMenuItem>
           <ContextMenuSeparator />
+          <ContextMenuSeparator />
+          {clip.linkGroupId ? (
+            <ContextMenuItem onSelect={() => actions.onUnlink(clip)}>
+              Desvincular A/V (Ctrl+Shift+L)
+            </ContextMenuItem>
+          ) : (
+            <ContextMenuItem onSelect={() => actions.onLink(clip)}>
+              Vincular seleção A/V (Ctrl+L)
+            </ContextMenuItem>
+          )}
           <ContextMenuItem onSelect={() => actions.onReveal(clip)}>Revelar mídia</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>

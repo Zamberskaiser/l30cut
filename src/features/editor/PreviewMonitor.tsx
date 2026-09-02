@@ -5,10 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   clipDuration,
   clipEnd,
+  clipGainDbAt,
+  dbToAmplitude,
   formatTimecode,
   sequenceDuration,
   type Aspect,
 } from "@/core/contracts/domain";
+
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { useUi } from "@/core/store/uiStore";
 
@@ -48,6 +51,14 @@ export function PreviewMonitor() {
     const sourceUs = activeClip.sourceInUs + (playheadUs - activeClip.startUs);
     const target = sourceUs / 1_000_000;
     if (Math.abs(el.currentTime - target) > 0.25) el.currentTime = target;
+  }, [activeClip, playheadUs]);
+
+  // Gain automation (pen keyframes) drives the demo playback volume.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !activeClip) return;
+    const db = clipGainDbAt(activeClip, playheadUs - activeClip.startUs);
+    el.volume = Math.min(1, Math.max(0, dbToAmplitude(db)));
   }, [activeClip, playheadUs]);
 
   useEffect(() => {

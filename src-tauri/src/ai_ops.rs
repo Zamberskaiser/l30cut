@@ -203,6 +203,19 @@ pub enum AiEditCommand {
         track_id: String,
         muted: bool,
     },
+    #[serde(rename = "linkClips")]
+    LinkClips {
+        #[serde(rename = "clipIds")]
+        clip_ids: Vec<String>,
+        #[serde(rename = "linkGroupId")]
+        link_group_id: Option<String>,
+    },
+    #[serde(rename = "unlinkClips")]
+    UnlinkClips {
+        #[serde(rename = "clipId")]
+        clip_id: String,
+    },
+
     #[serde(rename = "createSequence")]
     CreateSequence {
         #[serde(rename = "sequenceId")]
@@ -377,6 +390,28 @@ fn validate_command(index: usize, cmd: &AiEditCommand, errors: &mut Vec<String>)
         | AiEditCommand::SetTrackMute { track_id, .. } => {
             check_id(errors, &p("trackId"), track_id);
         }
+        AiEditCommand::LinkClips { clip_ids, link_group_id } => {
+            if clip_ids.len() < 2 || clip_ids.len() > 12 {
+                errors.push(p("clipIds: entre 2 e 12 ids"));
+            }
+            for (i, id) in clip_ids.iter().enumerate() {
+                check_id(errors, &p(&format!("clipIds[{i}]")), id);
+            }
+            let mut sorted = clip_ids.clone();
+            sorted.sort();
+            let before = sorted.len();
+            sorted.dedup();
+            if sorted.len() != before {
+                errors.push(p("clipIds: ids repetidos"));
+            }
+            if let Some(group) = link_group_id {
+                check_id(errors, &p("linkGroupId"), group);
+            }
+        }
+        AiEditCommand::UnlinkClips { clip_id } => {
+            check_id(errors, &p("clipId"), clip_id);
+        }
+
         AiEditCommand::CreateSequence { sequence_id, name, .. } => {
             check_id(errors, &p("sequenceId"), sequence_id);
             if name.is_empty() || name.len() > 80 {
