@@ -41,6 +41,7 @@ export const TAURI_COMMANDS = {
   export: "export_sequence",
   loadProject: "load_project",
   saveProject: "save_project",
+  validateAiTransaction: "validate_ai_transaction",
 } as const;
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
