@@ -3,6 +3,12 @@
 //! Every IPC command listed here is part of the allowlisted contract mirrored
 //! by `src/core/runtime/tauriRuntime.ts` on the frontend side. Responses are
 //! plain JSON validated with Zod in the frontend before use.
+//!
+//! Security boundary: AI-proposed edits are validated natively in
+//! [`ai_ops`] before anything acts on them. The WebView's TypeScript/Zod
+//! layer is convenience, not a security boundary.
+
+pub mod ai_ops;
 
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
@@ -83,15 +89,23 @@ fn install_component(_args: InstallArgs) -> Result<(), String> {
     Err("install_component ainda não implementado neste host".into())
 }
 
+/// Native security gate for AI-proposed edit transactions (see `ai_ops`).
+/// Receives the raw JSON array of commands and returns a typed report.
+/// Nothing AI-originated may be executed natively without `ok == true`.
+#[tauri::command]
+fn validate_ai_transaction(json: String) -> ai_ops::ValidationReport {
+    ai_ops::validate_transaction_json(&json)
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             diagnostics,
             prepare_data_dirs,
-            install_component
+            install_component,
+            validate_ai_transaction
         ])
         .run(tauri::generate_context!())
         .expect("erro ao iniciar o L30 CUT AI");

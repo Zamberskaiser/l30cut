@@ -70,7 +70,7 @@ export function ShortcutsDialog() {
 
   return (
     <Dialog open={ui.shortcutsOpen} onOpenChange={ui.setShortcutsOpen}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="flex max-h-[85vh] max-w-2xl flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle>Atalhos de teclado</DialogTitle>
           <DialogDescription>
@@ -86,7 +86,7 @@ export function ShortcutsDialog() {
           className="h-8"
         />
 
-        <ScrollArea className="h-80 rounded-md border border-border">
+        <ScrollArea className="min-h-24 flex-1 rounded-md border border-border">
           <div className="divide-y divide-border">
             {groups.map(([category, commands]) => (
               <div key={category} className="p-2">

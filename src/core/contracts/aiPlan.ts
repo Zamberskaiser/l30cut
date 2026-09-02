@@ -99,8 +99,13 @@ export const EstimatedImpactSchema = z
   .strict();
 export type EstimatedImpact = z.infer<typeof EstimatedImpactSchema>;
 
+/** Current wire-format version of the plan contract. */
+export const AI_PLAN_SCHEMA_VERSION = 1 as const;
+
 export const AiEditPlanSchema = z
   .object({
+    /** Closed version tag — v1 is the only accepted wire format. */
+    version: z.literal(AI_PLAN_SCHEMA_VERSION),
     id: IdSchema,
     intent: z.string().min(2).max(120),
     summary: z.string().min(2).max(400),
@@ -124,9 +129,21 @@ export type AiEditPlan = z.infer<typeof AiEditPlanSchema>;
 
 export type PlanParseResult = { ok: true; plan: AiEditPlan } | { ok: false; errors: string[] };
 
+/**
+ * Adapter for pre-v1 payloads (plans emitted before the `version` tag existed).
+ * The ONLY tolerated difference is the missing tag; everything else stays
+ * strict. Unknown versions are rejected, never coerced.
+ */
+export function adaptPlanInput(input: unknown): unknown {
+  if (input && typeof input === "object" && !Array.isArray(input) && !("version" in input)) {
+    return { ...(input as Record<string, unknown>), version: AI_PLAN_SCHEMA_VERSION };
+  }
+  return input;
+}
+
 /** Strict gate for anything coming out of a model. Unknown fields are rejected. */
 export function parseAiEditPlan(input: unknown): PlanParseResult {
-  const parsed = AiEditPlanSchema.safeParse(input);
+  const parsed = AiEditPlanSchema.safeParse(adaptPlanInput(input));
   if (parsed.success) return { ok: true, plan: parsed.data };
   return {
     ok: false,

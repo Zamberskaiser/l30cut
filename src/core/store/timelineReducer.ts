@@ -346,6 +346,13 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         track.locked = command.locked;
       });
 
+    case "setTrackMute":
+      return withSequence(project, (seq) => {
+        const track = seq.tracks.find((t) => t.id === command.trackId);
+        if (!track) throw new CommandError(`track not found: ${command.trackId}`);
+        track.muted = command.muted;
+      });
+
     case "setSequenceAspect":
       return withSequence(project, (seq) => {
         seq.aspect = command.aspect;

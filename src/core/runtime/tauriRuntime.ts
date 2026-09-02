@@ -14,6 +14,7 @@ import {
 import { z } from "zod";
 import { ASPECT_RESOLUTIONS } from "./catalog";
 import type {
+  AiValidationReport,
   ComponentId,
   ComponentStatus,
   ExportRequest,
@@ -41,6 +42,7 @@ export const TAURI_COMMANDS = {
   export: "export_sequence",
   loadProject: "load_project",
   saveProject: "save_project",
+  validateAiTransaction: "validate_ai_transaction",
 } as const;
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
@@ -179,6 +181,17 @@ export class TauriRuntime implements RuntimeAdapter {
   async saveProject(project: Project): Promise<void> {
     const invoke = await getInvoke();
     await invoke(TAURI_COMMANDS.saveProject, { project });
+  }
+
+  /** Native allowlist gate (src-tauri/src/ai_ops.rs) for AI transactions. */
+  async validateAiTransaction(commandsJson: string): Promise<AiValidationReport> {
+    const invoke = await getInvoke();
+    const raw = await invoke<unknown>(TAURI_COMMANDS.validateAiTransaction, {
+      json: commandsJson,
+    });
+    return z
+      .object({ ok: z.boolean(), opCount: z.number().int(), errors: z.array(z.string()) })
+      .parse(raw);
   }
 
   aspectResolution(aspect: Aspect) {

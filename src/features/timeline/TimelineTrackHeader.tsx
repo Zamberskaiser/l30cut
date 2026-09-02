@@ -6,9 +6,10 @@ interface Props {
   track: Track;
   pro: boolean;
   onToggleLock: () => void;
+  onToggleMute: () => void;
 }
 
-export function TimelineTrackHeader({ track, pro, onToggleLock }: Props) {
+export function TimelineTrackHeader({ track, pro, onToggleLock, onToggleMute }: Props) {
   return (
     <div
       className="flex items-center justify-between gap-1 border-b border-border px-2 text-[11px]"
@@ -28,9 +29,19 @@ export function TimelineTrackHeader({ track, pro, onToggleLock }: Props) {
           >
             {track.locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
           </button>
-          <span className="text-muted-foreground">
-            {track.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
-          </span>
+          {track.kind === "caption" ? null : (
+            <button
+              type="button"
+              aria-label={track.muted ? `Reativar som de ${track.name}` : `Silenciar ${track.name}`}
+              aria-pressed={track.muted}
+              onClick={onToggleMute}
+              className={
+                track.muted ? "text-destructive" : "text-muted-foreground hover:text-foreground"
+              }
+            >
+              {track.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
+            </button>
+          )}
         </span>
       ) : (
         <span className="text-[10px] uppercase text-muted-foreground">{track.kind[0]}</span>

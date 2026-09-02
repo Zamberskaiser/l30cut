@@ -121,4 +121,16 @@ export interface RuntimeAdapter {
   loadProject(id: string): Promise<Project | null>;
   saveProject(project: Project): Promise<void>;
   aspectResolution(aspect: Aspect): { width: number; height: number };
+  /**
+   * Native (Rust) allowlist validation of an AI-proposed command transaction.
+   * Present only on the Tauri runtime — in the browser demo the TypeScript/Zod
+   * layer is all there is, and that is documented as NOT a security boundary.
+   */
+  validateAiTransaction?(commandsJson: string): Promise<AiValidationReport>;
+}
+
+export interface AiValidationReport {
+  ok: boolean;
+  opCount: number;
+  errors: string[];
 }
