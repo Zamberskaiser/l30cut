@@ -32,8 +32,9 @@
 
 ## Backlog (próximas melhorias)
 
-- [ ] Clips A/V vinculados (link/unlink) com sincronismo garantido nos gestos
-- [ ] Automação de ganho com curvas (interpolação) aplicada na reprodução demo
+- [x] Clips A/V vinculados (link/unlink) com sincronismo em mover, cortar, aparar e apagar
+- [x] Automação de ganho com interpolação linear aplicada ao volume da reprodução demo
+
 - [ ] Waveforms reais nos clips de áudio (Web Audio no demo, ffmpeg no Tauri)
 - [ ] Persistência de atalhos e perfis via Tauri (arquivo em %APPDATA%)
 - [ ] Instalador Windows: validar build-windows.bat em máquina real / release CI
