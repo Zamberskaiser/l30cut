@@ -66,7 +66,7 @@ function mixToMono(buffer: AudioBuffer): Float32Array {
   const mono = new Float32Array(first.length);
   for (let c = 0; c < channels; c += 1) {
     const data = buffer.getChannelData(c);
-    for (let i = 0; i < mono.length; i += 1) mono[i] += (data[i] ?? 0) / channels;
+    for (let i = 0; i < mono.length; i += 1) mono[i] = (mono[i] ?? 0) + (data[i] ?? 0) / channels;
   }
   return mono;
 }
