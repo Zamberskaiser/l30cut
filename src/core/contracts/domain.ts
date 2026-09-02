@@ -82,6 +82,11 @@ export const ClipSchema = z
     playbackRate: z.number().min(0.1).max(10).optional(),
     /** Optional typed gain automation (pen tool). Sorted by atUs. */
     gainKeyframes: z.array(GainKeyframeSchema).optional(),
+    /**
+     * A/V link group. Clips sharing a linkGroupId move, trim, split and are
+     * deleted together. Absent means the clip is independent.
+     */
+    linkGroupId: z.string().min(1).optional(),
     enabled: z.boolean().default(true),
   })
   .strict()
@@ -94,6 +99,35 @@ export const clipRate = (c: Clip): number => c.playbackRate ?? 1;
 export const clipSourceSpan = (c: Clip): Micros => c.sourceOutUs - c.sourceInUs;
 export const clipDuration = (c: Clip): Micros => Math.round(clipSourceSpan(c) / clipRate(c));
 export const clipEnd = (c: Clip): Micros => c.startUs + clipDuration(c);
+
+/**
+ * Effective gain at a clip-relative offset, linearly interpolated between
+ * keyframes. Without keyframes it is simply the static clip gain.
+ */
+export function clipGainDbAt(c: Clip, offsetUs: Micros): number {
+  const kfs = c.gainKeyframes;
+  if (!kfs || kfs.length === 0) return c.gainDb;
+  const sorted = [...kfs].sort((a, b) => a.atUs - b.atUs);
+  const first = sorted[0]!;
+  const last = sorted[sorted.length - 1]!;
+  if (offsetUs <= first.atUs) return first.gainDb;
+  if (offsetUs >= last.atUs) return last.gainDb;
+  for (let i = 1; i < sorted.length; i += 1) {
+    const a = sorted[i - 1]!;
+    const b = sorted[i]!;
+    if (offsetUs <= b.atUs) {
+      const span = b.atUs - a.atUs;
+      if (span <= 0) return b.gainDb;
+      const t = (offsetUs - a.atUs) / span;
+      return a.gainDb + (b.gainDb - a.gainDb) * t;
+    }
+  }
+  return last.gainDb;
+}
+
+/** Linear amplitude multiplier for a dB value (0 dB → 1). */
+export const dbToAmplitude = (db: number): number => 10 ** (db / 20);
+
 
 export const CaptionSegmentSchema = z
   .object({
