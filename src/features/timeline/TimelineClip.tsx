@@ -67,6 +67,26 @@ export function TimelineClip({
   const label = clip.label || asset?.name || clip.id;
   const rate = clip.playbackRate ?? 1;
 
+  const showWaveform = trackKind === "audio" && !!peaks && !!asset && width > 12;
+  const wavePoints = showWaveform
+    ? (() => {
+        const samples = Math.max(8, Math.min(240, Math.round(width / 2)));
+        const slice = clipPeakSlice(
+          peaks.peaks,
+          asset.durationUs,
+          clip.sourceInUs,
+          clip.sourceOutUs,
+          samples,
+        );
+        const step = width / Math.max(1, samples - 1);
+        const top = slice.map((v, i) => `${(i * step).toFixed(1)},${(16 - v * 14).toFixed(1)}`);
+        const bottom = slice
+          .map((v, i) => `${(i * step).toFixed(1)},${(16 + v * 14).toFixed(1)}`)
+          .reverse();
+        return [...top, ...bottom].join(" ");
+      })()
+    : null;
+
   return (
     <>
       <ContextMenu>
