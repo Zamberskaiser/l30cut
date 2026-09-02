@@ -110,13 +110,13 @@ export function formatCombo(combo: ComboString): string {
 }
 
 /** True when the event target is an editable surface — edit shortcuts must not fire. */
+export const EDITABLE_SELECTOR =
+  'input, textarea, select, [contenteditable="true"], [contenteditable=""], [role="textbox"], [data-editable="true"]';
+
 export function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof Element)) return false;
-  return Boolean(
-    target.closest(
-      'input, textarea, select, [contenteditable="true"], [contenteditable=""], [role="textbox"], [data-editable="true"]',
-    ),
-  );
+  const el = target as { closest?: (selector: string) => unknown } | null;
+  if (!el || typeof el.closest !== "function") return false;
+  return Boolean(el.closest(EDITABLE_SELECTOR));
 }
 
 export function contextAllows(contexts: readonly PanelContext[], focused: PanelContext): boolean {

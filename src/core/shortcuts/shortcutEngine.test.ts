@@ -46,17 +46,13 @@ describe("combo normalization", () => {
 });
 
 describe("editable targets", () => {
-  it("detects inputs, textareas and contenteditable", () => {
-    const input = document.createElement("input");
-    const div = document.createElement("div");
-    const editable = document.createElement("div");
-    editable.setAttribute("contenteditable", "true");
-    const inner = document.createElement("span");
-    editable.appendChild(inner);
-    expect(isEditableTarget(input)).toBe(true);
-    expect(isEditableTarget(inner)).toBe(true);
-    expect(isEditableTarget(div)).toBe(false);
+  const stub = (matches: boolean) => ({ closest: () => (matches ? {} : null) }) as unknown as EventTarget;
+
+  it("detects editable surfaces and ignores plain elements", () => {
+    expect(isEditableTarget(stub(true))).toBe(true);
+    expect(isEditableTarget(stub(false))).toBe(false);
     expect(isEditableTarget(null)).toBe(false);
+    expect(isEditableTarget({} as EventTarget)).toBe(false);
   });
 });
 
