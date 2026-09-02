@@ -412,6 +412,36 @@ export function buildEditorCommands(): EditorCommand[] {
       },
     },
     {
+      id: "clip.link",
+      label: "Vincular clips (A/V)",
+      description: "Vincula os clips selecionados para mover, cortar e apagar juntos",
+      category: "Edição",
+      contexts: ["global"],
+      canExecute: (ctx) => ctx.selection.length >= 2,
+      execute: (ctx) => {
+        const ids = ctx.sequence.clips.filter((c) => ctx.selection.includes(c.id)).map((c) => c.id);
+        if (ids.length < 2) return;
+        ctx.run([{ type: "linkClips", clipIds: ids.slice(0, 12) }], "Vincular clips");
+      },
+    },
+    {
+      id: "clip.unlink",
+      label: "Desvincular clips",
+      description: "Remove o vínculo A/V do clip selecionado",
+      category: "Edição",
+      contexts: ["global"],
+      canExecute: (ctx) => {
+        const clip = targetClip(ctx);
+        return Boolean(clip?.linkGroupId);
+      },
+      execute: (ctx) => {
+        const clip = targetClip(ctx);
+        if (!clip?.linkGroupId) return;
+        ctx.run([{ type: "unlinkClips", clipId: clip.id }], "Desvincular clips");
+      },
+    },
+    {
+
       id: "clip.speed",
       label: "Velocidade / duração",
       description: "Aplica rate stretch de 10% mais lento no clip",
