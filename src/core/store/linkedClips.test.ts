@@ -10,15 +10,27 @@ import {
 import { createDemoProject } from "@/core/demo/demoProject";
 import { applyCommand } from "./timelineReducer";
 
-/** Links the first two clips of the demo sequence and returns the project. */
+/** Links the demo video clip to a matching audio clip on A1. */
 function linkedProject(): { project: Project; ids: [string, string] } {
   const base = createDemoProject();
-  const seq = activeSequence(base);
-  const a = seq.clips[0]!;
-  const b = seq.clips.find((c) => c.id !== a.id)!;
-  const project = applyCommand(base, { type: "linkClips", clipIds: [a.id, b.id] });
-  return { project, ids: [a.id, b.id] };
+  const a = activeSequence(base).clips[0]!;
+  const withAudio = applyCommand(base, {
+    type: "insertClip",
+    clipId: "clip_audio",
+    trackId: "a1",
+    assetId: a.assetId,
+    startUs: a.startUs,
+    sourceInUs: a.sourceInUs,
+    sourceOutUs: a.sourceOutUs,
+    label: "entrevista_demo (A)",
+  });
+  const project = applyCommand(withAudio, {
+    type: "linkClips",
+    clipIds: [a.id, "clip_audio"],
+  });
+  return { project, ids: [a.id, "clip_audio"] };
 }
+
 
 const find = (project: Project, id: string) => activeSequence(project).clips.find((c) => c.id === id);
 
