@@ -15,6 +15,7 @@ import type { AiEditPlan } from "@/core/contracts/aiPlan";
 import type { EditCommand, Transaction } from "@/core/contracts/commands";
 import {
   activeSequence,
+  TrainingProfileSchema,
   type ExportPreset,
   type Aspect,
   type FeedbackEvent,
@@ -28,6 +29,7 @@ import { JobQueue, type JobSpec } from "@/core/jobs/jobQueue";
 import { resolveRuntime } from "@/core/runtime";
 import { ASPECT_RESOLUTIONS } from "@/core/runtime/catalog";
 import type { RuntimeAdapter } from "@/core/runtime/types";
+import { clearTrainingEvents } from "@/core/training/trainingEvents";
 import {
   applyTransaction,
   emptyHistory,
@@ -37,6 +39,9 @@ import {
   type EditorHistory,
   type HistoryEntry,
 } from "./timelineReducer";
+
+/** Local-only persistence of the training profile (browser demo). */
+const PROFILE_STORAGE_KEY = "l30cut.profile.v1";
 
 export interface AssistantMessage {
   id: string;
@@ -124,6 +129,30 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   const [dirty, setDirty] = useState(false);
 
   useEffect(() => queue.current.subscribe(setJobs), []);
+
+  // Profile persistence — read after hydration (never during render/SSR),
+  // then mirror every change back to localStorage.
+  const profileLoaded = useRef(false);
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(PROFILE_STORAGE_KEY);
+      if (raw) {
+        const parsed = TrainingProfileSchema.safeParse(JSON.parse(raw));
+        if (parsed.success) setProfile(parsed.data);
+      }
+    } catch {
+      /* corrupted local data — keep defaults */
+    }
+    profileLoaded.current = true;
+  }, []);
+  useEffect(() => {
+    if (!profileLoaded.current) return;
+    try {
+      window.localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    } catch {
+      /* quota exceeded — profile stays in memory */
+    }
+  }, [profile]);
 
   const dispatch = useCallback(
     (tx: Transaction): HistoryEntry | null => {
