@@ -289,6 +289,13 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         const clip = requireClip(seq, command.clipId);
         requireUnlockedTrack(seq, clip.trackId);
         if (command.toStartUs < 0) throw new CommandError("negative timeline position");
+        const partners = linkedPartners(seq, clip);
+        const delta = command.toStartUs - clip.startUs;
+        for (const partner of partners) {
+          if (partner.startUs + delta < 0) {
+            throw new CommandError("clip vinculado ficaria antes do início");
+          }
+        }
         if (command.toTrackId) {
           const track = seq.tracks.find((t) => t.id === command.toTrackId);
           if (!track) throw new CommandError(`track not found: ${command.toTrackId}`);
@@ -296,6 +303,10 @@ export function applyCommand(project: Project, command: EditCommand): Project {
           clip.trackId = track.id;
         }
         clip.startUs = command.toStartUs;
+        // Linked partners keep their own track but follow the same offset.
+        for (const partner of partners) {
+          partner.startUs += delta;
+        }
       });
 
     case "duplicateClip":
@@ -309,6 +320,8 @@ export function applyCommand(project: Project, command: EditCommand): Project {
           trackId: targetTrackId,
           startUs: command.toStartUs ?? clipEnd(clip),
         };
+        // A copy starts independent: linking is always an explicit action.
+        delete copy.linkGroupId;
         if (copy.startUs < 0) throw new CommandError("negative timeline position");
         seq.clips.push(copy);
       });
@@ -317,7 +330,9 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       return withSequence(project, (seq) => {
         const clip = requireClip(seq, command.clipId);
         requireUnlockedTrack(seq, clip.trackId);
-        seq.clips = seq.clips.filter((c) => c.id !== command.clipId);
+        const remove = new Set([clip.id, ...linkedPartners(seq, clip).map((c) => c.id)]);
+        seq.clips = seq.clips.filter((c) => !remove.has(c.id));
+
       });
 
     case "rippleDelete":
