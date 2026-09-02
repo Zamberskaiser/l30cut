@@ -37,8 +37,27 @@ const BUILDS = [
   },
 ];
 
+function downloadFile(path: string, filename: string) {
+  fetch(path)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Falha ao baixar (${res.status})`);
+      return res.blob();
+    })
+    .then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((err: unknown) => {
+      alert(err instanceof Error ? err.message : "Falha ao baixar o arquivo");
+    });
+}
+
 function DownloadPage() {
   return (
+
     <div className="min-h-screen bg-background">
       <header className="chrome-surface flex h-11 items-center gap-3 border-b px-3">
         <Button asChild size="sm" variant="ghost" className="h-7 gap-1.5 text-xs">
