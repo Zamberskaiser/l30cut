@@ -82,7 +82,15 @@ export function TimelineClip({
             style={{ left, width }}
             title={`${label} — ${formatTimecode(duration)}`}
           >
-            <span className="block truncate text-[10px] leading-4">{label}</span>
+            <span className="block truncate text-[10px] leading-4">
+              {clip.linkGroupId ? (
+                <span aria-hidden className="mr-1 text-muted-foreground">
+                  ⛓
+                </span>
+              ) : null}
+              {label}
+            </span>
+
             {pro ? (
               <span className="tabular block truncate text-[9px] text-muted-foreground">
                 {formatTimecode(clip.sourceInUs).slice(3)} →{" "}
