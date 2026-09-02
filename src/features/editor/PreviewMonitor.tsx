@@ -5,10 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   clipDuration,
   clipEnd,
+  clipGainDbAt,
+  dbToAmplitude,
   formatTimecode,
   sequenceDuration,
   type Aspect,
 } from "@/core/contracts/domain";
+
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { useUi } from "@/core/store/uiStore";
 
