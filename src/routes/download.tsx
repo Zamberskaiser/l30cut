@@ -103,6 +103,24 @@ function DownloadPage() {
           </p>
         </section>
 
+        <section className="rounded-md border border-border bg-panel p-4">
+          <h2 className="text-base font-semibold">Baixar os materiais agora</h2>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Pacote com todo o código-fonte do editor, o projeto Tauri (src-tauri), a documentação de
+            arquitetura/release e os workflows de CI. Com ele você gera o MSI/ZIP no Windows com{" "}
+            <span className="tabular">bun install</span> e{" "}
+            <span className="tabular">bunx tauri build</span>.
+          </p>
+          <Button
+            size="sm"
+            className="mt-3 gap-1.5"
+            onClick={() => downloadFile("/l30-cut-ai-source.zip", "l30-cut-ai-source.zip")}
+          >
+            <Download className="size-4" /> Baixar pacote (.zip)
+          </Button>
+        </section>
+
+
         <section className="grid gap-2 md:grid-cols-2">
           <Requirement
             icon={<Monitor className="size-4" />}
