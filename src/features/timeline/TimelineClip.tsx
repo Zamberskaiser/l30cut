@@ -21,7 +21,10 @@ export interface ClipActions {
   onRippleDelete: (clip: Clip) => void;
   onGain: (clip: Clip) => void;
   onReveal: (clip: Clip) => void;
+  onLink: (clip: Clip) => void;
+  onUnlink: (clip: Clip) => void;
 }
+
 
 interface Props {
   clip: Clip;
