@@ -41,7 +41,7 @@ export interface AssistantContext {
     }>;
     clipsTruncated: boolean;
   };
-  assets: Array<{ id: string; durationUs: number; hasAudio: boolean }>;
+  assets: Array<{ id: string; durationUs: number; audioChannels: number }>;
   transcript: Array<{ assetId: string; startUs: number; endUs: number; text: string }>;
   transcriptTruncated: boolean;
   silences: number;
@@ -110,7 +110,7 @@ export function buildAssistantContext(
     assets: project.assets.slice(0, CONTEXT_LIMITS.maxAssets).map((a) => ({
       id: a.id,
       durationUs: a.durationUs,
-      hasAudio: a.hasAudio,
+      audioChannels: a.audioChannels,
     })),
     transcript,
     transcriptTruncated: transcript.length < transcriptPool.length,
