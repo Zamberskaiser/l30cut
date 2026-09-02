@@ -48,13 +48,16 @@ type Listener = (events: TrainingEvent[]) => void;
 const listeners = new Set<Listener>();
 let cache: TrainingEvent[] | null = null;
 
+/** Stable empty snapshot — required by useSyncExternalStore on the server. */
+export const EMPTY_TRAINING_EVENTS: TrainingEvent[] = [];
+
 function hasStorage(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
 function load(): TrainingEvent[] {
   if (cache) return cache;
-  if (!hasStorage()) return [];
+  if (!hasStorage()) return EMPTY_TRAINING_EVENTS;
   try {
     const raw = window.localStorage.getItem(TRAINING_STORAGE_KEY);
     if (!raw) return (cache = []);
