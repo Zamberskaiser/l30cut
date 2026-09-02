@@ -188,7 +188,7 @@ export function compilePlan(
           errors.push(`keepTranscriptTopic: nenhum trecho fala sobre “${op.query}”`);
           break;
         }
-        const asset = project.assets.find((a) => a.id === hits[0].assetId);
+        const asset = project.assets.find((a) => a.id === hits[0]!.assetId);
         const videoTrack = seq.tracks.find((t) => t.kind === "video");
         if (!asset || !videoTrack) {
           errors.push("keepTranscriptTopic: mídia ou trilha ausente");

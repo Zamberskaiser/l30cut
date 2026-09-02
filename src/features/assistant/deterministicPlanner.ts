@@ -30,7 +30,7 @@ function readMs(prompt: string, fallback: number): number {
   const ms = /(\d{2,5})\s*(ms|milissegundos)/.exec(norm(prompt));
   if (ms) return Number(ms[1]) * 1000;
   const sec = /(\d+(?:[.,]\d+)?)\s*(s|seg|segundos)/.exec(norm(prompt));
-  if (sec) return Math.round(Number(sec[1].replace(",", ".")) * SECOND);
+  if (sec?.[1]) return Math.round(Number(sec[1].replace(",", ".")) * SECOND);
   return fallback;
 }
 
@@ -147,7 +147,7 @@ export function planDeterministically(input: PlannerInput): AiEditPlan | null {
 
   const topic = /(sobre|falas sobre|apenas)\s+(.{3,60})/.exec(input.prompt);
   if (topic) {
-    const query = topic[2].replace(/["'.]/g, "").trim();
+    const query = (topic[2] ?? "").replace(/["'.]/g, "").trim();
     return finalize({
       intent: "keep-topic",
       summary: `Manter apenas as falas relacionadas a “${query}”.`,
@@ -172,6 +172,7 @@ export function planDeterministically(input: PlannerInput): AiEditPlan | null {
     const clip = input.scope.clipIds[0]
       ? seq.clips.find((c) => c.id === input.scope.clipIds[0]) ?? seq.clips[0]
       : seq.clips[0];
+    if (!clip) return null;
     return finalize({
       intent: "duplicate-clip",
       summary: `Duplicar “${clip.label || clip.id}” e mover a cópia para o início da sequência.`,
@@ -229,13 +230,15 @@ function pickTranscriptRanges(
   const ranges: Array<{ startUs: number; endUs: number; label: string }> = [];
   let i = 0;
   while (i < segments.length && ranges.length < count) {
-    const start = segments[i].startUs;
-    let end = segments[i].endUs;
-    let words = segments[i].text;
+    const head = segments[i]!;
+    const start = head.startUs;
+    let end = head.endUs;
+    let words = head.text;
     let j = i + 1;
     while (j < segments.length && end - start < defaults.clipMinUs) {
-      end = segments[j].endUs;
-      words += ` ${segments[j].text}`;
+      const next = segments[j]!;
+      end = next.endUs;
+      words += ` ${next.text}`;
       j += 1;
     }
     if (end - start > defaults.clipMaxUs) end = start + defaults.clipMaxUs;
