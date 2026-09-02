@@ -1,4 +1,5 @@
 import type { Clip, Project, Sequence, Track } from "@/core/contracts/domain";
+import type { PeakData } from "@/core/audio/waveform";
 import { TRACK_HEIGHT, usToPx } from "./geometry";
 import { TimelineClip, type ClipActions } from "./TimelineClip";
 import type { TimelineInteraction } from "./useTimelineInteraction";
