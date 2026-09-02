@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Cpu, HardDrive, Monitor, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Cpu, Download, HardDrive, Monitor, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -37,8 +37,27 @@ const BUILDS = [
   },
 ];
 
+function downloadFile(path: string, filename: string) {
+  fetch(path)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Falha ao baixar (${res.status})`);
+      return res.blob();
+    })
+    .then((blob) => {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    })
+    .catch((err: unknown) => {
+      alert(err instanceof Error ? err.message : "Falha ao baixar o arquivo");
+    });
+}
+
 function DownloadPage() {
   return (
+
     <div className="min-h-screen bg-background">
       <header className="chrome-surface flex h-11 items-center gap-3 border-b px-3">
         <Button asChild size="sm" variant="ghost" className="h-7 gap-1.5 text-xs">
@@ -83,6 +102,24 @@ function DownloadPage() {
             não há binário para baixar — esta página descreve exatamente o que o release entrega.
           </p>
         </section>
+
+        <section className="rounded-md border border-border bg-panel p-4">
+          <h2 className="text-base font-semibold">Baixar os materiais agora</h2>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Pacote com todo o código-fonte do editor, o projeto Tauri (src-tauri), a documentação de
+            arquitetura/release e os workflows de CI. Com ele você gera o MSI/ZIP no Windows com{" "}
+            <span className="tabular">bun install</span> e{" "}
+            <span className="tabular">bunx tauri build</span>.
+          </p>
+          <Button
+            size="sm"
+            className="mt-3 gap-1.5"
+            onClick={() => downloadFile("/l30-cut-ai-source.zip", "l30-cut-ai-source.zip")}
+          >
+            <Download className="size-4" /> Baixar pacote (.zip)
+          </Button>
+        </section>
+
 
         <section className="grid gap-2 md:grid-cols-2">
           <Requirement
