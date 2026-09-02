@@ -107,9 +107,10 @@ function DownloadPage() {
           <h2 className="text-base font-semibold">Baixar os materiais agora</h2>
           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
             Pacote com todo o código-fonte do editor, o projeto Tauri (src-tauri), a documentação de
-            arquitetura/release e os workflows de CI. Com ele você gera o MSI/ZIP no Windows com{" "}
-            <span className="tabular">bun install</span> e{" "}
-            <span className="tabular">bunx tauri build</span>.
+            arquitetura/release e os workflows de CI. Dentro dele há o{" "}
+            <span className="tabular">build-windows.bat</span>: dê dois cliques no Windows e ele
+            instala as dependências, roda os testes e gera o MSI/EXE automaticamente.
+
           </p>
           <Button
             size="sm"
