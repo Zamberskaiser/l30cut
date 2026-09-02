@@ -14,6 +14,7 @@ import {
 import { z } from "zod";
 import { ASPECT_RESOLUTIONS } from "./catalog";
 import type {
+  AiValidationReport,
   ComponentId,
   ComponentStatus,
   ExportRequest,
