@@ -103,19 +103,29 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       return withSequence(project, (seq) => {
         const clip = requireClip(seq, command.clipId);
         requireUnlockedTrack(seq, clip.trackId);
-        const offset = command.atUs - clip.startUs;
-        if (offset <= MIN_CLIP_US || offset >= clipDuration(clip) - MIN_CLIP_US) {
-          throw new CommandError("split point is outside the clip body");
+        // Linked partners split at the same timeline point; the right halves
+        // form their own link group so both sides stay in sync.
+        const targets = [clip, ...linkedPartners(seq, clip)];
+        const rightGroupId = clip.linkGroupId ? newId("link") : undefined;
+        for (const target of targets) {
+          const offset = command.atUs - target.startUs;
+          if (offset <= MIN_CLIP_US || offset >= clipDuration(target) - MIN_CLIP_US) {
+            if (target.id === clip.id) {
+              throw new CommandError("split point is outside the clip body");
+            }
+            continue;
+          }
+          const sourceOffset = Math.round(offset * clipRate(target));
+          const right: Clip = {
+            ...target,
+            id: newId("clip"),
+            startUs: command.atUs,
+            sourceInUs: target.sourceInUs + sourceOffset,
+            ...(rightGroupId ? { linkGroupId: rightGroupId } : {}),
+          };
+          target.sourceOutUs = target.sourceInUs + sourceOffset;
+          seq.clips.push(right);
         }
-        const sourceOffset = Math.round(offset * clipRate(clip));
-        const right: Clip = {
-          ...clip,
-          id: newId("clip"),
-          startUs: command.atUs,
-          sourceInUs: clip.sourceInUs + sourceOffset,
-        };
-        clip.sourceOutUs = clip.sourceInUs + sourceOffset;
-        seq.clips.push(right);
       });
 
     case "trimClip":
@@ -138,7 +148,16 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       return withSequence(project, (seq, next) => {
         const clip = requireClip(seq, command.clipId);
         applyEdgeTrim(next, seq, clip, command.edge, command.toUs);
+        // Linked partners follow the same edge, when their media allows it.
+        for (const partner of linkedPartners(seq, clip)) {
+          try {
+            applyEdgeTrim(next, seq, partner, command.edge, command.toUs);
+          } catch {
+            /* a partner without enough media keeps its own edge */
+          }
+        }
       });
+
 
     case "rippleTrimClip":
       return withSequence(project, (seq, next) => {
