@@ -13,6 +13,8 @@ interface Props {
   pro: boolean;
   interaction: TimelineInteraction;
   actions: ClipActions;
+  /** Audio peaks per assetId (real when decodable, synthesized otherwise). */
+  peaks: Record<string, PeakData>;
 }
 
 export function TimelineTrackLane({
@@ -24,6 +26,7 @@ export function TimelineTrackLane({
   pro,
   interaction,
   actions,
+  peaks,
 }: Props) {
   const ghostMove = interaction.ghostMove;
   const ghostTrim = interaction.ghostTrim;
@@ -74,6 +77,7 @@ export function TimelineTrackLane({
                       ? { edge: "start", toUs: Math.max(0, clip.startUs + ghostShift.deltaUs) }
                       : null
                 }
+                peaks={track.kind === "audio" ? peaks[clip.assetId] : undefined}
                 onPointerDown={interaction.onClipPointerDown}
                 actions={actions}
               />
