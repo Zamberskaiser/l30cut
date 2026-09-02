@@ -120,6 +120,13 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
     .strict(),
   z
     .object({
+      type: z.literal("setTrackMute"),
+      trackId: IdSchema,
+      muted: z.boolean(),
+    })
+    .strict(),
+  z
+    .object({
       type: z.literal("createSequence"),
       sequenceId: IdSchema,
       name: z.string().min(1),

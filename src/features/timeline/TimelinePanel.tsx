@@ -76,6 +76,12 @@ export function TimelinePanel() {
                   track.locked ? "Desbloquear trilha" : "Bloquear trilha",
                 )
               }
+              onToggleMute={() =>
+                editor.run(
+                  [{ type: "setTrackMute", trackId: track.id, muted: !track.muted }],
+                  track.muted ? "Reativar som da trilha" : "Silenciar trilha",
+                )
+              }
             />
           ))}
         </div>
