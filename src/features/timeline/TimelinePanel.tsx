@@ -10,6 +10,7 @@ import { TimelineToolbar } from "./TimelineToolbar";
 import { TimelineTrackHeader } from "./TimelineTrackHeader";
 import { TimelineTrackLane } from "./TimelineTrackLane";
 import { useTimelineInteraction } from "./useTimelineInteraction";
+import { useAssetPeaks } from "./useAssetPeaks";
 import type { ClipActions } from "./TimelineClip";
 
 export function TimelinePanel() {
@@ -19,6 +20,8 @@ export function TimelinePanel() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const lanesRef = useRef<HTMLDivElement>(null);
+
+  const peaks = useAssetPeaks(editor.project.assets);
 
   const interaction = useTimelineInteraction({ scrollRef, contentRef: lanesRef, sequence });
 
@@ -127,6 +130,7 @@ export function TimelinePanel() {
                   pro={pro}
                   interaction={interaction}
                   actions={actions}
+                  peaks={peaks}
                 />
               ))}
 

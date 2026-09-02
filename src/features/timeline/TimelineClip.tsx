@@ -12,6 +12,7 @@ import {
   type MediaAsset,
   type TrackKind,
 } from "@/core/contracts/domain";
+import { clipPeakSlice, type PeakData } from "@/core/audio/waveform";
 import { usToPx } from "./geometry";
 
 export interface ClipActions {
@@ -36,6 +37,8 @@ interface Props {
   /** Ghost offsets while a gesture is running (never mutates the project). */
   ghostDeltaUs?: number | undefined;
   ghostTrim?: { edge: "start" | "end"; toUs: number } | null | undefined;
+  /** Asset peaks (real when decodable, synthesized otherwise). */
+  peaks?: PeakData | undefined;
   onPointerDown: (event: React.PointerEvent, clip: Clip) => void;
   actions: ClipActions;
 }
@@ -50,6 +53,7 @@ export function TimelineClip({
   pro,
   ghostDeltaUs = 0,
   ghostTrim = null,
+  peaks,
   onPointerDown,
   actions,
 }: Props) {
@@ -62,6 +66,26 @@ export function TimelineClip({
   const width = Math.max(6, usToPx(Math.max(1, drawnEnd - drawnStart), pxPerSecond));
   const label = clip.label || asset?.name || clip.id;
   const rate = clip.playbackRate ?? 1;
+
+  const showWaveform = trackKind === "audio" && !!peaks && !!asset && width > 12;
+  const wavePoints = showWaveform
+    ? (() => {
+        const samples = Math.max(8, Math.min(240, Math.round(width / 2)));
+        const slice = clipPeakSlice(
+          peaks.peaks,
+          asset.durationUs,
+          clip.sourceInUs,
+          clip.sourceOutUs,
+          samples,
+        );
+        const step = width / Math.max(1, samples - 1);
+        const top = slice.map((v, i) => `${(i * step).toFixed(1)},${(16 - v * 14).toFixed(1)}`);
+        const bottom = slice
+          .map((v, i) => `${(i * step).toFixed(1)},${(16 + v * 14).toFixed(1)}`)
+          .reverse();
+        return [...top, ...bottom].join(" ");
+      })()
+    : null;
 
   return (
     <>
@@ -81,7 +105,19 @@ export function TimelineClip({
             style={{ left, width }}
             title={`${label} — ${formatTimecode(duration)}`}
           >
-            <span className="block truncate text-[10px] leading-4">
+            {wavePoints ? (
+              <svg
+                className={`pointer-events-none absolute inset-0 size-full ${
+                  peaks?.simulated ? "text-track-audio/70" : "text-track-audio"
+                }`}
+                preserveAspectRatio="none"
+                viewBox={`0 0 ${Math.max(1, width)} 32`}
+                aria-hidden
+              >
+                <polygon points={wavePoints} fill="currentColor" fillOpacity={0.55} />
+              </svg>
+            ) : null}
+            <span className="relative block truncate text-[10px] leading-4">
               {clip.linkGroupId ? (
                 <span aria-hidden className="mr-1 text-muted-foreground">
                   ⛓
