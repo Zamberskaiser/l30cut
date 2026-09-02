@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "L30 CUT AI",
+  "version": "0.1.0",
+  "identifier": "ai.l30cut.desktop",
+  "build": {
+    "beforeDevCommand": "bun run dev",
+    "devUrl": "http://localhost:8080",
+    "beforeBuildCommand": "bun run build",
+    "frontendDist": "../dist/client"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "L30 CUT AI",
+        "width": 1600,
+        "height": 960,
+        "minWidth": 1180,
+        "minHeight": 720,
+        "resizable": true,
+        "theme": "Dark"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost blob:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* http://localhost:*; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "publisher": "L30 CUT AI",
+    "shortDescription": "Editor de vídeo local com assistente de IA",
+    "longDescription": "Editor de vídeo local-first para Windows com timeline não destrutiva, cortes por silêncio, legendas automáticas e assistente de IA offline.",
+    "resources": [],
+    "windows": {
+      "webviewInstallMode": { "type": "downloadBootstrapper" }
+    }
+  }
+}
