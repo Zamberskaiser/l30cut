@@ -124,9 +124,7 @@ export const SequenceSchema = z
   .strict();
 export type Sequence = z.infer<typeof SequenceSchema>;
 
-export const SilenceRangeSchema = z
-  .object({ startUs: Micros, endUs: Micros })
-  .strict();
+export const SilenceRangeSchema = z.object({ startUs: Micros, endUs: Micros }).strict();
 export type SilenceRange = z.infer<typeof SilenceRangeSchema>;
 
 export const AnalysisSchema = z
@@ -181,13 +179,7 @@ export const JobKindSchema = z.enum([
 ]);
 export type JobKind = z.infer<typeof JobKindSchema>;
 
-export const JobStatusSchema = z.enum([
-  "queued",
-  "running",
-  "succeeded",
-  "failed",
-  "canceled",
-]);
+export const JobStatusSchema = z.enum(["queued", "running", "succeeded", "failed", "canceled"]);
 export type JobStatus = z.infer<typeof JobStatusSchema>;
 
 export interface Job {

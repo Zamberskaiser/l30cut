@@ -1,4 +1,10 @@
-import type { Aspect, MediaAsset, Project, SilenceRange, TranscriptSegment } from "@/core/contracts/domain";
+import type {
+  Aspect,
+  MediaAsset,
+  Project,
+  SilenceRange,
+  TranscriptSegment,
+} from "@/core/contracts/domain";
 import { SECOND } from "@/core/contracts/domain";
 import { createDemoProject } from "@/core/demo/demoProject";
 import { ASPECT_RESOLUTIONS, COMPONENT_CATALOG, SETUP_PROFILES } from "./catalog";
@@ -59,7 +65,10 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     secureKeyStorage: false,
   };
 
-  private components: ComponentStatus[] = COMPONENT_CATALOG.map((c) => ({ ...c, state: "missing" }));
+  private components: ComponentStatus[] = COMPONENT_CATALOG.map((c) => ({
+    ...c,
+    state: "missing",
+  }));
 
   async diagnose(): Promise<SystemDiagnostics> {
     return {

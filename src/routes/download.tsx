@@ -16,7 +16,8 @@ export const Route = createFileRoute("/download")({
       { property: "og:title", content: "Baixar o L30 CUT AI para Windows" },
       {
         property: "og:description",
-        content: "Instalador MSI, versão portátil, requisitos e verificação de integridade por checksum.",
+        content:
+          "Instalador MSI, versão portátil, requisitos e verificação de integridade por checksum.",
       },
     ],
   }),
@@ -67,7 +68,10 @@ function DownloadPage() {
                   <p className="text-[11px] text-muted-foreground">{build.detail}</p>
                   <p className="tabular mt-0.5 text-[10px] text-muted-foreground">{build.file}</p>
                 </div>
-                <Badge variant="outline" className="ml-auto border-border-strong text-[10px] text-muted-foreground">
+                <Badge
+                  variant="outline"
+                  className="ml-auto border-border-strong text-[10px] text-muted-foreground"
+                >
                   publicado pelo release CI
                 </Badge>
               </div>
@@ -81,10 +85,26 @@ function DownloadPage() {
         </section>
 
         <section className="grid gap-2 md:grid-cols-2">
-          <Requirement icon={<Monitor className="size-4" />} title="Sistema" text="Windows 10 21H2 ou Windows 11, 64 bits" />
-          <Requirement icon={<Cpu className="size-4" />} title="Processador" text="4 núcleos; 8+ recomendado para 4K" />
-          <Requirement icon={<HardDrive className="size-4" />} title="Disco" text="2 GB para o app e componentes, mais espaço para proxies" />
-          <Requirement icon={<ShieldCheck className="size-4" />} title="Privacidade" text="Nenhum vídeo, áudio ou transcrição sai da máquina" />
+          <Requirement
+            icon={<Monitor className="size-4" />}
+            title="Sistema"
+            text="Windows 10 21H2 ou Windows 11, 64 bits"
+          />
+          <Requirement
+            icon={<Cpu className="size-4" />}
+            title="Processador"
+            text="4 núcleos; 8+ recomendado para 4K"
+          />
+          <Requirement
+            icon={<HardDrive className="size-4" />}
+            title="Disco"
+            text="2 GB para o app e componentes, mais espaço para proxies"
+          />
+          <Requirement
+            icon={<ShieldCheck className="size-4" />}
+            title="Privacidade"
+            text="Nenhum vídeo, áudio ou transcrição sai da máquina"
+          />
         </section>
 
         <section className="rounded-md border border-border bg-panel p-4 text-[11px] leading-relaxed text-muted-foreground">

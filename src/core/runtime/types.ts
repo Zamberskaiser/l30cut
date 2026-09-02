@@ -96,7 +96,11 @@ export interface RuntimeAdapter {
   ): Promise<ComponentStatus>;
   prepareDataDirs(): Promise<string[]>;
   importMedia(request: ImportRequest, onProgress: ProgressSink): Promise<MediaAsset[]>;
-  generateThumbnails(asset: MediaAsset, onProgress: ProgressSink, signal: AbortSignal): Promise<string[]>;
+  generateThumbnails(
+    asset: MediaAsset,
+    onProgress: ProgressSink,
+    signal: AbortSignal,
+  ): Promise<string[]>;
   detectSilence(
     asset: MediaAsset,
     thresholdDb: number,

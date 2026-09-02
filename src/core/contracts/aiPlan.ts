@@ -52,10 +52,10 @@ export const PlanOperationSchema = z.discriminatedUnion("op", [
       toTrackId: IdSchema.optional(),
     })
     .strict(),
+  z.object({ op: z.literal("duplicate"), clipId: IdSchema, toStartUs: Micros.optional() }).strict(),
   z
-    .object({ op: z.literal("duplicate"), clipId: IdSchema, toStartUs: Micros.optional() })
+    .object({ op: z.literal("remove"), clipId: IdSchema, ripple: z.boolean().default(false) })
     .strict(),
-  z.object({ op: z.literal("remove"), clipId: IdSchema, ripple: z.boolean().default(false) }).strict(),
   z
     .object({ op: z.literal("setGain"), clipId: IdSchema, gainDb: z.number().min(-60).max(12) })
     .strict(),
@@ -122,9 +122,7 @@ export const AiEditPlanSchema = z
   .strict();
 export type AiEditPlan = z.infer<typeof AiEditPlanSchema>;
 
-export type PlanParseResult =
-  | { ok: true; plan: AiEditPlan }
-  | { ok: false; errors: string[] };
+export type PlanParseResult = { ok: true; plan: AiEditPlan } | { ok: false; errors: string[] };
 
 /** Strict gate for anything coming out of a model. Unknown fields are rejected. */
 export function parseAiEditPlan(input: unknown): PlanParseResult {

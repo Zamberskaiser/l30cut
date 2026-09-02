@@ -142,8 +142,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
   );
 
   const run = useCallback(
-    (commands: EditCommand[], label: string) =>
-      dispatch({ label, commands, source: "user" }),
+    (commands: EditCommand[], label: string) => dispatch({ label, commands, source: "user" }),
     [dispatch],
   );
 
@@ -225,10 +224,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     recordPlanApplied: (plan, commands) =>
       setPlanHistory((prev) => [...prev, { plan, appliedCommands: commands, at: Date.now() }]),
     addFeedback: (event) =>
-      setFeedback((prev) => [
-        ...prev,
-        { ...event, id: newId("fb"), at: new Date().toISOString() },
-      ]),
+      setFeedback((prev) => [...prev, { ...event, id: newId("fb"), at: new Date().toISOString() }]),
     setProfile: (next) => setProfile({ ...next, version: next.version }),
     clearLearningData: () => {
       setFeedback([]);

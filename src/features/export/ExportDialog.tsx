@@ -59,7 +59,8 @@ export function ExportDialog() {
         });
       })
       .catch((error: Error) => {
-        if (error.name !== "AbortError") toast.error("Falha na exportação", { description: error.message });
+        if (error.name !== "AbortError")
+          toast.error("Falha na exportação", { description: error.message });
       });
   }
 
@@ -74,15 +75,19 @@ export function ExportDialog() {
         <DialogHeader>
           <DialogTitle className="text-sm">Exportar sequência</DialogTitle>
           <DialogDescription className="text-xs">
-            {sequence.name} · {formatDuration(sequenceDuration(sequence))} ·{" "}
-            {sequence.clips.length} clips
+            {sequence.name} · {formatDuration(sequenceDuration(sequence))} · {sequence.clips.length}{" "}
+            clips
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
           <div>
             <Label className="text-[11px]">Nome do arquivo</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 h-8 text-xs" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 h-8 text-xs"
+            />
           </div>
 
           <div>

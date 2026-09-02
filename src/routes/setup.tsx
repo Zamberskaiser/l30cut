@@ -21,7 +21,8 @@ export const Route = createFileRoute("/setup")({
       { property: "og:title", content: "Configuração local — L30 CUT AI" },
       {
         property: "og:description",
-        content: "Perfis Leve, Recomendado e Alta qualidade com download verificado dos componentes locais.",
+        content:
+          "Perfis Leve, Recomendado e Alta qualidade com download verificado dos componentes locais.",
       },
     ],
   }),
@@ -80,7 +81,10 @@ function SetupPage() {
           </Link>
         </Button>
         <h1 className="text-sm font-semibold">Configuração local</h1>
-        <Badge variant="outline" className="ml-auto border-border-strong text-[10px] text-muted-foreground">
+        <Badge
+          variant="outline"
+          className="ml-auto border-border-strong text-[10px] text-muted-foreground"
+        >
           {runtime.mode === "tauri" ? "desktop" : "navegador (simulado)"}
         </Badge>
       </header>
@@ -97,7 +101,9 @@ function SetupPage() {
                 type="button"
                 onClick={() => setProfile(item)}
                 className={`rounded-md border bg-panel p-3 text-left transition-colors ${
-                  profile.id === item.id ? "border-primary" : "border-border hover:border-border-strong"
+                  profile.id === item.id
+                    ? "border-primary"
+                    : "border-border hover:border-border-strong"
                 }`}
               >
                 <p className="text-sm font-medium">{item.name}</p>

@@ -52,7 +52,9 @@ export function AssistantPanel() {
   const [scopeKind, setScopeKind] = useState<PlanScope["kind"]>("sequence");
   const [providerId, setProviderId] = useState("deterministic");
   const [thinking, setThinking] = useState(false);
-  const [confirming, setConfirming] = useState<{ plan: AiEditPlan; messageId: string } | null>(null);
+  const [confirming, setConfirming] = useState<{ plan: AiEditPlan; messageId: string } | null>(
+    null,
+  );
 
   const scope: PlanScope = {
     kind: scopeKind,
@@ -78,7 +80,10 @@ export function AssistantPanel() {
             prompt: text,
             contextJson: JSON.stringify(buildContext()),
           });
-          plan = { ...response.plan, modelInfo: { ...response.plan.modelInfo, latencyMs: response.latencyMs } };
+          plan = {
+            ...response.plan,
+            modelInfo: { ...response.plan.modelInfo, latencyMs: response.latencyMs },
+          };
         } catch (error) {
           toast.warning("Provider local indisponível — usando planejador determinístico", {
             description: (error as Error).message,
@@ -184,7 +189,10 @@ export function AssistantPanel() {
         <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Assistente
         </h2>
-        <Badge variant="outline" className="ml-auto border-border-strong text-[10px] text-muted-foreground">
+        <Badge
+          variant="outline"
+          className="ml-auto border-border-strong text-[10px] text-muted-foreground"
+        >
           {editor.runtime.mode === "tauri" ? "IA local" : "planejador local"}
         </Badge>
       </div>
@@ -222,7 +230,8 @@ export function AssistantPanel() {
         </div>
         <p className="col-span-2 text-[10px] leading-relaxed text-muted-foreground">
           Contexto: {sequence.clips.length} clips · {editor.selection.length} selecionados ·{" "}
-          {formatDuration(sequenceDuration(sequence))} · {editor.project.transcript.length} segmentos
+          {formatDuration(sequenceDuration(sequence))} · {editor.project.transcript.length}{" "}
+          segmentos
         </p>
       </div>
 
@@ -278,8 +287,15 @@ export function AssistantPanel() {
           className="resize-none text-xs"
         />
         <div className="mt-2 flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground">Enter envia · Shift+Enter quebra linha</span>
-          <Button size="sm" className="h-7 gap-1.5" onClick={() => void submit()} disabled={thinking}>
+          <span className="text-[10px] text-muted-foreground">
+            Enter envia · Shift+Enter quebra linha
+          </span>
+          <Button
+            size="sm"
+            className="h-7 gap-1.5"
+            onClick={() => void submit()}
+            disabled={thinking}
+          >
             <Send className="size-3.5" /> Enviar
           </Button>
         </div>

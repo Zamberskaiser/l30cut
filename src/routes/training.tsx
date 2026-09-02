@@ -22,7 +22,8 @@ export const Route = createFileRoute("/training")({
       { property: "og:title", content: "Aprendizado do assistente — L30 CUT AI" },
       {
         property: "og:description",
-        content: "Regras de estilo, defaults de corte e histórico de feedback armazenados apenas na sua máquina.",
+        content:
+          "Regras de estilo, defaults de corte e histórico de feedback armazenados apenas na sua máquina.",
       },
     ],
   }),
@@ -37,7 +38,11 @@ function TrainingPage() {
   function addRule() {
     const text = rule.trim();
     if (!text) return;
-    editor.setProfile({ ...profile, rules: [...profile.rules, text], version: profile.version + 1 });
+    editor.setProfile({
+      ...profile,
+      rules: [...profile.rules, text],
+      version: profile.version + 1,
+    });
     setRule("");
     toast.success("Regra adicionada ao perfil");
   }
@@ -72,7 +77,10 @@ function TrainingPage() {
         <h1 className="flex items-center gap-2 text-sm font-semibold">
           <BrainCircuit className="size-4 text-primary" /> Aprendizado do assistente
         </h1>
-        <Badge variant="outline" className="ml-auto border-border-strong text-[10px] text-muted-foreground">
+        <Badge
+          variant="outline"
+          className="ml-auto border-border-strong text-[10px] text-muted-foreground"
+        >
           perfil v{profile.version}
         </Badge>
       </header>
@@ -92,7 +100,11 @@ function TrainingPage() {
             <Switch
               checked={profile.learningEnabled}
               onCheckedChange={(checked) =>
-                editor.setProfile({ ...profile, learningEnabled: checked, version: profile.version + 1 })
+                editor.setProfile({
+                  ...profile,
+                  learningEnabled: checked,
+                  version: profile.version + 1,
+                })
               }
             />
           </div>

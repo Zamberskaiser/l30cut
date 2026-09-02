@@ -77,10 +77,14 @@ export function PreviewMonitor() {
 
   function splitAtPlayhead() {
     const clip =
-      sequence.clips.find((c) => selection.includes(c.id) && playheadUs > c.startUs && playheadUs < clipEnd(c)) ??
-      activeClip;
+      sequence.clips.find(
+        (c) => selection.includes(c.id) && playheadUs > c.startUs && playheadUs < clipEnd(c),
+      ) ?? activeClip;
     if (!clip) return;
-    run([{ type: "splitClip", clipId: clip.id, atUs: Math.round(playheadUs) }], "Cortar no playhead");
+    run(
+      [{ type: "splitClip", clipId: clip.id, atUs: Math.round(playheadUs) }],
+      "Cortar no playhead",
+    );
   }
 
   return (
@@ -109,7 +113,9 @@ export function PreviewMonitor() {
       </div>
 
       <div className="grid min-h-0 flex-1 place-items-center rounded-md border border-border bg-black/60">
-        <div className={`relative overflow-hidden rounded-sm bg-black ${ASPECT_STYLE[sequence.aspect]}`}>
+        <div
+          className={`relative overflow-hidden rounded-sm bg-black ${ASPECT_STYLE[sequence.aspect]}`}
+        >
           {asset && asset.kind !== "audio" ? (
             asset.kind === "image" ? (
               <img src={asset.path} alt={asset.name} className="size-full object-cover" />
@@ -141,7 +147,13 @@ export function PreviewMonitor() {
       </div>
 
       <div className="flex items-center gap-2 rounded-md border border-border bg-panel px-2 py-1.5">
-        <Button size="icon" variant="ghost" className="size-7" aria-label="Início" onClick={() => setPlayhead(0)}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-7"
+          aria-label="Início"
+          onClick={() => setPlayhead(0)}
+        >
           <SkipBack className="size-4" />
         </Button>
         <Button
@@ -153,7 +165,13 @@ export function PreviewMonitor() {
         >
           {playing ? <Pause className="size-4" /> : <Play className="size-4" />}
         </Button>
-        <Button size="icon" variant="ghost" className="size-7" aria-label="Fim" onClick={() => setPlayhead(total)}>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="size-7"
+          aria-label="Fim"
+          onClick={() => setPlayhead(total)}
+        >
           <SkipForward className="size-4" />
         </Button>
         <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={splitAtPlayhead}>

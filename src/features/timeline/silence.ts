@@ -1,10 +1,5 @@
 import type { EditCommand } from "@/core/contracts/commands";
-import {
-  clipDuration,
-  type Clip,
-  type Sequence,
-  type SilenceRange,
-} from "@/core/contracts/domain";
+import { clipDuration, type Clip, type Sequence, type SilenceRange } from "@/core/contracts/domain";
 import { newId } from "@/core/store/timelineReducer";
 
 export interface SilenceCutOptions {

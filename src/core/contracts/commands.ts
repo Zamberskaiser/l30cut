@@ -34,7 +34,11 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("deleteClip"), clipId: IdSchema }).strict(),
   z.object({ type: z.literal("rippleDelete"), clipId: IdSchema }).strict(),
   z
-    .object({ type: z.literal("changeGain"), clipId: IdSchema, gainDb: z.number().min(-60).max(12) })
+    .object({
+      type: z.literal("changeGain"),
+      clipId: IdSchema,
+      gainDb: z.number().min(-60).max(12),
+    })
     .strict(),
   z.object({ type: z.literal("addCaption"), segment: CaptionSegmentSchema }).strict(),
   z

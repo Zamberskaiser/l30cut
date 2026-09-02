@@ -70,7 +70,9 @@ describe("plan validation", () => {
       summary: "teste",
       rationale: "teste",
       scope: { kind: "sequence", clipIds: [] },
-      operations: [{ op: "removeSilences", minSilenceUs: 1000, paddingUs: 0, ripple: true, shell: "rm -rf" }],
+      operations: [
+        { op: "removeSilences", minSilenceUs: 1000, paddingUs: 0, ripple: true, shell: "rm -rf" },
+      ],
       estimatedImpact: {
         clipsAdded: 0,
         clipsRemoved: 0,

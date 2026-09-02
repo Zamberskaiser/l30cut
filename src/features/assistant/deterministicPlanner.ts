@@ -105,7 +105,8 @@ export function planDeterministically(input: PlannerInput): AiEditPlan | null {
       }.`,
       scope: input.scope,
       operations: ops,
-      warnings: ranges.length < count ? [`Só foi possível montar ${ranges.length} cortes coerentes.`] : [],
+      warnings:
+        ranges.length < count ? [`Só foi possível montar ${ranges.length} cortes coerentes.`] : [],
       impact: {
         clipsAdded: ranges.length,
         clipsRemoved: 0,
@@ -170,7 +171,7 @@ export function planDeterministically(input: PlannerInput): AiEditPlan | null {
 
   if (/(duplic)/.test(p) && seq.clips.length > 0) {
     const clip = input.scope.clipIds[0]
-      ? seq.clips.find((c) => c.id === input.scope.clipIds[0]) ?? seq.clips[0]
+      ? (seq.clips.find((c) => c.id === input.scope.clipIds[0]) ?? seq.clips[0])
       : seq.clips[0];
     if (!clip) return null;
     return finalize({

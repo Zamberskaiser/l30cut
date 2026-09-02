@@ -67,9 +67,7 @@ export function JobsBar() {
               {job.detail ? (
                 <p className="mt-1 truncate text-[10px] text-muted-foreground">{job.detail}</p>
               ) : null}
-              {job.error ? (
-                <p className="mt-1 text-[10px] text-destructive">{job.error}</p>
-              ) : null}
+              {job.error ? <p className="mt-1 text-[10px] text-destructive">{job.error}</p> : null}
             </li>
           ))}
         </ul>

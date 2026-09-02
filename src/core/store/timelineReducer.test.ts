@@ -13,7 +13,9 @@ describe("timeline commands", () => {
     const after = applyCommand(before, { type: "splitClip", clipId: clip.id, atUs: at });
     const seq = activeSequence(after);
     const parts = seq.clips.filter((c) => c.trackId === clip.trackId);
-    expect(parts.length).toBe(activeSequence(before).clips.filter((c) => c.trackId === clip.trackId).length + 1);
+    expect(parts.length).toBe(
+      activeSequence(before).clips.filter((c) => c.trackId === clip.trackId).length + 1,
+    );
     const total = parts.reduce((sum, c) => sum + clipDuration(c), 0);
     const originalTotal = activeSequence(before)
       .clips.filter((c) => c.trackId === clip.trackId)
@@ -32,7 +34,9 @@ describe("timeline commands", () => {
   it("rejects a split outside the clip bounds", () => {
     const before = project();
     const clip = activeSequence(before).clips[0]!;
-    expect(() => applyCommand(before, { type: "splitClip", clipId: clip.id, atUs: clipEnd(clip) })).toThrow();
+    expect(() =>
+      applyCommand(before, { type: "splitClip", clipId: clip.id, atUs: clipEnd(clip) }),
+    ).toThrow();
   });
 
   it("rejects unknown clip ids", () => {
@@ -43,7 +47,9 @@ describe("timeline commands", () => {
     const before = project();
     const seq = activeSequence(before);
     const track = seq.tracks.find((t) => t.kind === "video")!;
-    const clips = seq.clips.filter((c) => c.trackId === track.id).sort((a, b) => a.startUs - b.startUs);
+    const clips = seq.clips
+      .filter((c) => c.trackId === track.id)
+      .sort((a, b) => a.startUs - b.startUs);
     if (clips.length < 2) return;
     const removed = clips[0]!;
     const after = applyCommand(before, { type: "rippleDelete", clipId: removed.id });

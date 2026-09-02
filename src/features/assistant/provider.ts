@@ -96,7 +96,9 @@ export async function requestPlanFromProvider(
     }),
   });
   if (!response.ok) throw new Error(`Provider respondeu ${response.status}`);
-  const payload = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  const payload = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
   const content = payload.choices?.[0]?.message?.content;
   if (!content) throw new Error("Resposta do provider sem conteúdo.");
   let json: unknown;

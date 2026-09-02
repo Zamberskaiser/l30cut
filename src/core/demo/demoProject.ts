@@ -8,7 +8,11 @@ const LINES: Array<[number, number, string]> = [
   [0, 5.4, "Bem-vindo ao L30 CUT AI. Este é um projeto de demonstração."],
   [6.6, 12.1, "A ideia central é editar vídeo longo com ajuda de inteligência artificial local."],
   [13.8, 19.2, "Tudo acontece na sua máquina: transcrição, análise de silêncios e cortes."],
-  [21.0, 27.4, "A inteligência artificial nunca executa comando livre, ela propõe um plano tipado."],
+  [
+    21.0,
+    27.4,
+    "A inteligência artificial nunca executa comando livre, ela propõe um plano tipado.",
+  ],
   [29.2, 35.8, "Você revisa o impacto do plano e aplica como uma única transação reversível."],
   [37.5, 43.0, "Depois basta pedir cortes verticais de trinta a sessenta segundos para Reels."],
   [45.2, 51.6, "Legendas são geradas a partir da mesma transcrição, sem tocar na mídia original."],

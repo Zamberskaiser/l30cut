@@ -61,7 +61,10 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
         ) : diagnostics ? (
           <div className="space-y-3 text-xs">
             <dl className="tabular grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-border bg-panel p-3 text-[11px]">
-              <Row label="Runtime" value={runtime.mode === "tauri" ? "Desktop (Tauri)" : "Navegador (demo)"} />
+              <Row
+                label="Runtime"
+                value={runtime.mode === "tauri" ? "Desktop (Tauri)" : "Navegador (demo)"}
+              />
               <Row label="Plataforma" value={diagnostics.os} />
               <Row label="CPU" value={diagnostics.cpu} />
               <Row label="Núcleos" value={String(diagnostics.cores)} />

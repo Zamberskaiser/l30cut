@@ -1,12 +1,7 @@
 import type { AiEditPlan, PlanOperation } from "@/core/contracts/aiPlan";
 import type { EditCommand, Transaction } from "@/core/contracts/commands";
 import { EditCommandSchema } from "@/core/contracts/commands";
-import {
-  activeSequence,
-  clipEnd,
-  SECOND,
-  type Project,
-} from "@/core/contracts/domain";
+import { activeSequence, clipEnd, SECOND, type Project } from "@/core/contracts/domain";
 import type { RuntimeAdapter } from "@/core/runtime/types";
 import { buildSilenceCutPlan } from "@/features/timeline/silence";
 import { newId } from "@/core/store/timelineReducer";
@@ -217,8 +212,12 @@ export function compilePlan(
   }
 
   if (commands.length === 0) errors.push("O plano não gerou nenhuma operação aplicável.");
-  if (commands.length > MAX_COMMANDS) errors.push("O plano excede o limite de comandos por transação.");
-  if (!runtime.capabilities.ffmpeg && plan.operations.some((o) => o.op === "createClipsFromRanges")) {
+  if (commands.length > MAX_COMMANDS)
+    errors.push("O plano excede o limite de comandos por transação.");
+  if (
+    !runtime.capabilities.ffmpeg &&
+    plan.operations.some((o) => o.op === "createClipsFromRanges")
+  ) {
     // Allowed in demo mode (timeline is non-destructive) — surfaced as a warning only.
   }
   for (const command of commands) {

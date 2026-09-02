@@ -1,13 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  Activity,
-  Clapperboard,
-  Download,
-  Redo2,
-  Save,
-  Undo2,
-  GraduationCap,
-} from "lucide-react";
+import { Activity, Clapperboard, Download, Redo2, Save, Undo2, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";

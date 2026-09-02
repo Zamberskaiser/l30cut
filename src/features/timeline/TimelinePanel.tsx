@@ -71,19 +71,49 @@ export function TimelinePanel() {
           Timeline
         </h2>
         <div className="ml-2 flex items-center gap-1">
-          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" disabled={!selectedClips.length} onClick={() => act("split")}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1 text-xs"
+            disabled={!selectedClips.length}
+            onClick={() => act("split")}
+          >
             <Scissors className="size-3.5" /> Cortar
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" disabled={!selectedClips.length} onClick={() => act("duplicate")}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1 text-xs"
+            disabled={!selectedClips.length}
+            onClick={() => act("duplicate")}
+          >
             <Copy className="size-3.5" /> Duplicar
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" disabled={!selectedClips.length} onClick={() => act("gain")}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1 text-xs"
+            disabled={!selectedClips.length}
+            onClick={() => act("gain")}
+          >
             <Volume2 className="size-3.5" /> Ganho
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs" disabled={!selectedClips.length} onClick={() => act("ripple")}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1 text-xs"
+            disabled={!selectedClips.length}
+            onClick={() => act("ripple")}
+          >
             Ripple
           </Button>
-          <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-destructive" disabled={!selectedClips.length} onClick={() => act("delete")}>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-7 gap-1 text-xs text-destructive"
+            disabled={!selectedClips.length}
+            onClick={() => act("delete")}
+          >
             <Trash2 className="size-3.5" /> Remover
           </Button>
         </div>
@@ -115,7 +145,10 @@ export function TimelinePanel() {
           ))}
         </div>
 
-        <div ref={laneRef} className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden scrollbar-thin-dark">
+        <div
+          ref={laneRef}
+          className="min-h-0 flex-1 overflow-x-auto overflow-y-hidden scrollbar-thin-dark"
+        >
           <div style={{ width }} className="relative">
             <div
               className="relative h-6 cursor-col-resize border-b border-border bg-chrome"
@@ -149,7 +182,10 @@ export function TimelinePanel() {
                       <div
                         key={cap.id}
                         className="absolute top-1.5 h-8 overflow-hidden rounded-sm border border-track-caption/60 bg-track-caption/25 px-1"
-                        style={{ left: toPx(cap.startUs), width: Math.max(6, toPx(cap.endUs - cap.startUs)) }}
+                        style={{
+                          left: toPx(cap.startUs),
+                          width: Math.max(6, toPx(cap.endUs - cap.startUs)),
+                        }}
                         title={cap.text}
                       >
                         <span className="truncate text-[10px] leading-7">{cap.text}</span>
@@ -180,7 +216,10 @@ export function TimelinePanel() {
                                 ? "border-track-audio/60 bg-track-audio/25"
                                 : "border-track-video/60 bg-track-video/30"
                             } ${selected ? "ring-2 ring-primary" : ""}`}
-                            style={{ left: toPx(clip.startUs), width: Math.max(8, toPx(clipDuration(clip))) }}
+                            style={{
+                              left: toPx(clip.startUs),
+                              width: Math.max(8, toPx(clipDuration(clip))),
+                            }}
                             title={`${clip.label || asset?.name || clip.id} — ${formatTimecode(clipDuration(clip))}`}
                           >
                             <span className="block truncate text-[10px] leading-4">

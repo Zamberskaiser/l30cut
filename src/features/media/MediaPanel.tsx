@@ -40,9 +40,8 @@ export function MediaPanel() {
       kind: "import",
       label: `Importar ${files.length} arquivo(s)`,
       run: async ({ onProgress }) => {
-        const assets = await runtime.importMedia(
-          { files },
-          ({ progress, detail }) => onProgress(progress, detail),
+        const assets = await runtime.importMedia({ files }, ({ progress, detail }) =>
+          onProgress(progress, detail),
         );
         return assets;
       },
@@ -61,7 +60,11 @@ export function MediaPanel() {
           kind: "proxy",
           label: `Proxy de ${asset.name}`,
           run: ({ onProgress, signal }) =>
-            runtime.generateThumbnails(asset, ({ progress, detail }) => onProgress(progress, detail), signal),
+            runtime.generateThumbnails(
+              asset,
+              ({ progress, detail }) => onProgress(progress, detail),
+              signal,
+            ),
         });
       }
     } catch (error) {
@@ -73,7 +76,9 @@ export function MediaPanel() {
   }
 
   function addToTimeline(asset: MediaAsset) {
-    const track = sequence.tracks.find((t) => (asset.kind === "audio" ? t.kind === "audio" : t.kind === "video"));
+    const track = sequence.tracks.find((t) =>
+      asset.kind === "audio" ? t.kind === "audio" : t.kind === "video",
+    );
     if (!track) return;
     const end = sequence.clips
       .filter((c) => c.trackId === track.id)
@@ -121,7 +126,13 @@ export function MediaPanel() {
         <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Mídia
         </h2>
-        <Button size="sm" variant="secondary" className="h-7 gap-1.5" onClick={() => inputRef.current?.click()} disabled={busy}>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="h-7 gap-1.5"
+          onClick={() => inputRef.current?.click()}
+          disabled={busy}
+        >
           <Plus className="size-3.5" /> Importar
         </Button>
         <input
@@ -178,10 +189,22 @@ export function MediaPanel() {
                     {asset.width}×{asset.height}
                   </span>
                   <div className="ml-auto flex opacity-0 transition-opacity group-hover:opacity-100">
-                    <Button size="icon" variant="ghost" className="size-6" title="Adicionar à timeline" onClick={() => addToTimeline(asset)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-6"
+                      title="Adicionar à timeline"
+                      onClick={() => addToTimeline(asset)}
+                    >
                       <Wand2 className="size-3.5" />
                     </Button>
-                    <Button size="icon" variant="ghost" className="size-6" title="Analisar silêncios" onClick={() => analyzeSilence(asset)}>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-6"
+                      title="Analisar silêncios"
+                      onClick={() => analyzeSilence(asset)}
+                    >
                       <Waves className="size-3.5" />
                     </Button>
                   </div>
