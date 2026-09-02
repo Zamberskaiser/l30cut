@@ -72,7 +72,7 @@ export function TimelineClip({
             type="button"
             data-clip-id={clip.id}
             aria-pressed={selected}
-            aria-label={`${label} — ${formatTimecode(duration)}`}
+            aria-label={`${label} — ${formatTimecode(duration)}${clip.linkGroupId ? " — vinculado A/V" : ""}`}
             onPointerDown={(event) => onPointerDown(event, clip)}
             className={`absolute top-1.5 h-8 select-none overflow-hidden rounded-sm border px-1.5 text-left transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               trackKind === "audio"
