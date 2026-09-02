@@ -52,6 +52,19 @@ function assetDurationUs(project: Project, clip: Clip): number | null {
   return asset ? asset.durationUs : null;
 }
 
+/**
+ * Clips linked to `clip` (same linkGroupId, different id) whose track is not
+ * locked. Locked linked partners are skipped instead of blocking the gesture.
+ */
+function linkedPartners(seq: Sequence, clip: Clip): Clip[] {
+  if (!clip.linkGroupId) return [];
+  const lockedTracks = new Set(seq.tracks.filter((t) => t.locked).map((t) => t.id));
+  return seq.clips.filter(
+    (c) => c.id !== clip.id && c.linkGroupId === clip.linkGroupId && !lockedTracks.has(c.trackId),
+  );
+}
+
+
 /** Timeline-space edge trim: start edge moves startUs AND sourceInUs together. */
 function applyEdgeTrim(
   project: Project,
