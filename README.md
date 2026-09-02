@@ -1,29 +1,116 @@
-# Welcome to your Lovable project
+# L30 CUT AI
 
-This project was built with [Lovable](https://lovable.dev).
+Editor de vídeo local-first para Windows com assistente de IA por chat. O app roda 100% na máquina do usuário: FFmpeg local para render, whisper.cpp local para transcrição e um provider de IA local opcional.
 
-## Build with Lovable
+A versão web disponível no preview é uma **demonstração navegável** com processamento simulado. O app desktop compilado com Tauri é que executa as operações reais de mídia.
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## Requisitos
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+- Windows 10 21H2 ou Windows 11 (64 bits)
+- [Bun](https://bun.sh) — runtime e gerenciador de pacotes
+- [Rust](https://rustup.rs) — necessário para compilar o Tauri
+- WebView2 Runtime — presente por padrão no Windows 11 e na maioria das instalações do Windows 10
 
-## Development
+## Build e instalação rápida
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+1. Baixe o pacote-fonte em `/download` ou clone este repositório.
+2. Extraia e abra a pasta no Windows Explorer.
+3. Execute `build-windows.bat` com dois cliques.
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+O script:
+- verifica/instala Bun e Rust;
+- instala as dependências do projeto;
+- roda os testes;
+- gera o build web;
+- compila o app Tauri e produz o instalador MSI e a versão portátil.
+
+Os artefatos ficam em:
+
+```text
+src-tauri\target\release\bundle\msi\     <- instalador recomendado
+src-tauri\target\release\bundle\nsis\    <- versão portátil
 ```
 
-## Built with
+## Rodar o app
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+Depois que o build terminar, o próprio `build-windows.bat` pergunta se você quer executar o instalador MSI. Instale-o e abra o L30 CUT AI pelo menu Iniciar.
+
+Alternativamente, use o script auxiliar:
+
+```bat
+run-windows.bat
+```
+
+Ele procura o executável nas localizações comuns e abre o app. Para desenvolvimento web:
+
+```bat
+run-windows.bat --dev
+```
+
+## Desenvolvimento local
+
+```bash
+bun install
+bun run dev
+```
+
+O preview web roda em `http://localhost:8080`. Nesse modo o processamento de mídia é simulado (`BrowserDemoRuntime`).
+
+Para testar o app desktop real, use:
+
+```bash
+bun run build
+cargo tauri build
+```
+
+## Primeira execução
+
+Na primeira vez que o app desktop abrir, ele apresenta a tela de setup (`/setup`). Escolha um perfil (Leve, Recomendado ou Alta qualidade) e baixe os componentes locais (FFmpeg, ffprobe e whisper.cpp). A partir daí você pode criar projetos, importar mídia e pedir edições no chat do assistente.
+
+## Estrutura do projeto
+
+```text
+src/                    # Aplicacao React/TypeScript (TanStack Start)
+  core/                 # Dominio, comandos, reducer, runtime, IA
+  features/             # Telas e componentes (editor, timeline, assistente, etc.)
+  routes/               # Rotas do TanStack Router
+src-tauri/              # Projeto Rust/Tauri (shell desktop)
+  src/
+    ai_ops.rs           # Validacao nativa de operacoes de IA
+    lib.rs              # Comandos IPC
+public/                 # Assets e pacote-fonte .zip
+docs/                   # Arquitetura, release e guias
+.github/workflows/      # CI e release automatizado
+```
+
+## Scripts uteis
+
+| Script | Uso |
+|--------|-----|
+| `build-windows.bat` | Build completo: web + Tauri + MSI/NSIS |
+| `run-windows.bat` | Localiza e abre o app instalado |
+| `run-windows.bat --dev` | Inicia o servidor de desenvolvimento web |
+
+## Testes e qualidade
+
+```bash
+npm run types
+npm run test -- --run
+npm run lint -- --quiet
+npm run build
+```
+
+## Release automatizado
+
+Atualize a versão em `package.json`, `src-tauri/Cargo.toml` e `src-tauri/tauri.conf.json`, depois:
+
+```bash
+git tag vX.Y.Z
+git push --tags
+```
+
+O workflow `.github/workflows/release.yml` gera os artefatos e cria um rascunho de release no GitHub.
+
+## Licença
+
+Este projeto é de código aberto. Consulte o repositório para a licença completa.

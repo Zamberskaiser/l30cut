@@ -81,16 +81,52 @@ if errorlevel 1 goto :falhou
 
 :bundleok
 echo.
-
 echo ============================================
 echo   Build concluido com sucesso!
 echo ============================================
-echo   MSI:  src-tauri\target\release\bundle\msi\
-echo   EXE:  src-tauri\target\release\bundle\nsis\
 echo.
+echo Proximos passos:
+echo   1. Instalador MSI ^(recomendado^): de dois cliques no arquivo em
+echo      src-tauri\target\release\bundle\msi\
+echo   2. Versao portatil: use o arquivo em
+echo      src-tauri\target\release\bundle\nsis\
+echo   3. Depois de instalar, abra o L30 CUT AI pelo menu Iniciar.
+echo      Na primeira execucao, o app abre a tela de setup para baixar
+echo      FFmpeg e whisper.cpp.
+echo.
+
+set "MSI_DIR=src-tauri\target\release\bundle\msi"
+set "MSI_FILE="
+if exist "%MSI_DIR%" (
+  for %%F in ("%MSI_DIR%\*.msi") do (
+    set "MSI_FILE=%%~F"
+    goto :msiFound
+  )
+)
+:msiFound
+
+if defined MSI_FILE (
+  echo MSI encontrado: %MSI_FILE%
+  choice /c SN /M "Deseja executar o instalador agora"
+  if errorlevel 2 goto :openBundle
+  if errorlevel 1 (
+    echo Executando instalador...
+    start "" "%MSI_FILE%"
+    goto :fim
+  )
+) else (
+  echo   [AVISO] Nenhum arquivo MSI encontrado. Verifique os logs acima.
+)
+
+:openBundle
 if exist "src-tauri\target\release\bundle" (
   start "" "src-tauri\target\release\bundle"
 )
+
+:fim
+echo.
+echo Dica: depois de instalar, use run-windows.bat para abrir o app.
+echo.
 pause
 exit /b 0
 
