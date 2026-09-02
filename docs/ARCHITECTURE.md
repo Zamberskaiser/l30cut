@@ -29,8 +29,28 @@ Host (src-tauri)               comandos IPC allowlisted, diagnósticos, diretór
 ## Fluxo de um pedido de IA
 
 1. Usuário descreve a edição no chat, com escopo (sequência / seleção / range).
-2. Provider (determinístico ou LLM local) devolve JSON estrito.
-3. `AiPlanSchema` valida; campos desconhecidos são rejeitados.
+2. `contextBuilder` monta um contexto determinístico e limitado (sem caminhos
+   de arquivo) para o provider.
+3. Provider (determinístico ou LLM local) devolve JSON estrito no schema
+   **AiEditPlan v1** (`version: 1`); planos pré-v1 passam por um adapter que
+   só tolera a ausência do campo `version` — nada mais.
 4. `planExecutor` verifica IDs, ranges, duração, assets e capabilities.
-5. Plano compila em `Transaction`; usuário aplica ou descarta; feedback é
-   registrado no perfil de aprendizado local.
+5. Prévia opcional: `planPreview` dobra o reducer puro sobre uma cópia do
+   projeto — nada é aplicado. "Ajustar" reedita as operações e revalida tudo.
+6. Plano compila em `Transaction`; usuário aplica ou descarta; eventos tipados
+   (`trainingEvents`) são registrados localmente quando o aprendizado está ativo.
+
+## Fronteira de segurança
+
+- **O browser NÃO é fronteira de segurança.** Registry, Zod e TypeScript no
+  WebView são conveniência/UX: qualquer coisa ali pode ser adulterada.
+- **A fronteira real no desktop é o Rust** (`src-tauri/src/ai_ops.rs`):
+  enum allowlisted com `deny_unknown_fields`, argumentos tipados, IDs/ranges
+  com limites, teto de 500 operações por transação e nenhum caminho de arquivo
+  em operações de timeline. O comando IPC `validate_ai_transaction` é chamado
+  antes de qualquer aplicação no modo Tauri.
+- O host **não linka plugin de shell** e nunca executa strings livres.
+- Status honesto: a *validação* nativa está implementada e testada
+  (`cargo test`); o *executor* nativo (aplicar comandos num store Rust)
+  continua contrato — no desktop os comandos validados são aplicados pelo
+  mesmo reducer TypeScript da demo.
