@@ -258,6 +258,7 @@ export function EditorProvider({ children }: { children: ReactNode }) {
     clearLearningData: () => {
       setFeedback([]);
       setPlanHistory([]);
+      clearTrainingEvents();
       toast.success("Dados de aprendizado apagados");
     },
     exportPresetFor: (aspect) => {
