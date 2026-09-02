@@ -64,8 +64,22 @@ if errorlevel 1 goto :falhou
 echo.
 
 echo [6/6] Gerando instalador Windows ^(Tauri^)...
-call bunx tauri build
+echo   Garantindo a CLI do Tauri...
+call cargo tauri --version >nul 2>&1
+if errorlevel 1 (
+  echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
+  call cargo install tauri-cli --version "^2" --locked
+  if errorlevel 1 (
+    echo   [AVISO] cargo install falhou. Tentando a CLI npm...
+    call bunx --bun @tauri-apps/cli@^2 build
+    if errorlevel 1 goto :falhou
+    goto :bundleok
+  )
+)
+call cargo tauri build
 if errorlevel 1 goto :falhou
+
+:bundleok
 echo.
 
 echo ============================================
