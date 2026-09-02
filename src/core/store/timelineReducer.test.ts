@@ -8,7 +8,7 @@ const project = () => createDemoProject();
 describe("timeline commands", () => {
   it("splits a clip into two contiguous clips without changing total duration", () => {
     const before = project();
-    const clip = activeSequence(before).clips[0];
+    const clip = activeSequence(before).clips[0]!;
     const at = clip.startUs + Math.floor(clipDuration(clip) / 2);
     const after = applyCommand(before, { type: "splitClip", clipId: clip.id, atUs: at });
     const seq = activeSequence(after);
@@ -24,14 +24,14 @@ describe("timeline commands", () => {
   it("never mutates the input project", () => {
     const before = project();
     const snapshot = JSON.stringify(before);
-    const clip = activeSequence(before).clips[0];
+    const clip = activeSequence(before).clips[0]!;
     applyCommand(before, { type: "changeGain", clipId: clip.id, gainDb: -8 });
     expect(JSON.stringify(before)).toBe(snapshot);
   });
 
   it("rejects a split outside the clip bounds", () => {
     const before = project();
-    const clip = activeSequence(before).clips[0];
+    const clip = activeSequence(before).clips[0]!;
     expect(() => applyCommand(before, { type: "splitClip", clipId: clip.id, atUs: clipEnd(clip) })).toThrow();
   });
 
@@ -45,15 +45,15 @@ describe("timeline commands", () => {
     const track = seq.tracks.find((t) => t.kind === "video")!;
     const clips = seq.clips.filter((c) => c.trackId === track.id).sort((a, b) => a.startUs - b.startUs);
     if (clips.length < 2) return;
-    const removed = clips[0];
+    const removed = clips[0]!;
     const after = applyCommand(before, { type: "rippleDelete", clipId: removed.id });
-    const nextAfter = activeSequence(after).clips.find((c) => c.id === clips[1].id)!;
-    expect(nextAfter.startUs).toBe(clips[1].startUs - clipDuration(removed));
+    const nextAfter = activeSequence(after).clips.find((c) => c.id === clips[1]!.id)!;
+    expect(nextAfter.startUs).toBe(clips[1]!.startUs - clipDuration(removed));
   });
 
   it("applies a transaction atomically: one bad command rolls back everything", () => {
     const before = project();
-    const clip = activeSequence(before).clips[0];
+    const clip = activeSequence(before).clips[0]!;
     expect(() =>
       applyTransaction(before, emptyHistory, {
         label: "misto",
@@ -68,7 +68,7 @@ describe("timeline commands", () => {
 
   it("undo and redo restore exact snapshots", () => {
     const before = project();
-    const clip = activeSequence(before).clips[0];
+    const clip = activeSequence(before).clips[0]!;
     const result = applyTransaction(before, emptyHistory, {
       label: "ganho",
       source: "user",
@@ -89,7 +89,7 @@ describe("timeline commands", () => {
 
   it("keeps timecodes as integer microseconds after a trim", () => {
     const before = project();
-    const clip = activeSequence(before).clips[0];
+    const clip = activeSequence(before).clips[0]!;
     const after = applyCommand(before, {
       type: "trimClip",
       clipId: clip.id,
