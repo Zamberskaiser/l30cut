@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Toaster } from "../components/ui/sonner";
+import { EditorProvider } from "../core/store/editorStore";
+
 
 function NotFoundComponent() {
   return (
@@ -77,15 +80,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "L30 CUT AI — editor de vídeo local com IA" },
+      {
+        name: "description",
+        content:
+          "Editor de vídeo local-first para Windows com timeline não destrutiva e assistente de IA que propõe planos de edição revisáveis.",
+      },
+      { name: "author", content: "L30 CUT AI" },
+      { property: "og:title", content: "L30 CUT AI — editor de vídeo local com IA" },
+      {
+        property: "og:description",
+        content: "Timeline não destrutiva, cortes por silêncio, legendas automáticas e IA offline.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
+
     links: [
       {
         rel: "stylesheet",
@@ -119,8 +129,12 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <EditorProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <Outlet />
+      </EditorProvider>
+      <Toaster position="bottom-right" theme="dark" />
     </QueryClientProvider>
   );
 }
+
