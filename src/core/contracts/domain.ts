@@ -53,6 +53,16 @@ export const TrackSchema = z
   .strict();
 export type Track = z.infer<typeof TrackSchema>;
 
+/** Typed local gain keyframe. `atUs` is relative to the clip's timeline start. */
+export const GainKeyframeSchema = z
+  .object({
+    id: IdSchema,
+    atUs: Micros,
+    gainDb: z.number().min(-60).max(12),
+  })
+  .strict();
+export type GainKeyframe = z.infer<typeof GainKeyframeSchema>;
+
 export const ClipSchema = z
   .object({
     id: IdSchema,
@@ -65,6 +75,13 @@ export const ClipSchema = z
     sourceInUs: Micros,
     sourceOutUs: Micros,
     gainDb: z.number().min(-60).max(12).default(0),
+    /**
+     * Playback speed. Backwards compatible: absent means 1.0.
+     * Timeline duration = source span / playbackRate.
+     */
+    playbackRate: z.number().min(0.1).max(10).optional(),
+    /** Optional typed gain automation (pen tool). Sorted by atUs. */
+    gainKeyframes: z.array(GainKeyframeSchema).optional(),
     enabled: z.boolean().default(true),
   })
   .strict()
@@ -73,7 +90,9 @@ export const ClipSchema = z
   });
 export type Clip = z.infer<typeof ClipSchema>;
 
-export const clipDuration = (c: Clip): Micros => c.sourceOutUs - c.sourceInUs;
+export const clipRate = (c: Clip): number => c.playbackRate ?? 1;
+export const clipSourceSpan = (c: Clip): Micros => c.sourceOutUs - c.sourceInUs;
+export const clipDuration = (c: Clip): Micros => Math.round(clipSourceSpan(c) / clipRate(c));
 export const clipEnd = (c: Clip): Micros => c.startUs + clipDuration(c);
 
 export const CaptionSegmentSchema = z

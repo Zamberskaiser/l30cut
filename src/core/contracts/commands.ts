@@ -1,9 +1,21 @@
 import { z } from "zod";
-import { IdSchema, Micros, AspectSchema, CaptionSegmentSchema } from "./domain";
+import {
+  IdSchema,
+  Micros,
+  AspectSchema,
+  CaptionSegmentSchema,
+  GainKeyframeSchema,
+  MarkerSchema,
+} from "./domain";
 
 /**
  * Deterministic, closed set of timeline commands.
  * The AI never emits these directly — a validated AiEditPlan is compiled into them.
+ *
+ * Trim semantics:
+ * - `trimClip` operates in SOURCE space (used by silence cuts and precise edits).
+ * - `trimClipEdge` operates in TIMELINE space: trimming the start edge updates
+ *   `startUs` AND `sourceInUs` together, which is the correct editorial trim.
  */
 export const EditCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("splitClip"), clipId: IdSchema, atUs: Micros }).strict(),
@@ -13,6 +25,55 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
       clipId: IdSchema,
       sourceInUs: Micros.optional(),
       sourceOutUs: Micros.optional(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("trimClipEdge"),
+      clipId: IdSchema,
+      edge: z.enum(["start", "end"]),
+      /** New timeline position of the edited edge. */
+      toUs: Micros,
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("rippleTrimClip"),
+      clipId: IdSchema,
+      edge: z.enum(["start", "end"]),
+      toUs: Micros,
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("rollingEdit"),
+      leftClipId: IdSchema,
+      rightClipId: IdSchema,
+      /** New boundary position between the two adjacent clips. */
+      toUs: Micros,
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("rateStretchClip"),
+      clipId: IdSchema,
+      newDurationUs: Micros.min(1),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("slipClip"),
+      clipId: IdSchema,
+      /** Source-space shift; start and duration on the timeline stay fixed. */
+      deltaUs: z.number().int(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("slideClip"),
+      clipId: IdSchema,
+      /** Timeline shift absorbed by the adjacent neighbours. */
+      deltaUs: z.number().int(),
     })
     .strict(),
   z
@@ -28,6 +89,7 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
       type: z.literal("duplicateClip"),
       clipId: IdSchema,
       toStartUs: Micros.optional(),
+      toTrackId: IdSchema.optional(),
       newClipId: IdSchema.optional(),
     })
     .strict(),
@@ -40,7 +102,22 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
       gainDb: z.number().min(-60).max(12),
     })
     .strict(),
+  z
+    .object({
+      type: z.literal("setGainKeyframes"),
+      clipId: IdSchema,
+      keyframes: z.array(GainKeyframeSchema).max(200),
+    })
+    .strict(),
   z.object({ type: z.literal("addCaption"), segment: CaptionSegmentSchema }).strict(),
+  z.object({ type: z.literal("addMarker"), marker: MarkerSchema }).strict(),
+  z
+    .object({
+      type: z.literal("setTrackLock"),
+      trackId: IdSchema,
+      locked: z.boolean(),
+    })
+    .strict(),
   z
     .object({
       type: z.literal("createSequence"),
