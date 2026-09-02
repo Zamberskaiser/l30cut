@@ -344,8 +344,8 @@ export function useTimelineInteraction({
             : zone === "end" && index < sameTrack.length - 1
               ? [clip, sameTrack[index + 1]!]
               : null;
-        if (!pair) return;
-        setGesture({ ...base, kind: "rolling", leftClipId: pair[0].id, rightClipId: pair[1].id });
+        if (!pair || !pair[0] || !pair[1]) return;
+        setGesture({ ...base, kind: "rolling", leftClipId: pair[0]!.id, rightClipId: pair[1]!.id });
         return;
       }
       if (u.tool === "slip") {

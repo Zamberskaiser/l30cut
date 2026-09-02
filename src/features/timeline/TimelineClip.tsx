@@ -19,15 +19,15 @@ export interface ClipActions {
 
 interface Props {
   clip: Clip;
-  asset?: MediaAsset;
+  asset?: MediaAsset | undefined;
   trackKind: TrackKind;
   selected: boolean;
   locked: boolean;
   pxPerSecond: number;
   pro: boolean;
   /** Ghost offsets while a gesture is running (never mutates the project). */
-  ghostDeltaUs?: number;
-  ghostTrim?: { edge: "start" | "end"; toUs: number } | null;
+  ghostDeltaUs?: number | undefined;
+  ghostTrim?: { edge: "start" | "end"; toUs: number } | null | undefined;
   onPointerDown: (event: React.PointerEvent, clip: Clip) => void;
   actions: ClipActions;
 }

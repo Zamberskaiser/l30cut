@@ -54,8 +54,8 @@ function EditorPage() {
       <h1 className="sr-only">L30 CUT AI — editor de vídeo local com assistente de IA</h1>
       <TopBar />
 
-      <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
-        <ResizablePanel defaultSize={19} minSize={12} maxSize={34}>
+      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+        <ResizablePanel defaultSize="19" minSize="12" maxSize="34">
           <aside
             className="flex h-full min-h-0 flex-col border-r border-border bg-panel"
             onPointerDownCapture={() => ui.setFocused("media")}
@@ -91,17 +91,18 @@ function EditorPage() {
 
         <ResizableHandle />
 
-        <ResizablePanel defaultSize={ui.assistantCollapsed ? 81 : 58} minSize={30}>
-          <ResizablePanelGroup direction="vertical" className="min-h-0">
-            <ResizablePanel
-              defaultSize={54}
-              minSize={20}
-              onPointerDownCapture={() => ui.setFocused("monitor")}
-            >
-              <PreviewMonitor />
+        <ResizablePanel defaultSize={ui.assistantCollapsed ? "81" : "58"} minSize="30">
+          <ResizablePanelGroup orientation="vertical" className="min-h-0">
+            <ResizablePanel defaultSize="54" minSize="20">
+              <div
+                className="flex h-full min-h-0 flex-col"
+                onPointerDownCapture={() => ui.setFocused("monitor")}
+              >
+                <PreviewMonitor />
+              </div>
             </ResizablePanel>
             <ResizableHandle />
-            <ResizablePanel defaultSize={46} minSize={20}>
+            <ResizablePanel defaultSize="46" minSize="20">
               <TimelinePanel />
             </ResizablePanel>
           </ResizablePanelGroup>
@@ -110,7 +111,7 @@ function EditorPage() {
         {ui.assistantCollapsed ? null : (
           <>
             <ResizableHandle />
-            <ResizablePanel defaultSize={23} minSize={16} maxSize={40}>
+            <ResizablePanel defaultSize="23" minSize="16" maxSize="40">
               <aside
                 className="h-full min-h-0 border-l border-border bg-panel"
                 onPointerDownCapture={() => ui.setFocused("chat")}

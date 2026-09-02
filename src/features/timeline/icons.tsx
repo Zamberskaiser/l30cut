@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import type { ReactElement, SVGProps } from "react";
 import type { ToolId } from "@/core/commands/tools";
 
 /**
@@ -150,7 +150,7 @@ export function SnapIcon(props: IconProps) {
   );
 }
 
-export const TOOL_ICONS: Record<ToolId, (props: IconProps) => JSX.Element> = {
+export const TOOL_ICONS: Record<ToolId, (props: IconProps) => ReactElement> = {
   selection: SelectionIcon,
   trackSelect: TrackSelectIcon,
   rippleEdit: RippleEditIcon,

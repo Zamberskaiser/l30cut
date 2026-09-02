@@ -166,7 +166,7 @@ export function PreviewMonitor() {
           variant="secondary"
           className="size-7"
           aria-label={playing ? "Pausar" : "Reproduzir"}
-          onClick={() => setPlaying((p) => !p)}
+          onClick={() => setPlaying(!playing)}
         >
           {playing ? <Pause className="size-4" /> : <Play className="size-4" />}
         </Button>
