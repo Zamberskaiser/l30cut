@@ -110,13 +110,25 @@ function DownloadPage() {
             <span className="tabular">build-windows.bat</span>: dê dois cliques no Windows e ele
             instala as dependências, roda os testes e gera o MSI/EXE automaticamente.
           </p>
-          <Button
-            size="sm"
-            className="mt-3 gap-1.5"
-            onClick={() => downloadFile("/l30-cut-ai-source.zip", "l30-cut-ai-source.zip")}
-          >
-            <Download className="size-4" /> Baixar pacote (.zip)
-          </Button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              className="gap-1.5"
+              onClick={() => downloadFile("/l30-cut-ai-source.zip", "l30-cut-ai-source.zip")}
+            >
+              <Download className="size-4" /> Baixar pacote (.zip)
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() =>
+                document.getElementById("como-instalar")?.scrollIntoView({ behavior: "smooth" })
+              }
+            >
+              Como instalar
+            </Button>
+          </div>
         </section>
 
         <section className="grid gap-2 md:grid-cols-2">
@@ -142,15 +154,39 @@ function DownloadPage() {
           />
         </section>
 
-        <section className="rounded-md border border-border bg-panel p-4 text-[11px] leading-relaxed text-muted-foreground">
+        <section
+          id="como-instalar"
+          className="rounded-md border border-border bg-panel p-4 text-[11px] leading-relaxed text-muted-foreground"
+        >
           <h3 className="text-xs font-semibold text-foreground">Depois de instalar</h3>
-          <ol className="mt-2 list-decimal space-y-1 pl-4">
-            <li>Abra o app e siga a tela de configuração para preparar FFmpeg e whisper.cpp.</li>
-            <li>Escolha um perfil: Leve, Recomendado ou Alta qualidade.</li>
-            <li>Importe sua mídia — os arquivos originais nunca são modificados.</li>
-            <li>Peça edições no chat e revise cada plano antes de aplicar.</li>
+          <ol className="mt-2 list-decimal space-y-1.5 pl-4">
+            <li>
+              <strong className="text-foreground">Instale o app.</strong> Dê dois cliques no arquivo{" "}
+              <span className="tabular">.msi</span> gerado pelo build e siga o assistente. Um atalho{" "}
+              <span className="italic">L30 CUT AI</span> aparece no menu Iniciar.
+            </li>
+            <li>
+              <strong className="text-foreground">Abra o app.</strong> Na primeira execução, a tela
+              de setup pede para baixar FFmpeg, ffprobe e whisper.cpp.
+            </li>
+            <li>
+              <strong className="text-foreground">Escolha um perfil.</strong> Leve, Recomendado ou
+              Alta qualidade. O app baixa e verifica os componentes automaticamente.
+            </li>
+            <li>
+              <strong className="text-foreground">Crie um projeto</strong> e importe sua mídia. Os
+              arquivos originais nunca são modificados — todas as edições são não destrutivas.
+            </li>
+            <li>
+              <strong className="text-foreground">Use o chat</strong> para pedir cortes, legendas ou
+              ajustes. Revise o plano antes de aplicar.
+            </li>
           </ol>
-          <p className="mt-2">
+          <p className="mt-3">
+            Dica: dentro do pacote-fonte, <span className="tabular">run-windows.bat</span> localiza
+            o app instalado e o abre para você.
+          </p>
+          <p className="mt-1">
             Verifique a integridade comparando o SHA-256 do arquivo baixado com o publicado no
             release.
           </p>
