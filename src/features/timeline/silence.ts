@@ -31,7 +31,7 @@ export function buildSilenceCutPlan(
   const commands: EditCommand[] = [];
   const keptRanges: SilenceCutPlan["keptRanges"] = [];
   let removedUs = 0;
-  let cursorByTrack = new Map<string, number>();
+  const cursorByTrack = new Map<string, number>();
 
   const targets = sequence.clips
     .filter((c) => (clipIds && clipIds.length > 0 ? clipIds.includes(c.id) : true))
