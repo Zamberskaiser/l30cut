@@ -3,7 +3,9 @@ import {
   AlertTriangle,
   Check,
   ChevronRight,
+  Eye,
   Loader2,
+  Pencil,
   Send,
   Sparkles,
   ThumbsDown,
@@ -11,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { AiEditPlan, PlanScope } from "@/core/contracts/aiPlan";
+import { parseAiEditPlan } from "@/core/contracts/aiPlan";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,10 +26,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDuration, sequenceDuration } from "@/core/contracts/domain";
+import { buildAssistantContext } from "@/core/ai/contextBuilder";
+import { recordTrainingEvent } from "@/core/training/trainingEvents";
 import { useActiveSequence, useEditor, type AssistantMessage } from "@/core/store/editorStore";
 import { newId } from "@/core/store/timelineReducer";
 import { planDeterministically } from "./deterministicPlanner";
 import { compilePlan } from "./planExecutor";
+import { previewPlan, type PlanPreview, type PlanPreviewFailure } from "./planPreview";
 import { DEFAULT_PROVIDERS, requestPlanFromProvider } from "./provider";
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
 
@@ -64,6 +70,8 @@ export function AssistantPanel() {
     outUs: editor.inOutUs?.[1],
   };
 
+  const learning = editor.profile.learningEnabled;
+
   async function submit(override?: string) {
     const text = (override ?? prompt).trim();
     if (!text || thinking) return;
@@ -76,9 +84,15 @@ export function AssistantPanel() {
       const provider = DEFAULT_PROVIDERS.find((p) => p.id === providerId)!;
       if (provider.id !== "deterministic") {
         try {
+          const { context } = buildAssistantContext(
+            editor.project,
+            scope,
+            editor.profile,
+            editor.selection,
+          );
           const response = await requestPlanFromProvider(provider, {
             prompt: text,
-            contextJson: JSON.stringify(buildContext()),
+            contextJson: JSON.stringify(context),
           });
           plan = {
             ...response.plan,
@@ -108,6 +122,17 @@ export function AssistantPanel() {
         });
         return;
       }
+      if (learning) {
+        recordTrainingEvent({
+          kind: "plan_proposed",
+          intent: plan.intent,
+          planId: plan.id,
+          prompt: text.slice(0, 400),
+          scopeKind: scope.kind,
+          operationCount: plan.operations.length,
+          provider: plan.modelInfo.provider,
+        });
+      }
       editor.pushMessage({
         id: assistantId,
         role: "assistant",
@@ -121,26 +146,7 @@ export function AssistantPanel() {
     }
   }
 
-  function buildContext() {
-    return {
-      sequence: {
-        id: sequence.id,
-        aspect: sequence.aspect,
-        durationUs: sequenceDuration(sequence),
-        clips: sequence.clips.map((c) => ({
-          id: c.id,
-          startUs: c.startUs,
-          sourceInUs: c.sourceInUs,
-          sourceOutUs: c.sourceOutUs,
-        })),
-      },
-      assets: editor.project.assets.map((a) => ({ id: a.id, durationUs: a.durationUs })),
-      transcript: editor.project.transcript.slice(0, 200),
-      profileRules: editor.profile.rules,
-    };
-  }
-
-  function applyPlan(plan: AiEditPlan, messageId: string, confirmed: boolean) {
+  async function applyPlan(plan: AiEditPlan, messageId: string, confirmed: boolean) {
     if (plan.requiresConfirmation && !confirmed) {
       setConfirming({ plan, messageId });
       return;
@@ -148,8 +154,37 @@ export function AssistantPanel() {
     const compiled = compilePlan(editor.project, plan, editor.runtime);
     if (!compiled.ok) {
       editor.updateMessage(messageId, { planState: "failed" });
+      if (learning) {
+        recordTrainingEvent({
+          kind: "plan_validation_failed",
+          intent: plan.intent,
+          planId: plan.id,
+          detail: compiled.errors.slice(0, 2).join(" · ").slice(0, 240),
+        });
+      }
       toast.error("Plano rejeitado pelo validador", { description: compiled.errors.join(" · ") });
       return;
+    }
+    // Desktop: the Rust allowlist (src-tauri/src/ai_ops.rs) is the security
+    // boundary. In the browser demo this method doesn't exist and the Zod
+    // layer is all there is — documented as convenience, not security.
+    if (editor.runtime.validateAiTransaction) {
+      try {
+        const report = await editor.runtime.validateAiTransaction(
+          JSON.stringify(compiled.transaction.commands),
+        );
+        if (!report.ok) {
+          editor.updateMessage(messageId, { planState: "failed" });
+          toast.error("Transação rejeitada pela validação nativa", {
+            description: report.errors.join(" · "),
+          });
+          return;
+        }
+      } catch (error) {
+        editor.updateMessage(messageId, { planState: "failed" });
+        toast.error("Validação nativa indisponível", { description: (error as Error).message });
+        return;
+      }
     }
     const entry = editor.dispatch(compiled.transaction);
     if (!entry) {
@@ -165,6 +200,16 @@ export function AssistantPanel() {
       suggestedOps: plan.operations.length,
       appliedOps: compiled.transaction.commands.length,
     });
+    if (learning) {
+      recordTrainingEvent({
+        kind: "plan_applied",
+        intent: plan.intent,
+        planId: plan.id,
+        operationCount: plan.operations.length,
+        commandCount: compiled.transaction.commands.length,
+        provider: plan.modelInfo.provider,
+      });
+    }
     toast.success("Plano aplicado como uma transação", {
       description: `${compiled.transaction.commands.length} comandos · desfaça tudo com Ctrl+Z`,
       action: { label: "Desfazer", onClick: () => editor.undo() },
@@ -179,6 +224,37 @@ export function AssistantPanel() {
       action: "rejected",
       suggestedOps: plan.operations.length,
       appliedOps: 0,
+    });
+    if (learning) {
+      recordTrainingEvent({
+        kind: "plan_rejected",
+        intent: plan.intent,
+        planId: plan.id,
+        operationCount: plan.operations.length,
+      });
+    }
+  }
+
+  function adjust(previous: AiEditPlan, adjusted: AiEditPlan, messageId: string) {
+    editor.updateMessage(messageId, { plan: adjusted, planState: "pending" });
+    editor.addFeedback({
+      planId: previous.id,
+      intent: previous.intent,
+      action: "adjusted",
+      suggestedOps: previous.operations.length,
+      appliedOps: adjusted.operations.length,
+    });
+    if (learning) {
+      recordTrainingEvent({
+        kind: "plan_adjusted",
+        intent: adjusted.intent,
+        planId: adjusted.id,
+        operationCount: adjusted.operations.length,
+        detail: `de ${previous.operations.length} para ${adjusted.operations.length} operações`,
+      });
+    }
+    toast.success("Plano ajustado e revalidado", {
+      description: "Revise a prévia antes de aplicar.",
     });
   }
 
@@ -260,8 +336,10 @@ export function AssistantPanel() {
             <MessageBubble
               key={message.id}
               message={message}
-              onApply={(plan) => applyPlan(plan, message.id, false)}
+              onApply={(plan) => void applyPlan(plan, message.id, false)}
               onDiscard={(plan) => discard(plan, message.id)}
+              onAdjust={(previous, adjusted) => adjust(previous, adjusted, message.id)}
+              onPreview={(plan) => previewPlan(editor.project, plan, editor.runtime)}
             />
           ))}
           {thinking ? (
@@ -305,7 +383,7 @@ export function AssistantPanel() {
         plan={confirming?.plan ?? null}
         onCancel={() => setConfirming(null)}
         onConfirm={() => {
-          if (confirming) applyPlan(confirming.plan, confirming.messageId, true);
+          if (confirming) void applyPlan(confirming.plan, confirming.messageId, true);
           setConfirming(null);
         }}
       />
@@ -317,10 +395,14 @@ function MessageBubble({
   message,
   onApply,
   onDiscard,
+  onAdjust,
+  onPreview,
 }: {
   message: AssistantMessage;
   onApply: (plan: AiEditPlan) => void;
   onDiscard: (plan: AiEditPlan) => void;
+  onAdjust: (previous: AiEditPlan, adjusted: AiEditPlan) => void;
+  onPreview: (plan: AiEditPlan) => PlanPreview | PlanPreviewFailure;
 }) {
   if (message.role === "user") {
     return (
@@ -338,6 +420,8 @@ function MessageBubble({
           state={message.planState ?? "pending"}
           onApply={onApply}
           onDiscard={onDiscard}
+          onAdjust={onAdjust}
+          onPreview={onPreview}
         />
       ) : null}
     </div>
@@ -349,13 +433,47 @@ function PlanCard({
   state,
   onApply,
   onDiscard,
+  onAdjust,
+  onPreview,
 }: {
   plan: AiEditPlan;
   state: NonNullable<AssistantMessage["planState"]>;
   onApply: (plan: AiEditPlan) => void;
   onDiscard: (plan: AiEditPlan) => void;
+  onAdjust: (previous: AiEditPlan, adjusted: AiEditPlan) => void;
+  onPreview: (plan: AiEditPlan) => PlanPreview | PlanPreviewFailure;
 }) {
   const impact = plan.estimatedImpact;
+  const [preview, setPreview] = useState<PlanPreview | PlanPreviewFailure | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [draftErrors, setDraftErrors] = useState<string[]>([]);
+
+  function startAdjust() {
+    setDraft(JSON.stringify(plan.operations, null, 2));
+    setDraftErrors([]);
+    setEditing(true);
+  }
+
+  function saveAdjust() {
+    let operations: unknown;
+    try {
+      operations = JSON.parse(draft);
+    } catch (error) {
+      setDraftErrors([`JSON inválido: ${(error as Error).message}`]);
+      return;
+    }
+    const candidate = { ...plan, operations };
+    const parsed = parseAiEditPlan(candidate);
+    if (!parsed.ok) {
+      setDraftErrors(parsed.errors.slice(0, 6));
+      return;
+    }
+    setEditing(false);
+    setPreview(null);
+    onAdjust(plan, parsed.plan);
+  }
+
   return (
     <div className="rounded-md border border-border bg-card px-2.5 py-2">
       <div className="flex items-center gap-1.5">
@@ -399,10 +517,92 @@ function PlanCard({
         </p>
       ))}
 
+      {preview ? (
+        preview.ok ? (
+          <div className="mt-2 rounded-sm border border-border bg-background/50 px-2 py-1.5">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Prévia (nada foi aplicado)
+            </p>
+            <dl className="tabular mt-1 grid grid-cols-3 gap-x-2 text-[10px]">
+              <dt className="text-muted-foreground">clips</dt>
+              <dd>{preview.before.clips}</dd>
+              <dd className="text-accent">→ {preview.after.clips}</dd>
+              <dt className="text-muted-foreground">duração</dt>
+              <dd>{formatDuration(preview.before.durationUs)}</dd>
+              <dd className="text-accent">→ {formatDuration(preview.after.durationUs)}</dd>
+              <dt className="text-muted-foreground">legendas</dt>
+              <dd>{preview.before.captions}</dd>
+              <dd className="text-accent">→ {preview.after.captions}</dd>
+            </dl>
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              {preview.commandCount} comandos em 1 transação · reversível com Ctrl+Z
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 flex items-start gap-1.5 text-[10px] text-destructive">
+            <AlertTriangle className="mt-0.5 size-3 shrink-0" />
+            Prévia falhou: {preview.errors.slice(0, 3).join(" · ")}
+          </p>
+        )
+      ) : null}
+
+      {editing ? (
+        <div className="mt-2 space-y-1.5">
+          <label
+            className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground"
+            htmlFor={`adjust-${plan.id}`}
+          >
+            Ajustar operações (JSON revalidado pelo schema)
+          </label>
+          <Textarea
+            id={`adjust-${plan.id}`}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={8}
+            className="tabular resize-none text-[10px]"
+          />
+          {draftErrors.map((error) => (
+            <p key={error} className="text-[10px] text-destructive">
+              {error}
+            </p>
+          ))}
+          <div className="flex gap-1.5">
+            <Button size="sm" className="h-6 text-[10px]" onClick={saveAdjust}>
+              Revalidar e salvar
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-[10px]"
+              onClick={() => setEditing(false)}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
       {state === "pending" ? (
-        <div className="mt-2 flex items-center gap-1.5">
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
           <Button size="sm" className="h-7 gap-1.5 text-[11px]" onClick={() => onApply(plan)}>
             <Check className="size-3.5" /> Aplicar
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 gap-1.5 text-[11px]"
+            onClick={() => setPreview(onPreview(plan))}
+          >
+            <Eye className="size-3.5" /> Prévia
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 gap-1.5 text-[11px]"
+            onClick={startAdjust}
+            disabled={editing}
+          >
+            <Pencil className="size-3.5" /> Ajustar
           </Button>
           <Button
             size="sm"
@@ -440,7 +640,7 @@ function PlanCard({
 function Impact({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex justify-between">
-      <dt className="text-muted-foreground">{label}</dt>
+      <dt className="tabular text-muted-foreground">{label}</dt>
       <dd className="tabular">{value}</dd>
     </div>
   );
