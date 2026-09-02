@@ -137,7 +137,18 @@ export function TimelineClip({
             Ripple delete
           </ContextMenuItem>
           <ContextMenuSeparator />
+          <ContextMenuSeparator />
+          {clip.linkGroupId ? (
+            <ContextMenuItem onSelect={() => actions.onUnlink(clip)}>
+              Desvincular A/V (Ctrl+Shift+L)
+            </ContextMenuItem>
+          ) : (
+            <ContextMenuItem onSelect={() => actions.onLink(clip)}>
+              Vincular seleção A/V (Ctrl+L)
+            </ContextMenuItem>
+          )}
           <ContextMenuItem onSelect={() => actions.onReveal(clip)}>Revelar mídia</ContextMenuItem>
+
         </ContextMenuContent>
       </ContextMenu>
 
