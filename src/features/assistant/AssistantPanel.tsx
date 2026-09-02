@@ -62,8 +62,8 @@ export function AssistantPanel() {
     outUs: editor.inOutUs?.[1],
   };
 
-  async function submit() {
-    const text = prompt.trim();
+  async function submit(override?: string) {
+    const text = (override ?? prompt).trim();
     if (!text || thinking) return;
     setPrompt("");
     editor.pushMessage({ id: newId("msg"), role: "user", text, at: Date.now() });
@@ -238,7 +238,7 @@ export function AssistantPanel() {
                 <button
                   key={s}
                   type="button"
-                  onClick={() => setPrompt(s)}
+                  onClick={() => void submit(s)}
                   className="flex w-full items-center gap-1.5 rounded-sm border border-border bg-panel-raised/60 px-2 py-1.5 text-left text-[11px] hover:border-border-strong"
                 >
                   <ChevronRight className="size-3 text-primary" /> {s}
