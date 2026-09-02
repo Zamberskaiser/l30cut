@@ -79,20 +79,16 @@ describe("A/V linked clips", () => {
     expect(copy.linkGroupId).toBeUndefined();
   });
 
-  it("splits a linked partner that overlaps the same timeline point", () => {
-    const base = createDemoProject();
-    const seq = activeSequence(base);
-    const a = seq.clips[0]!;
-    const twin = seq.clips.find(
-      (c) => c.id !== a.id && c.startUs === a.startUs && clipEnd(c) === clipEnd(a),
-    );
+  it("splits linked partners at the same timeline point", () => {
+    const { project, ids } = linkedProject();
+    const a = find(project, ids[0])!;
     const at = a.startUs + Math.floor(clipDuration(a) / 2);
-    const project = twin
-      ? applyCommand(base, { type: "linkClips", clipIds: [a.id, twin.id] })
-      : base;
     const after = applyCommand(project, { type: "splitClip", clipId: a.id, atUs: at });
-    expect(clipEnd(find(after, a.id)!)).toBe(at);
-    if (twin) expect(clipEnd(find(after, twin.id)!)).toBe(at);
+    expect(clipEnd(find(after, ids[0])!)).toBe(at);
+    expect(clipEnd(find(after, ids[1])!)).toBe(at);
+    const rightHalves = activeSequence(after).clips.filter((c) => c.startUs === at);
+    expect(rightHalves.length).toBe(2);
+    expect(rightHalves[0]!.linkGroupId).toBe(rightHalves[1]!.linkGroupId);
   });
 });
 
@@ -106,10 +102,11 @@ describe("gain automation", () => {
     const clip = {
       ...activeSequence(createDemoProject()).clips[0]!,
       gainKeyframes: [
-        { atUs: 0, gainDb: -12 },
-        { atUs: 1_000_000, gainDb: 0 },
+        { id: "kf_1", atUs: 0, gainDb: -12 },
+        { id: "kf_2", atUs: 1_000_000, gainDb: 0 },
       ],
     };
+
     expect(clipGainDbAt(clip, -5)).toBe(-12);
     expect(clipGainDbAt(clip, 500_000)).toBeCloseTo(-6, 6);
     expect(clipGainDbAt(clip, 9_000_000)).toBe(0);
