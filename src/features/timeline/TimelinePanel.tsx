@@ -1,11 +1,6 @@
 import { useRef } from "react";
 import { toast } from "sonner";
-import {
-  clipEnd,
-  formatTimecode,
-  SECOND,
-  sequenceDuration,
-} from "@/core/contracts/domain";
+import { clipEnd, formatTimecode, SECOND, sequenceDuration } from "@/core/contracts/domain";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { useUi } from "@/core/store/uiStore";
 import { HEADER_WIDTH, usToPx } from "./geometry";
@@ -37,7 +32,8 @@ export function TimelinePanel() {
         [{ type: "splitClip", clipId: clip.id, atUs: Math.round(editor.playheadUs) }],
         "Cortar clip",
       ),
-    onDuplicate: (clip) => editor.run([{ type: "duplicateClip", clipId: clip.id }], "Duplicar clip"),
+    onDuplicate: (clip) =>
+      editor.run([{ type: "duplicateClip", clipId: clip.id }], "Duplicar clip"),
     onDelete: (clip) => {
       editor.run([{ type: "deleteClip", clipId: clip.id }], "Remover clip");
       editor.setSelection([]);

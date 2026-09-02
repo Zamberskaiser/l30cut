@@ -1,11 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCommandContext } from "@/core/commands/useCommandContext";
 import { useEditorShortcuts } from "@/core/shortcuts/useEditorShortcuts";

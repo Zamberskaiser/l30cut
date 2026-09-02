@@ -53,7 +53,13 @@ function assetDurationUs(project: Project, clip: Clip): number | null {
 }
 
 /** Timeline-space edge trim: start edge moves startUs AND sourceInUs together. */
-function applyEdgeTrim(project: Project, seq: Sequence, clip: Clip, edge: "start" | "end", toUs: number): void {
+function applyEdgeTrim(
+  project: Project,
+  seq: Sequence,
+  clip: Clip,
+  edge: "start" | "end",
+  toUs: number,
+): void {
   requireUnlockedTrack(seq, clip.trackId);
   const rate = clipRate(clip);
   if (edge === "start") {
@@ -62,7 +68,8 @@ function applyEdgeTrim(project: Project, seq: Sequence, clip: Clip, edge: "start
     const deltaTimeline = toUs - clip.startUs;
     const newSourceIn = clip.sourceInUs + Math.round(deltaTimeline * rate);
     if (newSourceIn < 0) throw new CommandError("negative source in point");
-    if (clip.sourceOutUs - newSourceIn < MIN_CLIP_US) throw new CommandError("trim result too short");
+    if (clip.sourceOutUs - newSourceIn < MIN_CLIP_US)
+      throw new CommandError("trim result too short");
     clip.startUs = toUs;
     clip.sourceInUs = newSourceIn;
   } else {
@@ -158,14 +165,19 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         const right = requireClip(seq, command.rightClipId);
         requireUnlockedTrack(seq, left.trackId);
         requireUnlockedTrack(seq, right.trackId);
-        if (left.trackId !== right.trackId) throw new CommandError("rolling edit exige a mesma trilha");
+        if (left.trackId !== right.trackId)
+          throw new CommandError("rolling edit exige a mesma trilha");
         if (Math.abs(clipEnd(left) - right.startUs) > 1_000) {
           throw new CommandError("rolling edit exige clips adjacentes");
         }
-        if (command.toUs < left.startUs + MIN_CLIP_US || command.toUs > clipEnd(right) - MIN_CLIP_US) {
+        if (
+          command.toUs < left.startUs + MIN_CLIP_US ||
+          command.toUs > clipEnd(right) - MIN_CLIP_US
+        ) {
           throw new CommandError("boundary fora dos limites dos clips");
         }
-        const newLeftSourceOut = left.sourceInUs + Math.round((command.toUs - left.startUs) * clipRate(left));
+        const newLeftSourceOut =
+          left.sourceInUs + Math.round((command.toUs - left.startUs) * clipRate(left));
         const leftMax = assetDurationUs(next, left);
         if (leftMax !== null && newLeftSourceOut > leftMax) {
           throw new CommandError("mídia do clip esquerdo insuficiente");
@@ -215,18 +227,24 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         const prev = sameTrack.filter((c) => clipEnd(c) <= clip.startUs + 1_000).at(-1);
         const nextClip = sameTrack.find((c) => c.startUs >= clipEnd(clip) - 1_000);
         if (!prev || !nextClip) throw new CommandError("slide exige vizinhos adjacentes");
-        if (Math.abs(clipEnd(prev) - clip.startUs) > 1_000 || Math.abs(nextClip.startUs - clipEnd(clip)) > 1_000) {
+        if (
+          Math.abs(clipEnd(prev) - clip.startUs) > 1_000 ||
+          Math.abs(nextClip.startUs - clipEnd(clip)) > 1_000
+        ) {
           throw new CommandError("slide exige vizinhos adjacentes");
         }
         const delta = command.deltaUs;
         // prev absorbs at its out point, next at its in point.
         const newPrevSourceOut = prev.sourceOutUs + Math.round(delta * clipRate(prev));
         const prevMax = assetDurationUs(next, prev);
-        if (newPrevSourceOut - prev.sourceInUs < MIN_CLIP_US) throw new CommandError("vizinho anterior ficaria curto demais");
-        if (prevMax !== null && newPrevSourceOut > prevMax) throw new CommandError("mídia do vizinho anterior insuficiente");
+        if (newPrevSourceOut - prev.sourceInUs < MIN_CLIP_US)
+          throw new CommandError("vizinho anterior ficaria curto demais");
+        if (prevMax !== null && newPrevSourceOut > prevMax)
+          throw new CommandError("mídia do vizinho anterior insuficiente");
         const newNextSourceIn = nextClip.sourceInUs + Math.round(delta * clipRate(nextClip));
         if (newNextSourceIn < 0) throw new CommandError("mídia do próximo vizinho insuficiente");
-        if (nextClip.sourceOutUs - newNextSourceIn < MIN_CLIP_US) throw new CommandError("próximo vizinho ficaria curto demais");
+        if (nextClip.sourceOutUs - newNextSourceIn < MIN_CLIP_US)
+          throw new CommandError("próximo vizinho ficaria curto demais");
         if (clip.startUs + delta < 0) throw new CommandError("negative timeline position");
         prev.sourceOutUs = newPrevSourceOut;
         nextClip.sourceInUs = newNextSourceIn;

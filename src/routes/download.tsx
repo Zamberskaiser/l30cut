@@ -57,7 +57,6 @@ function downloadFile(path: string, filename: string) {
 
 function DownloadPage() {
   return (
-
     <div className="min-h-screen bg-background">
       <header className="chrome-surface flex h-11 items-center gap-3 border-b px-3">
         <Button asChild size="sm" variant="ghost" className="h-7 gap-1.5 text-xs">
@@ -110,7 +109,6 @@ function DownloadPage() {
             arquitetura/release e os workflows de CI. Dentro dele há o{" "}
             <span className="tabular">build-windows.bat</span>: dê dois cliques no Windows e ele
             instala as dependências, roda os testes e gera o MSI/EXE automaticamente.
-
           </p>
           <Button
             size="sm"
@@ -120,7 +118,6 @@ function DownloadPage() {
             <Download className="size-4" /> Baixar pacote (.zip)
           </Button>
         </section>
-
 
         <section className="grid gap-2 md:grid-cols-2">
           <Requirement

@@ -5,7 +5,13 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { clipDuration, formatTimecode, type Clip, type MediaAsset, type TrackKind } from "@/core/contracts/domain";
+import {
+  clipDuration,
+  formatTimecode,
+  type Clip,
+  type MediaAsset,
+  type TrackKind,
+} from "@/core/contracts/domain";
 import { usToPx } from "./geometry";
 
 export interface ClipActions {
@@ -76,7 +82,8 @@ export function TimelineClip({
             <span className="block truncate text-[10px] leading-4">{label}</span>
             {pro ? (
               <span className="tabular block truncate text-[9px] text-muted-foreground">
-                {formatTimecode(clip.sourceInUs).slice(3)} → {formatTimecode(clip.sourceOutUs).slice(3)}
+                {formatTimecode(clip.sourceInUs).slice(3)} →{" "}
+                {formatTimecode(clip.sourceOutUs).slice(3)}
                 {clip.gainDb !== 0 ? ` · ${clip.gainDb} dB` : ""}
                 {rate !== 1 ? ` · ${Math.round(rate * 100)}%` : ""}
               </span>
@@ -98,10 +105,7 @@ export function TimelineClip({
                   stroke="currentColor"
                   strokeWidth="1"
                   points={clip.gainKeyframes
-                    .map(
-                      (kf) =>
-                        `${usToPx(kf.atUs, pxPerSecond)},${((12 - kf.gainDb) / 18) * 32}`,
-                    )
+                    .map((kf) => `${usToPx(kf.atUs, pxPerSecond)},${((12 - kf.gainDb) / 18) * 32}`)
                     .join(" ")}
                 />
               </svg>
@@ -117,7 +121,9 @@ export function TimelineClip({
           </button>
         </ContextMenuTrigger>
         <ContextMenuContent className="w-52">
-          <ContextMenuItem onSelect={() => actions.onSplit(clip)}>Cortar no playhead</ContextMenuItem>
+          <ContextMenuItem onSelect={() => actions.onSplit(clip)}>
+            Cortar no playhead
+          </ContextMenuItem>
           <ContextMenuItem onSelect={() => actions.onDuplicate(clip)}>Duplicar</ContextMenuItem>
           <ContextMenuItem onSelect={() => actions.onGain(clip)}>Ganho de áudio</ContextMenuItem>
           <ContextMenuSeparator />

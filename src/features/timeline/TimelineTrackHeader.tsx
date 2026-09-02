@@ -22,7 +22,9 @@ export function TimelineTrackHeader({ track, pro, onToggleLock }: Props) {
             aria-label={track.locked ? `Desbloquear ${track.name}` : `Bloquear ${track.name}`}
             aria-pressed={track.locked}
             onClick={onToggleLock}
-            className={track.locked ? "text-warning" : "text-muted-foreground hover:text-foreground"}
+            className={
+              track.locked ? "text-warning" : "text-muted-foreground hover:text-foreground"
+            }
           >
             {track.locked ? <Lock className="size-3.5" /> : <LockOpen className="size-3.5" />}
           </button>

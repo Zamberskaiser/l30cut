@@ -21,7 +21,9 @@ const MODIFIER_CODES = new Set([
 ]);
 
 /** Normalizes a keyboard event to a canonical combo. Meta is treated as Ctrl. */
-export function comboFromEvent(event: Pick<KeyboardEvent, "code" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">): ComboString | null {
+export function comboFromEvent(
+  event: Pick<KeyboardEvent, "code" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">,
+): ComboString | null {
   if (!event.code || MODIFIER_CODES.has(event.code)) return null;
   return serializeCombo({
     ctrl: event.ctrlKey || event.metaKey,
@@ -126,9 +128,7 @@ export function contextAllows(contexts: readonly PanelContext[], focused: PanelC
 export function mergeBindings(defaults: BindingMap, overrides: ShortcutOverrides): BindingMap {
   const merged: BindingMap = { ...defaults };
   for (const [id, combos] of Object.entries(overrides.bindings)) {
-    const normalized = combos
-      .map((c) => normalizeCombo(c))
-      .filter((c): c is string => Boolean(c));
+    const normalized = combos.map((c) => normalizeCombo(c)).filter((c): c is string => Boolean(c));
     merged[id] = normalized;
   }
   return merged;
@@ -210,7 +210,9 @@ export function serializeOverrides(overrides: ShortcutOverrides): string {
   return JSON.stringify(overrides, null, 2);
 }
 
-export function parseOverrides(json: string): { ok: true; overrides: ShortcutOverrides } | { ok: false; error: string } {
+export function parseOverrides(
+  json: string,
+): { ok: true; overrides: ShortcutOverrides } | { ok: false; error: string } {
   try {
     const parsed = ShortcutOverridesSchema.safeParse(JSON.parse(json));
     if (!parsed.success) {

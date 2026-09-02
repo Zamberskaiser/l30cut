@@ -70,9 +70,7 @@ const unlockedTracks = (seq: Sequence) =>
 function targetClip(ctx: CommandContext) {
   const selected = ctx.sequence.clips.find((c) => ctx.selection.includes(c.id));
   if (selected) return selected;
-  return ctx.sequence.clips.find(
-    (c) => ctx.playheadUs >= c.startUs && ctx.playheadUs < clipEnd(c),
-  );
+  return ctx.sequence.clips.find((c) => ctx.playheadUs >= c.startUs && ctx.playheadUs < clipEnd(c));
 }
 
 function clipsUnderPlayhead(ctx: CommandContext, onlyUnlocked: boolean) {
@@ -85,12 +83,7 @@ function clipsUnderPlayhead(ctx: CommandContext, onlyUnlocked: boolean) {
   );
 }
 
-const tool = (
-  id: string,
-  toolId: ToolId,
-  label: string,
-  description: string,
-): EditorCommand => ({
+const tool = (id: string, toolId: ToolId, label: string, description: string): EditorCommand => ({
   id,
   label,
   description,
@@ -560,8 +553,7 @@ export function buildEditorCommands(): EditorCommand[] {
       contexts: ["global"],
       repeatable: true,
       canExecute: always,
-      execute: (ctx) =>
-        ctx.setPlayhead((prev) => Math.max(0, prev - frameUs(ctx.sequence))),
+      execute: (ctx) => ctx.setPlayhead((prev) => Math.max(0, prev - frameUs(ctx.sequence))),
     },
     {
       id: "nav.frameForward",
@@ -581,8 +573,7 @@ export function buildEditorCommands(): EditorCommand[] {
       contexts: ["global"],
       repeatable: true,
       canExecute: always,
-      execute: (ctx) =>
-        ctx.setPlayhead((prev) => Math.max(0, prev - 5 * frameUs(ctx.sequence))),
+      execute: (ctx) => ctx.setPlayhead((prev) => Math.max(0, prev - 5 * frameUs(ctx.sequence))),
     },
     {
       id: "nav.fiveForward",

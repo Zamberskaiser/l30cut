@@ -49,9 +49,27 @@ describe("coordinates", () => {
 
 describe("snap", () => {
   it("collects deterministic targets and excludes dragged clips", () => {
-    const targets = snapTargets({ sequence, playheadUs: 3 * SECOND, inOutUs: [1 * SECOND, 4 * SECOND] });
-    expect(targets).toEqual([0, SECOND, 2 * SECOND, 3 * SECOND, 4 * SECOND, 5 * SECOND, 6 * SECOND, 8 * SECOND]);
-    const withoutC2 = snapTargets({ sequence, playheadUs: 0, inOutUs: null, excludeClipIds: ["c2"] });
+    const targets = snapTargets({
+      sequence,
+      playheadUs: 3 * SECOND,
+      inOutUs: [1 * SECOND, 4 * SECOND],
+    });
+    expect(targets).toEqual([
+      0,
+      SECOND,
+      2 * SECOND,
+      3 * SECOND,
+      4 * SECOND,
+      5 * SECOND,
+      6 * SECOND,
+      8 * SECOND,
+    ]);
+    const withoutC2 = snapTargets({
+      sequence,
+      playheadUs: 0,
+      inOutUs: null,
+      excludeClipIds: ["c2"],
+    });
     expect(withoutC2).toEqual([0, 2 * SECOND, 8 * SECOND]);
   });
 

@@ -15,7 +15,10 @@ import {
 } from "./shortcutEngine";
 import { EMPTY_OVERRIDES } from "./types";
 
-const evt = (code: string, mods: Partial<Record<"ctrlKey" | "metaKey" | "altKey" | "shiftKey", boolean>> = {}) => ({
+const evt = (
+  code: string,
+  mods: Partial<Record<"ctrlKey" | "metaKey" | "altKey" | "shiftKey", boolean>> = {},
+) => ({
   code,
   ctrlKey: false,
   metaKey: false,
@@ -46,7 +49,8 @@ describe("combo normalization", () => {
 });
 
 describe("editable targets", () => {
-  const stub = (matches: boolean) => ({ closest: () => (matches ? {} : null) }) as unknown as EventTarget;
+  const stub = (matches: boolean) =>
+    ({ closest: () => (matches ? {} : null) }) as unknown as EventTarget;
 
   it("detects editable surfaces and ignores plain elements", () => {
     expect(isEditableTarget(stub(true))).toBe(true);
@@ -90,7 +94,12 @@ describe("resolution", () => {
   });
 
   it("never fires edit shortcuts while typing, but allows Escape and the palette", () => {
-    const typing = { focused: "chat" as const, editable: true, commands: EDITOR_COMMANDS, bindings };
+    const typing = {
+      focused: "chat" as const,
+      editable: true,
+      commands: EDITOR_COMMANDS,
+      bindings,
+    };
     expect(resolveCommand({ combo: "KeyC", ...typing })).toBeNull();
     expect(resolveCommand({ combo: "Delete", ...typing })).toBeNull();
     expect(resolveCommand({ combo: "Space", ...typing })).toBeNull();
@@ -110,13 +119,29 @@ describe("resolution", () => {
   });
 
   it("applies user overrides and round-trips JSON", () => {
-    const overrides = { version: 1 as const, preset: "premiere-windows", bindings: { "tool.razor": ["KeyX"] } };
+    const overrides = {
+      version: 1 as const,
+      preset: "premiere-windows",
+      bindings: { "tool.razor": ["KeyX"] },
+    };
     const merged = mergeBindings(PREMIERE_WINDOWS_PRESET, overrides);
     expect(
-      resolveCommand({ combo: "KeyX", focused: "timeline", editable: false, commands: EDITOR_COMMANDS, bindings: merged }),
+      resolveCommand({
+        combo: "KeyX",
+        focused: "timeline",
+        editable: false,
+        commands: EDITOR_COMMANDS,
+        bindings: merged,
+      }),
     ).toBe("tool.razor");
     expect(
-      resolveCommand({ combo: "KeyC", focused: "timeline", editable: false, commands: EDITOR_COMMANDS, bindings: merged }),
+      resolveCommand({
+        combo: "KeyC",
+        focused: "timeline",
+        editable: false,
+        commands: EDITOR_COMMANDS,
+        bindings: merged,
+      }),
     ).toBeNull();
 
     const parsed = parseOverrides(serializeOverrides(overrides));

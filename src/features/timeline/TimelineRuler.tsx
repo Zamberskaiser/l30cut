@@ -34,7 +34,11 @@ export function TimelineRuler({ totalUs, pxPerSecond, inOutUs, onPointerDown }: 
         />
       ) : null}
       {ticks.map((s) => (
-        <div key={s} className="absolute top-0 h-full" style={{ left: usToPx(s * SECOND, pxPerSecond) }}>
+        <div
+          key={s}
+          className="absolute top-0 h-full"
+          style={{ left: usToPx(s * SECOND, pxPerSecond) }}
+        >
           <div className="h-2 w-px bg-ruler" />
           <span className="tabular ml-1 text-[9px] text-muted-foreground">
             {formatTimecode(s * SECOND).slice(3, 8)}

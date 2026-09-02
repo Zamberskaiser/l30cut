@@ -151,24 +151,21 @@ export function useTimelineInteraction({
     [contentRef],
   );
 
-  const snapUs = useCallback(
-    (us: number, excludeClipIds: string[] = []) => {
-      const { ui: u, editor: e, sequence: seq } = stateRef.current;
-      if (!u.snap) return { us, snappedTo: null as number | null };
-      const toleranceUs = pxToUs(SNAP_TOLERANCE_PX, u.pxPerSecond);
-      return applySnap(
-        us,
-        snapTargets({
-          sequence: seq,
-          playheadUs: e.playheadUs,
-          inOutUs: e.inOutUs,
-          excludeClipIds,
-        }),
-        toleranceUs,
-      );
-    },
-    [],
-  );
+  const snapUs = useCallback((us: number, excludeClipIds: string[] = []) => {
+    const { ui: u, editor: e, sequence: seq } = stateRef.current;
+    if (!u.snap) return { us, snappedTo: null as number | null };
+    const toleranceUs = pxToUs(SNAP_TOLERANCE_PX, u.pxPerSecond);
+    return applySnap(
+      us,
+      snapTargets({
+        sequence: seq,
+        playheadUs: e.playheadUs,
+        inOutUs: e.inOutUs,
+        excludeClipIds,
+      }),
+      toleranceUs,
+    );
+  }, []);
 
   /* ---------------- pointer down handlers ---------------- */
 
@@ -280,9 +277,7 @@ export function useTimelineInteraction({
         const from = clip.startUs;
         const ids = seq.clips
           .filter((c) => c.startUs >= from)
-          .filter((c) =>
-            event.shiftKey ? !isLocked(seq, c.trackId) : c.trackId === clip.trackId,
-          )
+          .filter((c) => (event.shiftKey ? !isLocked(seq, c.trackId) : c.trackId === clip.trackId))
           .map((c) => c.id);
         e.setSelection(ids);
         u.setLastCommand("Selecionar trilha");
@@ -357,7 +352,8 @@ export function useTimelineInteraction({
         return;
       }
       if (zone !== "body") {
-        const mode = u.tool === "rippleEdit" ? "ripple" : u.tool === "rateStretch" ? "rate" : "trim";
+        const mode =
+          u.tool === "rippleEdit" ? "ripple" : u.tool === "rateStretch" ? "rate" : "trim";
         setGesture({ ...base, kind: "trim", clipId: clip.id, edge: zone, mode });
         return;
       }
@@ -386,9 +382,7 @@ export function useTimelineInteraction({
       const { ui: u } = stateRef.current;
       const anchorUs = usAtClientX(event.clientX);
       const viewport = scrollRef.current;
-      const offsetInViewport = viewport
-        ? event.clientX - viewport.getBoundingClientRect().left
-        : 0;
+      const offsetInViewport = viewport ? event.clientX - viewport.getBoundingClientRect().left : 0;
       const factor = event.deltaY < 0 ? 1.2 : 1 / 1.2;
       u.setPxPerSecond((prev) => {
         const next = Math.min(400, Math.max(2, prev * factor));
@@ -413,7 +407,8 @@ export function useTimelineInteraction({
       if (!g || event.pointerId !== g.pointerId) return;
       const dx = event.clientX - g.startClientX;
       const dy = event.clientY - g.startClientY;
-      const passed = g.moved || Math.abs(dx) >= DRAG_THRESHOLD_PX || Math.abs(dy) >= DRAG_THRESHOLD_PX;
+      const passed =
+        g.moved || Math.abs(dx) >= DRAG_THRESHOLD_PX || Math.abs(dy) >= DRAG_THRESHOLD_PX;
       const { ui: u, editor: e, sequence: seq } = stateRef.current;
 
       if (g.kind === "scrub") {
@@ -553,9 +548,7 @@ export function useTimelineInteraction({
         if (clip) {
           if (ghost.kind === "rate") {
             const newDuration =
-              ghost.edge === "end"
-                ? ghost.toUs - clip.startUs
-                : clipEnd(clip) - ghost.toUs;
+              ghost.edge === "end" ? ghost.toUs - clip.startUs : clipEnd(clip) - ghost.toUs;
             if (newDuration > 0 && newDuration !== clipDuration(clip)) {
               commands.push({
                 type: "rateStretchClip",
