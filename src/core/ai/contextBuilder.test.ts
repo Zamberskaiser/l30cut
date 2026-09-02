@@ -52,12 +52,7 @@ describe("buildAssistantContext", () => {
         confidence: 0.9,
       })),
     };
-    const { context, stats } = buildAssistantContext(
-      bloated,
-      scope,
-      DEFAULT_TRAINING_PROFILE,
-      [],
-    );
+    const { context, stats } = buildAssistantContext(bloated, scope, DEFAULT_TRAINING_PROFILE, []);
     expect(context.transcript.length).toBeLessThanOrEqual(CONTEXT_LIMITS.maxTranscriptSegments);
     expect(context.transcriptTruncated).toBe(true);
     const chars = context.transcript.reduce((s, t) => s + t.text.length, 0);

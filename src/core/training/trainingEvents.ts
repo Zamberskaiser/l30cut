@@ -115,9 +115,10 @@ export function clearTrainingEvents(): void {
 }
 
 /** JSONL dataset — one validated event per line, filterable by origin. */
-export function exportTrainingDataset(
-  origin?: TrainingEvent["origin"],
-): { jsonl: string; count: number } {
+export function exportTrainingDataset(origin?: TrainingEvent["origin"]): {
+  jsonl: string;
+  count: number;
+} {
   const events = load().filter((e) => (origin ? e.origin === origin : true));
   return { jsonl: events.map((e) => JSON.stringify(e)).join("\n"), count: events.length };
 }
