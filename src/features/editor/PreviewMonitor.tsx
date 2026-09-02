@@ -50,6 +50,15 @@ export function PreviewMonitor() {
     if (Math.abs(el.currentTime - target) > 0.25) el.currentTime = target;
   }, [activeClip, playheadUs]);
 
+  // Gain automation (pen keyframes) drives the demo playback volume.
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el || !activeClip) return;
+    const db = clipGainDbAt(activeClip, playheadUs - activeClip.startUs);
+    el.volume = Math.min(1, Math.max(0, dbToAmplitude(db)));
+  }, [activeClip, playheadUs]);
+
+
   useEffect(() => {
     if (!playing) return;
     let raf = 0;
