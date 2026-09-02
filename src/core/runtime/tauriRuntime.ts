@@ -183,6 +183,17 @@ export class TauriRuntime implements RuntimeAdapter {
     await invoke(TAURI_COMMANDS.saveProject, { project });
   }
 
+  /** Native allowlist gate (src-tauri/src/ai_ops.rs) for AI transactions. */
+  async validateAiTransaction(commandsJson: string): Promise<AiValidationReport> {
+    const invoke = await getInvoke();
+    const raw = await invoke<unknown>(TAURI_COMMANDS.validateAiTransaction, {
+      json: commandsJson,
+    });
+    return z
+      .object({ ok: z.boolean(), opCount: z.number().int(), errors: z.array(z.string()) })
+      .parse(raw);
+  }
+
   aspectResolution(aspect: Aspect) {
     return ASPECT_RESOLUTIONS[aspect];
   }
