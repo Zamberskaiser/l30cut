@@ -114,7 +114,7 @@ export function buildAssistantContext(
     })),
     transcript,
     transcriptTruncated: transcript.length < transcriptPool.length,
-    silences: project.analysis.silences.length,
+    silences: Object.values(project.analysis.silences).reduce((sum, r) => sum + r.length, 0),
     scope,
     profile: {
       rules: profile.rules.slice(0, CONTEXT_LIMITS.maxRules).map((r) => r.slice(0, 240)),
