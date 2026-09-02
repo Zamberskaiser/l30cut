@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, Info } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { formatDuration, sequenceDuration, type Aspect } from "@/core/contracts/domain";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
+import { onAppEvent } from "@/core/commands/appEvents";
 
 const ASPECTS: Aspect[] = ["16:9", "9:16", "1:1", "4:5"];
 
@@ -29,6 +30,8 @@ export function ExportDialog() {
   const [crf, setCrf] = useState(20);
   const [burnCaptions, setBurnCaptions] = useState(false);
   const [name, setName] = useState("l30-export");
+
+  useEffect(() => onAppEvent("export", () => setOpen(true)), []);
 
   const preset = { ...editor.exportPresetFor(aspect), crf, burnCaptions };
 

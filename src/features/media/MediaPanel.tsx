@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Film, FileAudio, Image as ImageIcon, Plus, Wand2, Waves } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { clipDuration, formatDuration, type MediaAsset } from "@/core/contracts/
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { newId } from "@/core/store/timelineReducer";
 import { EmptyState } from "@/features/editor/EmptyState";
+import { onAppEvent } from "@/core/commands/appEvents";
 
 const ACCEPTED = ".mp4,.mov,.wav,.mp3,.m4a,.png,.jpg,.jpeg";
 const MAX_BYTES = 4 * 1024 * 1024 * 1024;
@@ -24,6 +25,8 @@ export function MediaPanel() {
   const sequence = useActiveSequence();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => onAppEvent("import", () => inputRef.current?.click()), []);
 
   const importJob = jobs.find((j) => j.kind === "import" && j.status === "running");
 
