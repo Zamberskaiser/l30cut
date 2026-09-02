@@ -12,6 +12,7 @@ import {
   type MediaAsset,
   type TrackKind,
 } from "@/core/contracts/domain";
+import { clipPeakSlice, type PeakData } from "@/core/audio/waveform";
 import { usToPx } from "./geometry";
 
 export interface ClipActions {
