@@ -58,6 +58,9 @@ export const PREMIERE_WINDOWS_PRESET: BindingMap = {
   // Clip
   "audio.gain": ["KeyG"],
   "clip.speed": ["Ctrl+KeyR"],
+  "clip.link": ["Ctrl+KeyL"],
+  "clip.unlink": ["Ctrl+Shift+KeyL"],
+
 
   // View
   "timeline.toggleSnap": ["KeyS"],
