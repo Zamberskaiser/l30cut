@@ -39,3 +39,4 @@
 - [x] Fluxo pós-build: instruções no BAT, run-windows.bat, README e /download explicam como instalar e rodar
 - [ ] Persistência de atalhos e perfis via Tauri (arquivo em %APPDATA%)
 - [ ] Instalador Windows: validar build-windows.bat end-to-end em máquina Windows real / release CI
+- [x] Bootstrap Windows: instalar e ativar automaticamente MSVC/Visual C++ Build Tools quando `link.exe` não existir

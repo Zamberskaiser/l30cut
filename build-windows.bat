@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 8 (2026-09-03)
+rem   Script versao 9 (2026-09-03)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem ============================================================
@@ -20,7 +20,7 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 8 (2026-09-03)
+echo   Script versao 9 (2026-09-03)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
@@ -28,7 +28,7 @@ echo.
 
 call :addpath
 
-echo [1/7] Verificando Bun...
+echo [1/8] Verificando Bun...
 where bun >nul 2>nul
 if errorlevel 1 (
   echo   Instalando Bun automaticamente...
@@ -43,7 +43,7 @@ if errorlevel 1 (
 echo   OK: Bun disponivel.
 echo.
 
-echo [2/7] Verificando Rust/Cargo...
+echo [2/8] Verificando Rust/Cargo...
 where cargo >nul 2>nul
 if errorlevel 1 (
   echo   Instalando Rust automaticamente...
@@ -60,7 +60,13 @@ if errorlevel 1 (
 echo   OK: Cargo disponivel.
 echo.
 
-echo [3/7] Verificando runtime WebView2...
+echo [3/8] Verificando compilador Visual C++ ^(link.exe^)...
+call :preparemsvc
+if errorlevel 1 goto :falhou
+echo   OK: compilador Visual C++ disponivel.
+echo.
+
+echo [4/8] Verificando runtime WebView2...
 set "WV2_OK="
 reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" >nul 2>&1 && set "WV2_OK=1"
 reg query "HKLM\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" >nul 2>&1 && set "WV2_OK=1"
@@ -72,12 +78,12 @@ if not defined WV2_OK (
 echo   OK: WebView2 pronto.
 echo.
 
-echo [4/7] Instalando pacotes do projeto...
+echo [5/8] Instalando pacotes do projeto...
 call bun install
 if errorlevel 1 goto :falhou
 echo.
 
-echo [5/7] Gerando build web...
+echo [6/8] Gerando build web...
 call bun run build
 if errorlevel 1 goto :falhou
 if not exist "dist\client\index.html" (
@@ -100,29 +106,20 @@ if not exist "dist\client\index.html" (
 echo   OK: interface estatica pronta em dist\client.
 echo.
 
-echo [6/7] Gerando instalador Windows ^(Tauri^)...
+echo [7/8] Gerando instalador Windows ^(Tauri^)...
 set "TAURI_CMD="
 
 rem 1) CLI local do projeto (node_modules\.bin\tauri.cmd) - caminho mais confiavel
 if not exist "node_modules\@tauri-apps\cli\package.json" (
   echo   Instalando @tauri-apps/cli...
   call bun add -d "@tauri-apps/cli@2"
+  if errorlevel 1 goto :falhou
 )
 if exist "node_modules\.bin\tauri.cmd" set "TAURI_CMD=node_modules\.bin\tauri.cmd"
 
-rem 2) Fallback: cargo-tauri
 if not defined TAURI_CMD (
-  call cargo tauri --version >nul 2>&1
-  if errorlevel 1 (
-    echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
-    call cargo install tauri-cli --version ^2.0.0 --locked
-  )
-  call cargo tauri --version >nul 2>&1
-  if not errorlevel 1 set "TAURI_CMD=cargo tauri"
-)
-
-if not defined TAURI_CMD (
-  echo   [ERRO] Nao foi possivel preparar a CLI do Tauri.
+  echo   [ERRO] A CLI local do Tauri nao foi criada pelo Bun.
+  echo   Apague a pasta node_modules e execute este batch novamente.
   goto :falhou
 )
 
@@ -132,7 +129,7 @@ if errorlevel 1 goto :falhou
 echo.
 
 
-echo [7/7] Instalando o L30 CUT AI no computador...
+echo [8/8] Instalando o L30 CUT AI no computador...
 set "MSI_FILE="
 for %%F in ("src-tauri\target\release\bundle\msi\*.msi") do (
   if not defined MSI_FILE set "MSI_FILE=%%~fF"
@@ -187,6 +184,47 @@ exit /b 0
 
 :addpath
 set "PATH=%PATH%;%USERPROFILE%\.bun\bin;%USERPROFILE%\.cargo\bin"
+exit /b 0
+
+:preparemsvc
+rem O Rust para Windows usa o linker MSVC. VS Code sozinho nao fornece link.exe.
+set "VCVARS_FILE="
+if exist "C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+if not defined VCVARS_FILE if exist "%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+if not defined VCVARS_FILE if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+if not defined VCVARS_FILE if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+
+if defined VCVARS_FILE goto :activatemsvc
+
+echo   Visual C++ Build Tools nao encontrado. Instalando automaticamente...
+set "VS_BOOTSTRAPPER=%TEMP%\vs_BuildTools.exe"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing -Uri https://aka.ms/vs/17/release/vs_BuildTools.exe -OutFile '%VS_BOOTSTRAPPER%'"
+if not exist "%VS_BOOTSTRAPPER%" (
+  echo   [ERRO] Nao foi possivel baixar o Visual Studio Build Tools.
+  exit /b 1
+)
+
+"%VS_BOOTSTRAPPER%" --quiet --wait --norestart --nocache --installPath "C:\BuildTools" --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended
+set "VS_EXIT=%ERRORLEVEL%"
+if not "%VS_EXIT%"=="0" if not "%VS_EXIT%"=="3010" (
+  echo   [ERRO] A instalacao do Visual C++ Build Tools falhou.
+  echo   Abra https://visualstudio.microsoft.com/visual-cpp-build-tools/ e instale "Desenvolvimento para desktop com C++".
+  exit /b 1
+)
+set "VCVARS_FILE=C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+
+:activatemsvc
+if not exist "%VCVARS_FILE%" (
+  echo   [ERRO] O ambiente Visual C++ foi instalado, mas vcvars64.bat nao foi localizado.
+  exit /b 1
+)
+echo   Ativando ambiente MSVC: %VCVARS_FILE%
+call "%VCVARS_FILE%" >nul
+where link >nul 2>nul
+if errorlevel 1 (
+  echo   [ERRO] link.exe continua indisponivel apos ativar o Visual C++.
+  exit /b 1
+)
 exit /b 0
 
 :falhou

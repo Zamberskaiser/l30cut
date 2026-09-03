@@ -9,6 +9,7 @@ A versão web disponível no preview é uma **demonstração navegável** com pr
 - Windows 10 21H2 ou Windows 11 (64 bits)
 - [Bun](https://bun.sh) — runtime e gerenciador de pacotes
 - [Rust](https://rustup.rs) — necessário para compilar o Tauri
+- Microsoft Visual C++ Build Tools — o script instala automaticamente a carga “Desenvolvimento para desktop com C++” quando `link.exe` não estiver disponível
 - WebView2 Runtime — presente por padrão no Windows 11 e na maioria das instalações do Windows 10
 
 ## Build e instalação rápida
@@ -18,7 +19,7 @@ A versão web disponível no preview é uma **demonstração navegável** com pr
 3. Execute `build-windows.bat` com dois cliques.
 
 O script:
-- verifica/instala Bun e Rust;
+- verifica/instala Bun, Rust e Visual C++ Build Tools;
 - instala as dependências do projeto;
 - roda os testes;
 - gera o build web;
