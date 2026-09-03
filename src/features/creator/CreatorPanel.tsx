@@ -265,7 +265,10 @@ export function CreatorPanel() {
               </span>
             </div>
             {scenes.map((scene, index) => (
-              <div key={scene.id} className="flex flex-col gap-1.5 rounded-md border border-border p-2">
+              <div
+                key={scene.id}
+                className="flex flex-col gap-1.5 rounded-md border border-border p-2"
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-medium">Cena {index + 1}</span>
                   <span className="text-[10px] text-muted-foreground">

@@ -3,7 +3,10 @@ import { estimateDurationUs, fallbackScenes, parseScriptJson, totalDurationUs } 
 
 describe("creator script", () => {
   it("cria uma cena por bloco do briefing sem depender de IA", () => {
-    const scenes = fallbackScenes("Uma cidade ao amanhecer. O trânsito acorda. As luzes apagam.", 3);
+    const scenes = fallbackScenes(
+      "Uma cidade ao amanhecer. O trânsito acorda. As luzes apagam.",
+      3,
+    );
     expect(scenes).toHaveLength(3);
     expect(scenes[0]!.narration).toContain("cidade");
     expect(totalDurationUs(scenes)).toBeGreaterThan(0);
