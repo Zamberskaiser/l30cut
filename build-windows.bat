@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 echo ============================================
 echo   L30 CUT AI - build do app para Windows
-echo   Script versao 4 (2026-09-03)
+echo   Script versao 5 (2026-09-03)
 echo ============================================
 echo.
 
