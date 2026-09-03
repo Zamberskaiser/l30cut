@@ -28,7 +28,7 @@ echo.
 
 call :addpath
 
-echo [1/8] Verificando Bun...
+echo [1/7] Verificando Bun...
 where bun >nul 2>nul
 if errorlevel 1 (
   echo   Instalando Bun automaticamente...
@@ -43,7 +43,7 @@ if errorlevel 1 (
 echo   OK: Bun disponivel.
 echo.
 
-echo [2/8] Verificando Rust/Cargo...
+echo [2/7] Verificando Rust/Cargo...
 where cargo >nul 2>nul
 if errorlevel 1 (
   echo   Instalando Rust automaticamente...
@@ -60,13 +60,13 @@ if errorlevel 1 (
 echo   OK: Cargo disponivel.
 echo.
 
-echo [3/8] Verificando compilador Visual C++ ^(link.exe^)...
+echo [3/7] Verificando compilador Visual C++ ^(link.exe^)...
 call :preparemsvc
 if errorlevel 1 goto :falhou
 echo   OK: compilador Visual C++ disponivel.
 echo.
 
-echo [4/8] Verificando runtime WebView2...
+echo [4/7] Verificando runtime WebView2...
 set "WV2_OK="
 reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" >nul 2>&1 && set "WV2_OK=1"
 reg query "HKLM\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" >nul 2>&1 && set "WV2_OK=1"
@@ -78,7 +78,7 @@ if not defined WV2_OK (
 echo   OK: WebView2 pronto.
 echo.
 
-echo [5/8] Instalando pacotes do projeto...
+echo [5/7] Instalando pacotes do projeto...
 call bun install
 if errorlevel 1 goto :falhou
 echo.
