@@ -107,24 +107,19 @@ echo   OK: interface estatica pronta em dist\client.
 echo.
 
 echo [7/8] Gerando instalador Windows ^(Tauri^)...
-set "TAURI_CMD="
 
-rem 1) CLI local do projeto (node_modules\.bin\tauri.cmd) - caminho mais confiavel
-if not exist "node_modules\@tauri-apps\cli\package.json" (
+call bun run tauri --version
+if errorlevel 1 (
   echo   Instalando @tauri-apps/cli...
-  call bun add -d "@tauri-apps/cli@2"
-  if errorlevel 1 goto :falhou
-)
-if exist "node_modules\.bin\tauri.cmd" set "TAURI_CMD=node_modules\.bin\tauri.cmd"
-
-if not defined TAURI_CMD (
-  echo   [ERRO] A CLI local do Tauri nao foi criada pelo Bun.
-  echo   Apague a pasta node_modules e execute este batch novamente.
-  goto :falhou
+  call bun add --dev --exact "@tauri-apps/cli@2.11.4"
+  call bun run tauri --version
+  if errorlevel 1 (
+    echo   [ERRO] Nao foi possivel preparar a CLI local do Tauri via Bun.
+    goto :falhou
+  )
 )
 
-echo   Usando CLI: %TAURI_CMD%
-call %TAURI_CMD% build
+call bun run tauri build
 if errorlevel 1 goto :falhou
 echo.
 
