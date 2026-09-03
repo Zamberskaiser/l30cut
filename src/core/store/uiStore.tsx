@@ -132,9 +132,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setTrackHeight = useCallback((next: number | ((prev: number) => number)) => {
-    setTrackHeightState((prev) =>
-      clampTrackHeight(typeof next === "function" ? next(prev) : next),
-    );
+    setTrackHeightState((prev) => clampTrackHeight(typeof next === "function" ? next(prev) : next));
   }, []);
 
   const setTool = useCallback((next: ToolId) => setToolState(next), []);
