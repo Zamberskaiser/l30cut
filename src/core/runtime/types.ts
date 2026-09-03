@@ -95,6 +95,8 @@ export interface RuntimeAdapter {
     signal: AbortSignal,
   ): Promise<ComponentStatus>;
   prepareDataDirs(): Promise<string[]>;
+  /** Native file picker (installed app only). Returns absolute paths, [] on cancel. */
+  pickMediaFiles?(): Promise<string[]>;
   importMedia(request: ImportRequest, onProgress: ProgressSink): Promise<MediaAsset[]>;
   generateThumbnails(
     asset: MediaAsset,
