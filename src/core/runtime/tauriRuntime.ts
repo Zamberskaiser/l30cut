@@ -213,6 +213,45 @@ export class TauriRuntime implements RuntimeAdapter {
     await invoke(TAURI_COMMANDS.saveProject, { project });
   }
 
+  /** Native "Salvar como": OS save dialog + allowlisted Rust write. */
+  async saveProjectToFile(project: Project): Promise<string | null> {
+    const invoke = await getInvoke();
+    const path = await invoke<string | null>("plugin:dialog|save", {
+      options: {
+        title: "Salvar projeto",
+        defaultPath: projectFileName(project),
+        filters: [{ name: "Projeto L30 CUT AI", extensions: [PROJECT_FILE_EXTENSION] }],
+      },
+    });
+    if (!path) return null;
+    await invoke(TAURI_COMMANDS.writeProjectFile, {
+      path,
+      contents: serializeProjectFile(project),
+    });
+    return path;
+  }
+
+  async openProjectFromFile(): Promise<{ project: Project; path: string } | null> {
+    const invoke = await getInvoke();
+    const picked = await invoke<unknown>("plugin:dialog|open", {
+      options: {
+        multiple: false,
+        directory: false,
+        title: "Abrir projeto",
+        filters: [{ name: "Projeto L30 CUT AI", extensions: [PROJECT_FILE_EXTENSION, "json"] }],
+      },
+    });
+    const path =
+      typeof picked === "string"
+        ? picked
+        : typeof (picked as { path?: unknown })?.path === "string"
+          ? (picked as { path: string }).path
+          : null;
+    if (!path) return null;
+    const contents = await invoke<string>(TAURI_COMMANDS.readProjectFile, { path });
+    return { project: parseProjectFile(contents), path };
+  }
+
   /** Native allowlist gate (src-tauri/src/ai_ops.rs) for AI transactions. */
   async validateAiTransaction(commandsJson: string): Promise<AiValidationReport> {
     const invoke = await getInvoke();
