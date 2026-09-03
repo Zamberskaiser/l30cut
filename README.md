@@ -71,6 +71,30 @@ empacotado pelo Tauri. O `build-windows.bat` confirma a presença de
 
 Na primeira vez que o app desktop abrir, ele apresenta a tela de setup (`/setup`). Escolha um perfil (Leve, Recomendado ou Alta qualidade) e baixe os componentes locais (FFmpeg, ffprobe e whisper.cpp). A partir daí você pode criar projetos, importar mídia e pedir edições no chat do assistente.
 
+## IA generativa local (Ollama)
+
+O assistente funciona em dois motores:
+
+1. **Regras determinísticas (padrão, sem download):** interpreta pedidos como “remova pausas maiores que 700 ms” ou “crie 6 cortes de 30 a 60 s” usando a transcrição e a detecção de silêncio locais. Nenhum modelo é necessário.
+2. **IA generativa local via Ollama (opcional):** um LLM roda no próprio computador e entende pedidos livres, devolvendo um plano no mesmo schema fechado `AiEditPlan`.
+
+Como ativar:
+
+1. Instale o Ollama em <https://ollama.com/download> e deixe o serviço rodando (padrão `http://127.0.0.1:11434`).
+2. No editor, painel **Assistente** → botão **Motor** → ative *Usar IA generativa nos planos*.
+3. Clique em **Testar** para detectar o servidor e os modelos instalados.
+4. Baixe um modelo recomendado direto da tela (`qwen2.5:7b-instruct`, `llama3.1:8b`, `qwen2.5:3b-instruct` ou `phi3.5:3.8b`). O download é streamado com progresso e fica salvo na máquina.
+5. Selecione o modelo. Ele passa a ser usado nos próximos pedidos.
+
+Garantias:
+
+- **Offline:** o app fala apenas com o endpoint local configurado. Nenhum prompt, transcrição ou mídia sai do computador, e não há chave de API.
+- **Nunca confia no modelo:** a resposta é validada por Zod contra `AiEditPlan` (enum fechada de operações) e, no desktop, revalidada nativamente em Rust (`src-tauri/src/ai_ops.rs`) antes de virar transação na timeline. Plano inválido é recusado inteiro.
+- **Fallback:** se o Ollama estiver desligado ou devolver algo fora do schema, o planejador determinístico assume (pode ser desligado nas configurações).
+- **Contexto mínimo:** só o escopo escolhido (projeto, sequência, seleção, intervalo ou transcrição) é enviado ao modelo local, sempre marcado como dado não confiável.
+
+No preview web, chamadas para `127.0.0.1` normalmente são bloqueadas por CORS; use o app instalado (o Ollama libera origens `tauri://` por padrão) ou inicie o Ollama com `OLLAMA_ORIGINS=*` para testar no navegador.
+
 ## Estrutura do projeto
 
 ```text
