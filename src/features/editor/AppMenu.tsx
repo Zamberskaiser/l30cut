@@ -27,7 +27,7 @@ export function AppMenu() {
 
   return (
     <>
-      <DropdownMenu defaultOpen>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
