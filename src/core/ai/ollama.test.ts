@@ -139,11 +139,16 @@ describe("llm settings", () => {
   });
 
   it("requires both enabled and a model", () => {
-    expect(isGenerativeReady({ ...DEFAULT_LLM_SETTINGS, enabled: true })).toBe(false);
-    expect(
-      isGenerativeReady({ ...DEFAULT_LLM_SETTINGS, enabled: true, model: "llama3.1:8b" }),
-    ).toBe(true);
+    expect(isGenerativeReady({ ...DEFAULT_LLM_SETTINGS, enabled: true, model: "" })).toBe(false);
+    expect(isGenerativeReady({ ...DEFAULT_LLM_SETTINGS, enabled: true })).toBe(true);
   });
+
+  it("defaults to the product model (Llama 3.1 8B), disabled until opt-in", () => {
+    expect(DEFAULT_LLM_SETTINGS.model).toBe("llama3.1:8b");
+    expect(DEFAULT_LLM_SETTINGS.enabled).toBe(false);
+    expect(isGenerativeReady(DEFAULT_LLM_SETTINGS)).toBe(false);
+  });
+
 
   it("rejects unknown fields and providers", () => {
     expect(LlmSettingsSchema.safeParse({ provider: "openai" }).success).toBe(false);
