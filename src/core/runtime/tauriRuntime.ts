@@ -30,6 +30,7 @@ import type {
   RuntimeAdapter,
   SetupProfile,
   SystemDiagnostics,
+  UpdateInfo,
 } from "./types";
 
 /**
