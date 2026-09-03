@@ -24,7 +24,16 @@
     ],
 
     "security": {
-      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost blob:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* http://localhost:*; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost data:; media-src 'self' asset: http://asset.localhost blob:; connect-src 'self' ipc: http://ipc.localhost http://127.0.0.1:* http://localhost:* https:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "dialog": false,
+      "endpoints": ["https://github.com/OWNER/REPO/releases/latest/download/latest.json"],
+      "pubkey": "dW50aWxsZWRfcHVibGljX2tleV9wbGFjZWhvbGRlcg==",
+      "windows": { "installMode": "basicUi" }
     }
   },
   "bundle": {
