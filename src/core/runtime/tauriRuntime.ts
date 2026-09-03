@@ -42,6 +42,8 @@ export const TAURI_COMMANDS = {
   export: "export_sequence",
   loadProject: "load_project",
   saveProject: "save_project",
+  writeProjectFile: "write_project_file",
+  readProjectFile: "read_project_file",
   validateAiTransaction: "validate_ai_transaction",
 } as const;
 
