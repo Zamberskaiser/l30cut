@@ -179,6 +179,7 @@ export function BinTree({ selectedBinId, onSelect }: BinTreeProps) {
               {renaming === bin.id ? (
                 <Input
                   autoFocus
+                  onFocus={(e) => e.currentTarget.select()}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   onBlur={() => commitRename(bin.id)}
