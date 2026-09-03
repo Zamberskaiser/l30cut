@@ -4,6 +4,7 @@ import { clipEnd, formatTimecode, SECOND, sequenceDuration } from "@/core/contra
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { newId } from "@/core/store/timelineReducer";
 import { useUi } from "@/core/store/uiStore";
+import { insertAssetCommands } from "@/features/media/insertAsset";
 import { HEADER_WIDTH, usToPx } from "./geometry";
 import { SequenceTabs } from "./SequenceTabs";
 import { TrackControls } from "./TrackControls";

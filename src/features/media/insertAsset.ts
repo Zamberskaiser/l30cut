@@ -1,4 +1,4 @@
-import type { EditorCommand } from "@/core/contracts/commands";
+import type { EditCommand } from "@/core/contracts/commands";
 import type { MediaAsset, Sequence } from "@/core/contracts/domain";
 import { newId } from "@/core/store/timelineReducer";
 
@@ -12,7 +12,7 @@ export function insertAssetCommands(
   sequence: Sequence,
   startUs: number,
   preferredTrackId?: string,
-): EditorCommand[] {
+): EditCommand[] {
   const label = asset.name.replace(/\.[^.]+$/, "");
   const at = Math.max(0, Math.round(startUs));
   const preferred = preferredTrackId
@@ -34,7 +34,7 @@ export function insertAssetCommands(
           ? sequence.tracks.find((t) => t.kind === "audio")
           : undefined;
 
-  const commands: EditorCommand[] = [];
+  const commands: EditCommand[] = [];
   const clipIds: string[] = [];
   for (const track of [videoTrack, audioTrack]) {
     if (!track) continue;
