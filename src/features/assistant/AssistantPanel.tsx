@@ -56,11 +56,22 @@ export function AssistantPanel() {
   const sequence = useActiveSequence();
   const [prompt, setPrompt] = useState("");
   const [scopeKind, setScopeKind] = useState<PlanScope["kind"]>("sequence");
-  const [providerId, setProviderId] = useState("deterministic");
+  const [llm, setLlm] = useState<LlmSettings>(DEFAULT_LLM_SETTINGS);
+  const [llmOpen, setLlmOpen] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [confirming, setConfirming] = useState<{ plan: AiEditPlan; messageId: string } | null>(
     null,
   );
+
+  // Preferences live in localStorage; read after hydration only.
+  useEffect(() => setLlm(loadLlmSettings()), []);
+
+  function updateLlm(next: LlmSettings) {
+    setLlm(next);
+    saveLlmSettings(next);
+  }
+
+  const generative = isGenerativeReady(llm);
 
   const scope: PlanScope = {
     kind: scopeKind,
@@ -81,8 +92,16 @@ export function AssistantPanel() {
     const assistantId = newId("msg");
     try {
       let plan: AiEditPlan | null = null;
-      const provider = DEFAULT_PROVIDERS.find((p) => p.id === providerId)!;
-      if (provider.id !== "deterministic") {
+      if (generative) {
+        // Local Ollama server on the user's own machine — nothing leaves it.
+        const provider: ProviderConfig = {
+          id: "ollama",
+          label: `Ollama · ${llm.model}`,
+          endpoint: ollamaChatEndpoint(llm.baseUrl),
+          model: llm.model,
+          enabled: true,
+          requiresKey: false,
+        };
         try {
           const { context } = buildAssistantContext(
             editor.project,
@@ -99,11 +118,21 @@ export function AssistantPanel() {
             modelInfo: { ...response.plan.modelInfo, latencyMs: response.latencyMs },
           };
         } catch (error) {
-          toast.warning("Provider local indisponível — usando planejador determinístico", {
+          if (!llm.fallbackToDeterministic) {
+            editor.pushMessage({
+              id: assistantId,
+              role: "assistant",
+              text: `A IA local não respondeu: ${(error as Error).message}. Verifique se o Ollama está rodando em ${llm.baseUrl}.`,
+              at: Date.now(),
+            });
+            return;
+          }
+          toast.warning("IA local indisponível — usando planejador determinístico", {
             description: (error as Error).message,
           });
         }
       }
+
       plan =
         plan ??
         planDeterministically({
