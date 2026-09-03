@@ -14,7 +14,7 @@ const runtime = {
     localTranscription: false,
     componentDownloads: false,
     secureKeyStorage: false,
-    updater: false,
+    updater: false, videoCreator: false,
   },
 };
 

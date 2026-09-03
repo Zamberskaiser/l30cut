@@ -83,13 +83,12 @@ export function parseScriptJson(raw: string): CreatorScene[] | null {
   const scenes = list
     .slice(0, 12)
     .map((item, index) => {
-      const row = item as Record<string, unknown>;
+      const row = item as { narration?: unknown; title?: unknown; imagePrompt?: unknown };
       const narration = typeof row.narration === "string" ? row.narration.trim() : "";
       const title = typeof row.title === "string" ? row.title.trim() : `Parte ${index + 1}`;
+      const rawPrompt = typeof row.imagePrompt === "string" ? row.imagePrompt.trim() : "";
       const imagePrompt =
-        typeof row.imagePrompt === "string" && row.imagePrompt.trim().length > 0
-          ? row.imagePrompt.trim()
-          : `cinematic still about: ${narration || title}`;
+        rawPrompt.length > 0 ? rawPrompt : `cinematic still about: ${narration || title}`;
       if (narration.length === 0 && title.length === 0) return null;
       return scene(index, title, narration, imagePrompt);
     })
