@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 echo ============================================
 echo   L30 CUT AI - build do app para Windows
-echo   Script versao 3 (2026-09-03)
+echo   Script versao 4 (2026-09-03)
 echo ============================================
 echo.
 
@@ -63,6 +63,12 @@ echo.
 echo [5/6] Gerando build web...
 call bun run build
 if errorlevel 1 goto :falhou
+if not exist ".output\public" (
+  echo   [ERRO] O build web terminou, mas a pasta .output\public nao foi criada.
+  echo   O Tauri precisa dessa pasta para empacotar a interface.
+  goto :falhou
+)
+echo   OK: arquivos web encontrados em .output\public.
 echo.
 
 echo [6/6] Gerando instalador Windows ^(Tauri^)...

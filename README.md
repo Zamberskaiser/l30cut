@@ -60,8 +60,12 @@ Para testar o app desktop real, use:
 
 ```bash
 bun run build
-cargo tauri build
+bunx --bun tauri build
 ```
+
+O build web do TanStack Start é gerado em `.output/public`; esse é o diretório
+empacotado pelo Tauri. O `build-windows.bat` valida sua existência antes de
+iniciar a geração do MSI/NSIS.
 
 ## Primeira execução
 

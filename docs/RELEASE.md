@@ -9,10 +9,13 @@
 
 ```powershell
 bun run test
-bunx tauri build
+bunx --bun tauri build
 ```
 
 Artefatos em `src-tauri/target/release/bundle/` (MSI e NSIS `.exe`).
+Os arquivos da interface são lidos de `.output/public`, saída pública do build
+TanStack Start. O script Windows interrompe com uma mensagem específica se esse
+diretório não tiver sido gerado.
 
 ## Depois do build
 
