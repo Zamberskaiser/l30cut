@@ -101,38 +101,36 @@ echo   OK: interface estatica pronta em dist\client.
 echo.
 
 echo [6/7] Gerando instalador Windows ^(Tauri^)...
-set "TAURI_OK="
-call bunx --bun tauri --version >nul 2>&1
-if not errorlevel 1 set "TAURI_OK=npm"
+set "TAURI_CMD="
 
-if not defined TAURI_OK (
+rem 1) CLI local do projeto (node_modules\.bin\tauri.cmd) - caminho mais confiavel
+if not exist "node_modules\@tauri-apps\cli\package.json" (
+  echo   Instalando @tauri-apps/cli...
   call bun add -d "@tauri-apps/cli@2"
-  if not errorlevel 1 set "TAURI_OK=npm"
 )
+if exist "node_modules\.bin\tauri.cmd" set "TAURI_CMD=node_modules\.bin\tauri.cmd"
 
-if not defined TAURI_OK (
+rem 2) Fallback: cargo-tauri
+if not defined TAURI_CMD (
   call cargo tauri --version >nul 2>&1
-  if not errorlevel 1 set "TAURI_OK=cargo"
+  if errorlevel 1 (
+    echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
+    call cargo install tauri-cli --version ^^2 --locked
+  )
+  call cargo tauri --version >nul 2>&1
+  if not errorlevel 1 set "TAURI_CMD=cargo tauri"
 )
 
-if not defined TAURI_OK (
-  echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
-  call cargo install tauri-cli --version 2 --locked
-  if not errorlevel 1 set "TAURI_OK=cargo"
-)
-
-if not defined TAURI_OK (
-  echo   [ERRO] Nao foi possivel instalar a CLI do Tauri.
+if not defined TAURI_CMD (
+  echo   [ERRO] Nao foi possivel preparar a CLI do Tauri.
   goto :falhou
 )
 
-if "%TAURI_OK%"=="npm" (
-  call bunx --bun tauri build
-) else (
-  call cargo tauri build
-)
+echo   Usando CLI: %TAURI_CMD%
+call %TAURI_CMD% build
 if errorlevel 1 goto :falhou
 echo.
+
 
 echo [7/7] Instalando o L30 CUT AI no computador...
 set "MSI_FILE="
