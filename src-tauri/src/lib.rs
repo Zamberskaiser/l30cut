@@ -12,6 +12,7 @@ pub mod ai_ops;
 
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
+use tauri_plugin_updater::UpdaterExt;
 
 #[derive(Serialize)]
 pub struct SystemDiagnostics {
