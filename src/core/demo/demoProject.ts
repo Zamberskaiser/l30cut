@@ -71,7 +71,13 @@ export function createDemoProject(): Project {
         sizeBytes: 158_000_000,
         proxyReady: true,
         demo: true,
+        binId: "bin_brutos",
       },
+    ],
+    bins: [
+      { id: "bin_brutos", name: "Brutos" },
+      { id: "bin_trilhas", name: "Trilhas e SFX" },
+      { id: "bin_exports", name: "Selecionados" },
     ],
     sequences: [
       {
@@ -121,6 +127,10 @@ export function createEmptyProject(name: string): Project {
     updatedAt: now,
     demo: false,
     assets: [],
+    bins: [
+      { id: "bin_brutos", name: "Brutos" },
+      { id: "bin_trilhas", name: "Trilhas e SFX" },
+    ],
     sequences: [
       {
         id: "seq_main",

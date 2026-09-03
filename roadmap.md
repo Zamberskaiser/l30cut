@@ -49,6 +49,14 @@
 - [x] Comandos e atalhos: edit.openTrim, effects.fadeIn/fadeOut, effects.chromaToggle
 - [x] Filtros ffmpeg determinísticos para exportação (colorkey, fade, pixelize/boxblur)
 
+## Entrega atual: pastas de mídia (bins)
+
+- [x] Domínio `Bin` com aninhamento, contagem recursiva e proteção contra ciclos
+- [x] Comandos transacionais: createBin, renameBin, deleteBin, moveBin, moveAssetsToBin
+- [x] Árvore de pastas no painel esquerdo com criar/renomear/excluir e subpastas
+- [x] Arrastar mídia para pasta, arrastar pasta para pasta, importar direto na pasta selecionada
+- [x] Excluir pasta reparenteia conteúdo (nunca apaga mídia nem clips)
+
 ## Backlog (próximas melhorias)
 
 - [x] Clips A/V vinculados (link/unlink) com sincronismo em mover, cortar, aparar e apagar

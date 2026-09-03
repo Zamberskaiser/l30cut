@@ -35,9 +35,59 @@ export const MediaAssetSchema = z
     thumbnailUrl: z.string().optional(),
     proxyReady: z.boolean().default(false),
     demo: z.boolean().default(false),
+    /** Bin (folder) that holds the asset; `undefined` means the project root. */
+    binId: IdSchema.optional(),
   })
   .strict();
 export type MediaAsset = z.infer<typeof MediaAssetSchema>;
+
+/**
+ * Media bin — a project folder in the media panel. Bins are pure organization:
+ * they never move files on disk and never affect clips, so deleting a bin only
+ * reparents its contents.
+ */
+export const BinSchema = z
+  .object({
+    id: IdSchema,
+    name: z.string().min(1).max(80),
+    /** Parent bin id; `undefined` means a root-level bin. */
+    parentId: IdSchema.optional(),
+    color: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
+  })
+  .strict();
+export type Bin = z.infer<typeof BinSchema>;
+
+/** Root-first depth-first order, so the panel renders a stable tree. */
+export function binTree(bins: Bin[], parentId?: string): Array<{ bin: Bin; depth: number }> {
+  const walk = (parent: string | undefined, depth: number): Array<{ bin: Bin; depth: number }> =>
+    bins
+      .filter((b) => (b.parentId ?? undefined) === parent)
+      .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"))
+      .flatMap((bin) => [{ bin, depth }, ...walk(bin.id, depth + 1)]);
+  return walk(parentId, 0);
+}
+
+/** Ids of `binId` plus every descendant, used to count/filter recursively. */
+export function binWithDescendants(bins: Bin[], binId: string): string[] {
+  const out = [binId];
+  for (const bin of bins) {
+    if (bin.parentId === binId) out.push(...binWithDescendants(bins, bin.id));
+  }
+  return out;
+}
+
+/** True when `candidate` is `binId` or lives inside it (prevents cyclic moves). */
+export function isBinInside(bins: Bin[], candidate: string, binId: string): boolean {
+  let current: string | undefined = candidate;
+  while (current) {
+    if (current === binId) return true;
+    current = bins.find((b) => b.id === current)?.parentId;
+  }
+  return false;
+}
 
 export const TrackKindSchema = z.enum(["video", "audio", "caption"]);
 export type TrackKind = z.infer<typeof TrackKindSchema>;
@@ -304,6 +354,7 @@ export const ProjectSchema = z
     updatedAt: z.string(),
     demo: z.boolean().default(false),
     assets: z.array(MediaAssetSchema),
+    bins: z.array(BinSchema).default([]),
     sequences: z.array(SequenceSchema),
     activeSequenceId: IdSchema,
     transcript: z.array(TranscriptSegmentSchema).default([]),
