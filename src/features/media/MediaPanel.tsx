@@ -154,7 +154,7 @@ export function MediaPanel() {
           size="sm"
           variant="secondary"
           className="h-7 gap-1.5"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => void startImport()}
           disabled={busy}
         >
           <Plus className="size-3.5" /> Importar
@@ -183,7 +183,7 @@ export function MediaPanel() {
               title="Nenhuma mídia"
               description="Importe MP4, MOV, WAV ou imagem para começar."
               action={
-                <Button size="sm" variant="secondary" onClick={() => inputRef.current?.click()}>
+                <Button size="sm" variant="secondary" onClick={() => void startImport()}>
                   Importar arquivo
                 </Button>
               }
