@@ -6,11 +6,14 @@ import {
   clipDuration,
   clipEnd,
   clipGainDbAt,
+  clipTransitionOpacityAt,
   dbToAmplitude,
   formatTimecode,
   sequenceDuration,
+  trackerBoxAt,
   type Aspect,
 } from "@/core/contracts/domain";
+import { useChromaKeyCanvas } from "@/features/effects/useChromaKeyCanvas";
 
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { useUi } from "@/core/store/uiStore";
@@ -28,6 +31,7 @@ export function PreviewMonitor() {
   const { project, playheadUs, setPlayhead, run, selection, runtime } = useEditor();
   const sequence = useActiveSequence();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const chromaCanvasRef = useRef<HTMLCanvasElement>(null);
   const ui = useUi();
   const playing = ui.playing;
   const setPlaying = ui.setPlaying;
@@ -43,6 +47,15 @@ export function PreviewMonitor() {
 
   const asset = activeClip ? project.assets.find((a) => a.id === activeClip.assetId) : undefined;
   const caption = sequence.captions.find((c) => playheadUs >= c.startUs && playheadUs < c.endUs);
+
+  const clipOffsetUs = activeClip ? playheadUs - activeClip.startUs : 0;
+  const opacity = activeClip ? clipTransitionOpacityAt(activeClip, clipOffsetUs) : 1;
+  const dipToBlack =
+    activeClip?.transitionIn?.kind === "dip" || activeClip?.transitionOut?.kind === "dip";
+  const trackerBox = trackerBoxAt(activeClip?.tracker, clipOffsetUs);
+  const chroma = activeClip?.chroma?.enabled ? activeClip.chroma : undefined;
+
+  useChromaKeyCanvas(videoRef, chromaCanvasRef, chroma, playing);
 
   // Keep the <video> element aligned with the timeline playhead (source time).
   useEffect(() => {
@@ -136,14 +149,25 @@ export function PreviewMonitor() {
             asset.kind === "image" ? (
               <img src={asset.path} alt={asset.name} className="size-full object-cover" />
             ) : (
-              <video
-                ref={videoRef}
-                src={asset.path}
-                muted={sequence.tracks.some((t) => t.kind === "audio" && t.muted)}
-                playsInline
-                className="size-full object-cover"
-                crossOrigin="anonymous"
-              />
+              <>
+                <video
+                  ref={videoRef}
+                  src={asset.path}
+                  muted={sequence.tracks.some((t) => t.kind === "audio" && t.muted)}
+                  playsInline
+                  className={`size-full object-cover ${chroma ? "invisible" : ""}`}
+                  crossOrigin="anonymous"
+                  style={{ opacity }}
+                />
+                {chroma ? (
+                  <canvas
+                    ref={chromaCanvasRef}
+                    aria-label="Pré-visualização com chroma key"
+                    className="absolute inset-0 size-full object-cover"
+                    style={{ opacity }}
+                  />
+                ) : null}
+              </>
             )
           ) : (
             <div className="grid size-full min-h-[16rem] min-w-[20rem] place-items-center px-6 text-center">
@@ -152,6 +176,40 @@ export function PreviewMonitor() {
               </p>
             </div>
           )}
+          {trackerBox && activeClip?.tracker ? (
+            <div
+              aria-label="Área rastreada"
+              className={
+                activeClip.tracker.target === "box"
+                  ? "pointer-events-none absolute rounded-sm border-2 border-accent"
+                  : activeClip.tracker.target === "text"
+                    ? "pointer-events-none absolute grid place-items-center"
+                    : "pointer-events-none absolute rounded-sm backdrop-blur-md"
+              }
+              style={{
+                left: `${trackerBox.x * 100}%`,
+                top: `${trackerBox.y * 100}%`,
+                width: `${trackerBox.w * 100}%`,
+                height: `${trackerBox.h * 100}%`,
+                ...(activeClip.tracker.target === "pixelate"
+                  ? { backdropFilter: "blur(10px) contrast(1.4)" }
+                  : {}),
+              }}
+            >
+              {activeClip.tracker.target === "text" ? (
+                <span className="rounded-sm bg-background/80 px-1.5 py-0.5 text-[10px] leading-none">
+                  {activeClip.tracker.label || "Rastreado"}
+                </span>
+              ) : null}
+            </div>
+          ) : null}
+          {dipToBlack && opacity < 1 ? (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-black"
+              style={{ opacity: 1 - opacity }}
+            />
+          ) : null}
           {caption ? (
             <div className="absolute inset-x-0 bottom-3 px-4">
               <p className="mx-auto max-w-[90%] rounded-sm bg-background/80 px-2 py-1 text-center text-[11px] leading-snug">
