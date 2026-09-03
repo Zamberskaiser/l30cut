@@ -124,8 +124,11 @@ export function parsePullLine(line: string, previous: PullProgress | null): Pull
   const total = typeof item.total === "number" ? item.total : (previous?.totalBytes ?? 0);
   const completed = typeof item.completed === "number" ? item.completed : 0;
   const status = typeof item.status === "string" ? item.status : (previous?.status ?? "");
-  const progress =
-    total > 0 ? Math.min(1, completed / total) : /success/i.test(status) ? 1 : (previous?.progress ?? 0);
+  const progress = /success/i.test(status)
+    ? 1
+    : total > 0 && completed > 0
+      ? Math.min(1, completed / total)
+      : (previous?.progress ?? 0);
   return { progress, status, completedBytes: completed, totalBytes: total };
 }
 
@@ -142,8 +145,8 @@ export async function checkOllama(
   const base = normalizeOllamaBaseUrl(baseUrl);
   try {
     const [tags, version] = await Promise.all([
-      fetchImpl(`${base}/api/tags`, { signal }).then(readJson),
-      fetchImpl(`${base}/api/version`, { signal })
+      fetchImpl(`${base}/api/tags`, signal ? { signal } : {}).then(readJson),
+      fetchImpl(`${base}/api/version`, signal ? { signal } : {})
         .then(readJson)
         .catch(() => null),
     ]);
@@ -177,7 +180,7 @@ export async function pullOllamaModel(
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ model, stream: true }),
-    signal,
+    ...(signal ? { signal } : {}),
   });
   if (!response.ok) throw new Error(`Ollama respondeu ${response.status} ao baixar ${model}`);
   if (!response.body) throw new Error("Resposta de download sem corpo.");
