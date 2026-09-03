@@ -88,6 +88,7 @@ export class TauriRuntime implements RuntimeAdapter {
     localTranscription: true,
     componentDownloads: true,
     secureKeyStorage: true,
+    updater: true,
   };
 
   async diagnose(): Promise<SystemDiagnostics> {
