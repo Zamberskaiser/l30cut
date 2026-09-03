@@ -39,16 +39,16 @@ export interface RecommendedModel {
 /** Small instruct models that reliably emit JSON and fit consumer GPUs/CPUs. */
 export const RECOMMENDED_OLLAMA_MODELS: RecommendedModel[] = [
   {
+    id: "llama3.1:8b",
+    label: "Llama 3.1 8B (padrão)",
+    approxBytes: 4_900_000_000,
+    note: "Escolha oficial do L30 CUT AI: boa compreensão de português e planos em JSON. ~8 GB de RAM/VRAM.",
+  },
+  {
     id: "qwen2.5:7b-instruct",
     label: "Qwen 2.5 7B Instruct",
     approxBytes: 4_700_000_000,
-    note: "Melhor equilíbrio para planos em JSON. Precisa de ~8 GB de RAM/VRAM.",
-  },
-  {
-    id: "llama3.1:8b",
-    label: "Llama 3.1 8B",
-    approxBytes: 4_900_000_000,
-    note: "Boa compreensão de português. ~8 GB de RAM/VRAM.",
+    note: "Alternativa com bom desempenho em JSON. Precisa de ~8 GB de RAM/VRAM.",
   },
   {
     id: "qwen2.5:3b-instruct",
@@ -63,6 +63,9 @@ export const RECOMMENDED_OLLAMA_MODELS: RecommendedModel[] = [
     note: "Rápido e pequeno; planos simples.",
   },
 ];
+
+/** Modelo padrão do produto: usado quando o usuário liga a IA local sem escolher outro. */
+export const DEFAULT_OLLAMA_MODEL = "llama3.1:8b";
 
 export const DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434";
 

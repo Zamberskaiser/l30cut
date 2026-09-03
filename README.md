@@ -83,7 +83,7 @@ Como ativar:
 1. Instale o Ollama em <https://ollama.com/download> e deixe o serviço rodando (padrão `http://127.0.0.1:11434`).
 2. No editor, painel **Assistente** → botão **Motor** → ative *Usar IA generativa nos planos*.
 3. Clique em **Testar** para detectar o servidor e os modelos instalados.
-4. Baixe um modelo recomendado direto da tela (`qwen2.5:7b-instruct`, `llama3.1:8b`, `qwen2.5:3b-instruct` ou `phi3.5:3.8b`). O download é streamado com progresso e fica salvo na máquina.
+4. Baixe o modelo padrão do produto, **Llama 3.1 8B** (`llama3.1:8b`), direto da tela. Alternativas: `qwen2.5:7b-instruct`, `qwen2.5:3b-instruct` (leve) ou `phi3.5:3.8b`. O download é streamado com progresso e fica salvo na máquina.
 5. Selecione o modelo. Ele passa a ser usado nos próximos pedidos.
 
 Garantias:
