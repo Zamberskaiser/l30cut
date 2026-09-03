@@ -7,6 +7,12 @@ import type {
 } from "@/core/contracts/domain";
 import { SECOND } from "@/core/contracts/domain";
 import { createDemoProject } from "@/core/demo/demoProject";
+import {
+  parseProjectFile,
+  projectFileName,
+  serializeProjectFile,
+  PROJECT_FILE_EXTENSION,
+} from "@/core/project/projectFile";
 import { ASPECT_RESOLUTIONS, COMPONENT_CATALOG, SETUP_PROFILES } from "./catalog";
 import type {
   ComponentId,
