@@ -17,6 +17,7 @@ import { EmptyState } from "@/features/editor/EmptyState";
 import { onAppEvent } from "@/core/commands/appEvents";
 import { ASSET_DND_MIME } from "@/features/timeline/dnd";
 import { BinTree } from "./BinTree";
+import { insertAssetCommands, trackEndUs } from "./insertAsset";
 
 const ACCEPTED = ".mp4,.mov,.wav,.mp3,.m4a,.png,.jpg,.jpeg";
 const MAX_BYTES = 4 * 1024 * 1024 * 1024;
@@ -127,24 +128,9 @@ export function MediaPanel() {
       asset.kind === "audio" ? t.kind === "audio" : t.kind === "video",
     );
     if (!track) return;
-    const end = sequence.clips
-      .filter((c) => c.trackId === track.id)
-      .reduce((m, c) => Math.max(m, c.startUs + clipDuration(c)), 0);
-    run(
-      [
-        {
-          type: "insertClip",
-          clipId: newId("clip"),
-          trackId: track.id,
-          assetId: asset.id,
-          startUs: end,
-          sourceInUs: 0,
-          sourceOutUs: asset.durationUs,
-          label: asset.name.replace(/\.[^.]+$/, ""),
-        },
-      ],
-      `Inserir ${asset.name}`,
-    );
+    const commands = insertAssetCommands(asset, sequence, trackEndUs(sequence, track.id), track.id);
+    if (commands.length === 0) return;
+    run(commands, `Inserir ${asset.name}`);
   }
 
   function analyzeSilence(asset: MediaAsset) {

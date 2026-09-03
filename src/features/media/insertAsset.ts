@@ -1,6 +1,6 @@
 import type { EditorCommand } from "@/core/contracts/commands";
 import type { MediaAsset, Sequence } from "@/core/contracts/domain";
-import { newId } from "@/core/contracts/domain";
+import { newId } from "@/core/store/timelineReducer";
 
 /**
  * Premiere-like insertion: a video file that carries audio lands as TWO clips —

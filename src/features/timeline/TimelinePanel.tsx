@@ -85,21 +85,9 @@ export function TimelinePanel() {
       toast.info("Trilha de legendas não aceita mídia");
       return;
     }
-    editor.run(
-      [
-        {
-          type: "insertClip",
-          clipId: newId("clip"),
-          trackId,
-          assetId,
-          startUs: Math.round(startUs),
-          sourceInUs: 0,
-          sourceOutUs: asset.durationUs,
-          label: asset.name.replace(/\.[^.]+$/, ""),
-        },
-      ],
-      `Inserir ${asset.name}`,
-    );
+    const commands = insertAssetCommands(asset, sequence, startUs, trackId);
+    if (commands.length === 0) return;
+    editor.run(commands, `Inserir ${asset.name}`);
   }
 
   function renameTrack(trackId: string, current: string) {
