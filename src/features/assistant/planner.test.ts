@@ -15,6 +15,7 @@ const runtime = {
     componentDownloads: false,
     secureKeyStorage: false,
     updater: false,
+    videoCreator: false,
   },
 };
 

@@ -21,6 +21,10 @@ import {
 import { ASPECT_RESOLUTIONS } from "./catalog";
 import type {
   AiValidationReport,
+  CreatorEngines,
+  CreatorRenderOptions,
+  CreatorResult,
+  CreatorScene,
   ComponentId,
   ComponentStatus,
   ExportRequest,
@@ -54,6 +58,9 @@ export const TAURI_COMMANDS = {
   validateAiTransaction: "validate_ai_transaction",
   checkForUpdate: "check_for_update",
   installUpdate: "install_update",
+  listAiEngines: "list_ai_engines",
+  llmGenerate: "llm_generate",
+  createVideo: "create_ai_video",
 } as const;
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
@@ -92,6 +99,7 @@ export class TauriRuntime implements RuntimeAdapter {
     componentDownloads: true,
     secureKeyStorage: true,
     updater: true,
+    videoCreator: true,
   };
 
   async diagnose(): Promise<SystemDiagnostics> {
@@ -294,5 +302,34 @@ export class TauriRuntime implements RuntimeAdapter {
   async installUpdate(): Promise<void> {
     const invoke = await getInvoke();
     await invoke(TAURI_COMMANDS.installUpdate);
+  }
+
+  async listAiEngines(): Promise<CreatorEngines> {
+    const invoke = await getInvoke();
+    return z
+      .object({
+        ffmpeg: z.boolean(),
+        narration: z.boolean(),
+        images: z.boolean(),
+        llm: z.boolean(),
+      })
+      .parse(await invoke(TAURI_COMMANDS.listAiEngines));
+  }
+
+  async generateScript(endpoint: string, model: string, prompt: string): Promise<string> {
+    const invoke = await getInvoke();
+    return invoke<string>(TAURI_COMMANDS.llmGenerate, { endpoint, model, prompt });
+  }
+
+  async createVideo(
+    scenes: CreatorScene[],
+    options: CreatorRenderOptions,
+    onProgress: ProgressSink,
+  ): Promise<CreatorResult> {
+    const invoke = await getInvoke();
+    onProgress({ progress: 0.05, detail: `Montando ${scenes.length} cena(s) com FFmpeg` });
+    const result = await invoke<CreatorResult>(TAURI_COMMANDS.createVideo, { scenes, options });
+    onProgress({ progress: 1, detail: "Vídeo pronto" });
+    return result;
   }
 }

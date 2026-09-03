@@ -62,8 +62,11 @@
 - [x] Host Rust: probe_media com ffprobe (duração, resolução, fps, trilhas de áudio) + install_component real (FFmpeg/whisper.cpp/modelo)
 - [x] Host Rust: generate_proxy (miniaturas), detect_silence (silencedetect), transcribe_asset (whisper.cpp), export_sequence (concat H.264)
 - [x] Importar vídeo com áudio cria clip de vídeo + clip de áudio vinculados (A/V link estilo Premiere)
-- [ ] Criador de vídeos com IA local: roteiro (llama.cpp), narração (Piper TTS), imagens (stable-diffusion.cpp/SDXL),
-      montagem determinística com FFmpeg; opcional LTX-Video/Wan via ComfyUI em GPUs potentes
+- [x] Criador de vídeos com IA local: aba "Criar" com roteiro (LLM local em loopback), narração (Piper TTS),
+      imagens (stable-diffusion.cpp) e montagem determinística com FFmpeg (Ken Burns + concat), resultado
+      importado e inserido na timeline
+- [ ] Opcional para GPU 8 GB+: trechos animados com LTX-Video/Wan 2.x via ComfyUI local
+
 
 ## Backlog (próximas melhorias)
 

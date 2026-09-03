@@ -15,6 +15,8 @@ import {
 } from "@/core/project/projectFile";
 import { ASPECT_RESOLUTIONS, COMPONENT_CATALOG, SETUP_PROFILES } from "./catalog";
 import type {
+  CreatorEngines,
+  CreatorResult,
   ComponentId,
   ComponentStatus,
   ExportRequest,
@@ -71,6 +73,7 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     componentDownloads: false,
     secureKeyStorage: false,
     updater: false,
+    videoCreator: false,
   };
 
   private components: ComponentStatus[] = COMPONENT_CATALOG.map((c) => ({
@@ -257,6 +260,20 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
 
   async installUpdate(): Promise<void> {
     throw new Error("Atualizações só funcionam no aplicativo instalado.");
+  }
+
+  async listAiEngines(): Promise<CreatorEngines> {
+    return { ffmpeg: false, narration: false, images: false, llm: false };
+  }
+
+  async generateScript(): Promise<string> {
+    throw new Error("O roteirista local (LLM) só roda no aplicativo instalado.");
+  }
+
+  async createVideo(): Promise<CreatorResult> {
+    throw new Error(
+      "A renderização do vídeo usa FFmpeg local e só funciona no aplicativo instalado.",
+    );
   }
 }
 

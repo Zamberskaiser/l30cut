@@ -41,7 +41,12 @@ fn exe(name: &str) -> String {
     }
 }
 
-fn app_dir(app: &tauri::AppHandle, sub: &str) -> Result<PathBuf, String> {
+/// Platform-correct executable file name (`ffmpeg` / `ffmpeg.exe`).
+pub fn exe_name(name: &str) -> String {
+    exe(name)
+}
+
+pub fn app_dir(app: &tauri::AppHandle, sub: &str) -> Result<PathBuf, String> {
     let dir = app
         .path()
         .app_data_dir()
@@ -53,12 +58,29 @@ fn app_dir(app: &tauri::AppHandle, sub: &str) -> Result<PathBuf, String> {
 
 /// Resolves a bundled binary, falling back to the same name on PATH so a
 /// system-wide FFmpeg install also works.
-fn tool(app: &tauri::AppHandle, name: &str) -> Result<PathBuf, String> {
+pub fn tool(app: &tauri::AppHandle, name: &str) -> Result<PathBuf, String> {
     let local = app_dir(app, "bin")?.join(exe(name));
     if local.exists() {
         return Ok(local);
     }
     Ok(PathBuf::from(name))
+}
+
+/// True when the tool can actually be launched (bundled or on PATH).
+pub fn tool_exists(app: &tauri::AppHandle, name: &str) -> bool {
+    match tool(app, name) {
+        Ok(path) => {
+            if path.exists() {
+                return true;
+            }
+            spawnable(&path)
+                .arg("-version")
+                .output()
+                .map(|o| o.status.success())
+                .unwrap_or(false)
+        }
+        Err(_) => false,
+    }
 }
 
 fn spawnable(program: &Path) -> Command {
@@ -71,20 +93,31 @@ fn spawnable(program: &Path) -> Command {
     cmd
 }
 
-fn run(program: &Path, args: &[String]) -> Result<std::process::Output, String> {
+pub fn run(program: &Path, args: &[String]) -> Result<std::process::Output, String> {
     spawnable(program)
         .args(args)
         .output()
         .map_err(|e| format!("não foi possível executar {}: {e}", program.display()))
 }
 
-fn missing_tool(name: &str) -> String {
+/// Spawns a tool with piped stdin/stdout, for engines that read text from stdin.
+pub fn spawn_piped(program: &Path, args: &[String]) -> Result<std::process::Child, String> {
+    spawnable(program)
+        .args(args)
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("não foi possível executar {}: {e}", program.display()))
+}
+
+pub fn missing_tool(name: &str) -> String {
     format!(
         "{name} não está instalado. Abra a tela de configuração e instale os componentes locais."
     )
 }
 
-fn sanitize_stem(name: &str) -> String {
+pub fn sanitize_stem(name: &str) -> String {
     let cleaned: String = name
         .chars()
         .map(|c| {
@@ -102,6 +135,7 @@ fn sanitize_stem(name: &str) -> String {
         trimmed
     }
 }
+
 
 fn rand_id(prefix: &str) -> String {
     let nanos = std::time::SystemTime::now()

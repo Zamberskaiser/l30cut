@@ -87,6 +87,8 @@ export interface RuntimeAdapter {
     secureKeyStorage: boolean;
     /** True when the host can check/install app updates. */
     updater: boolean;
+    /** True when the host can render an AI video with local engines. */
+    videoCreator: boolean;
   };
   diagnose(): Promise<SystemDiagnostics>;
   listComponents(): Promise<ComponentStatus[]>;
@@ -143,6 +145,55 @@ export interface RuntimeAdapter {
   checkForUpdate?(): Promise<UpdateInfo | null>;
   /** Downloads, installs and restarts the app. */
   installUpdate?(): Promise<void>;
+  /** Which local creator engines are installed (FFmpeg, Piper, diffusion, LLM). */
+  listAiEngines?(): Promise<CreatorEngines>;
+  /** Asks a LOCAL OpenAI-compatible endpoint for a scene script. */
+  generateScript?(endpoint: string, model: string, prompt: string): Promise<string>;
+  /** Renders the scene list into a real MP4 with FFmpeg + local engines. */
+  createVideo?(
+    scenes: CreatorScene[],
+    options: CreatorRenderOptions,
+    onProgress: ProgressSink,
+  ): Promise<CreatorResult>;
+}
+
+/** Local engines the AI video creator can use. */
+export interface CreatorEngines {
+  ffmpeg: boolean;
+  narration: boolean;
+  images: boolean;
+  llm: boolean;
+}
+
+export interface CreatorScene {
+  id: string;
+  /** Text burned on screen (optional). */
+  title: string;
+  /** Narration read by the local TTS. */
+  narration: string;
+  /** Prompt for the local image model. */
+  imagePrompt: string;
+  /** Existing still on disk, when the user brings their own picture. */
+  imagePath?: string;
+  durationUs: number;
+  /** Card background when no image model is installed. */
+  color: string;
+}
+
+export interface CreatorRenderOptions {
+  width: number;
+  height: number;
+  outputName: string;
+  narrate: boolean;
+  burnTitles: boolean;
+}
+
+export interface CreatorResult {
+  outputPath: string;
+  bytes: number;
+  usedNarration: boolean;
+  usedImageModel: boolean;
+  sceneCount: number;
 }
 
 export interface UpdateInfo {
