@@ -2,8 +2,13 @@
 
 ## Pré-requisitos locais
 
-- Windows 10/11 x64, Rust stable, Bun, WebView2 Runtime.
+- Windows 10/11 x64, Rust stable, Bun, Visual C++ Build Tools e WebView2 Runtime.
 - `bun install`
+
+O compilador Rust para Windows depende do linker MSVC (`link.exe`). O `build-windows.bat`
+detecta esse componente e, se necessário, instala silenciosamente o Visual Studio 2022 Build
+Tools com a carga `Microsoft.VisualStudio.Workload.VCTools`, depois ativa `vcvars64.bat` na
+mesma execução. VS Code não substitui esse compilador.
 
 ## Build local
 
