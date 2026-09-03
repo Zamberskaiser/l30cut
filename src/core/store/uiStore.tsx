@@ -75,6 +75,11 @@ export interface UiStore {
   setShortcutsOpen: (open: boolean) => void;
   paletteOpen: boolean;
   setPaletteOpen: (open: boolean) => void;
+  /** Advanced trim window. */
+  trimOpen: boolean;
+  setTrimOpen: (open: boolean) => void;
+  trimRipple: boolean;
+  setTrimRipple: (ripple: boolean) => void;
   /** commandId → combos, preset merged with user overrides. */
   bindings: BindingMap;
   overrides: ShortcutOverrides;
@@ -98,6 +103,8 @@ export function UiProvider({ children }: { children: ReactNode }) {
   const [assistantCollapsed, setAssistantCollapsed] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [trimOpen, setTrimOpen] = useState(false);
+  const [trimRipple, setTrimRipple] = useState(false);
   const [overrides, setOverrides] = useState<ShortcutOverrides>(EMPTY_OVERRIDES);
   const [hydrated, setHydrated] = useState(false);
 
