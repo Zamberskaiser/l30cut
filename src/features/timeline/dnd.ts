@@ -4,3 +4,6 @@
  * as asset drops.
  */
 export const ASSET_DND_MIME = "application/x-l30cut-asset";
+
+/** Drag of a media bin (folder) row, used to nest bins inside each other. */
+export const BIN_DND_MIME = "application/x-l30cut-bin";
