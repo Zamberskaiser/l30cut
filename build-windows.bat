@@ -74,7 +74,7 @@ if not errorlevel 1 set "TAURI_OK=npm"
 
 if not defined TAURI_OK (
   echo   Instalando @tauri-apps/cli via bun...
-  call bun add -d "@tauri-apps/cli@^2.0.0"
+  call bun add -d "@tauri-apps/cli@2"
   if not errorlevel 1 set "TAURI_OK=npm"
 )
 
