@@ -85,6 +85,8 @@ export interface RuntimeAdapter {
     localTranscription: boolean;
     componentDownloads: boolean;
     secureKeyStorage: boolean;
+    /** True when the host can check/install app updates. */
+    updater: boolean;
   };
   diagnose(): Promise<SystemDiagnostics>;
   listComponents(): Promise<ComponentStatus[]>;
@@ -137,6 +139,16 @@ export interface RuntimeAdapter {
    * layer is all there is, and that is documented as NOT a security boundary.
    */
   validateAiTransaction?(commandsJson: string): Promise<AiValidationReport>;
+  /** Checks the configured updater endpoint. Returns null when no update is available. */
+  checkForUpdate?(): Promise<UpdateInfo | null>;
+  /** Downloads, installs and restarts the app. */
+  installUpdate?(): Promise<void>;
+}
+
+export interface UpdateInfo {
+  version: string;
+  date: string | null;
+  body: string | null;
 }
 
 export interface AiValidationReport {
