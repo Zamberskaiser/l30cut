@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 9 (2026-09-03)
+rem   Script versao 10 (2026-09-03)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem ============================================================
@@ -20,7 +20,7 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 9 (2026-09-03)
+echo   Script versao 10 (2026-09-03)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
@@ -99,14 +99,18 @@ if errorlevel 1 (
   )
 )
 echo   OK: CLI local do Tauri pronta.
-call bun run tauri build > "%~dp0build-log.txt" 2>&1
+echo   Compilando... isso leva de 5 a 20 minutos na primeira vez.
+echo   Acompanhe o progresso abaixo (tambem salvo em build-log.txt):
+echo.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & bun run tauri build 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo   [ERRO] A geracao do instalador falhou. Log completo em: %~dp0build-log.txt
-  powershell -NoProfile -Command "Get-Content -Tail 30 '%~dp0build-log.txt'"
+  powershell -NoProfile -Command "Get-Content -Tail 40 '%~dp0build-log.txt'"
   goto :falhou
 )
 echo   OK: build concluido. Log em: %~dp0build-log.txt
 echo.
+
 
 
 echo [7/7] Instalando o L30 CUT AI no computador...
@@ -147,18 +151,37 @@ for %%P in (
   "%ProgramFiles%\L30 CUT AI\L30 CUT AI.exe"
   "%ProgramFiles(x86)%\L30 CUT AI\L30 CUT AI.exe"
   "%LOCALAPPDATA%\Programs\L30 CUT AI\L30 CUT AI.exe"
+  "src-tauri\target\release\L30 CUT AI.exe"
   "src-tauri\target\release\l30-cut-ai.exe"
 ) do (
   if not defined APP_EXE if exist %%P set "APP_EXE=%%~fP"
 )
 
-if defined APP_EXE (
-  start "" "%APP_EXE%"
-  echo   App iniciado: %APP_EXE%
-) else (
-  echo   [AVISO] Executavel nao localizado. Abra pelo menu Iniciar.
+if not defined APP_EXE (
+  echo   [ERRO] Executavel do L30 CUT AI nao encontrado.
+  echo   Procurei em Arquivos de Programas, AppData e src-tauri\target\release.
+  echo   Veja o final de build-log.txt para o motivo real do build.
+  powershell -NoProfile -Command "if (Test-Path '%~dp0build-log.txt') { Get-Content -Tail 25 '%~dp0build-log.txt' }"
   if exist "src-tauri\target\release\bundle" start "" "src-tauri\target\release\bundle"
+  goto :falhou
 )
+
+start "" "%APP_EXE%"
+echo   App iniciado: %APP_EXE%
+echo   Confirmando se a janela abriu...
+timeout /t 8 /nobreak >nul
+tasklist /fi "imagename eq L30 CUT AI.exe" 2>nul | find /i "L30 CUT AI.exe" >nul
+if errorlevel 1 (
+  echo   [AVISO] O app fechou logo apos abrir. Rodando no console para capturar o erro...
+  echo   Log do app: %~dp0app-log.txt
+  "%APP_EXE%" > "%~dp0app-log.txt" 2>&1
+  powershell -NoProfile -Command "if (Test-Path '%~dp0app-log.txt') { Get-Content -Tail 25 '%~dp0app-log.txt' }"
+  echo.
+  echo   Envie o conteudo de app-log.txt para eu corrigir a causa.
+  pause
+  exit /b 1
+)
+echo   OK: L30 CUT AI esta rodando.
 
 echo.
 echo ============================================
@@ -170,6 +193,7 @@ echo   Para abrir de novo depois: run-windows.bat ou menu Iniciar.
 echo.
 timeout /t 20 >nul
 exit /b 0
+
 
 :addpath
 set "PATH=%PATH%;%USERPROFILE%\.bun\bin;%USERPROFILE%\.cargo\bin"

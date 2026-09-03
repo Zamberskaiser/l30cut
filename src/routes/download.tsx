@@ -188,6 +188,13 @@ function DownloadPage() {
             o app instalado e o abre para você.
           </p>
           <p className="mt-1">
+            Se o app não abrir: o build agora mostra o progresso na tela e salva tudo em{" "}
+            <span className="tabular">build-log.txt</span>. Quando a janela fecha sozinha, os dois
+            scripts reabrem o app no console e gravam o erro em{" "}
+            <span className="tabular">app-log.txt</span> — esse arquivo diz a causa exata.
+          </p>
+
+          <p className="mt-1">
             Verifique a integridade comparando o SHA-256 do arquivo baixado com o publicado no
             release.
           </p>

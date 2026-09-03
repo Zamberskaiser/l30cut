@@ -77,6 +77,17 @@ if defined FOUND_EXE (
   echo.
   echo Iniciando L30 CUT AI...
   start "" "%FOUND_EXE%"
+  timeout /t 8 /nobreak >nul
+  tasklist /fi "imagename eq L30 CUT AI.exe" 2>nul | find /i "L30 CUT AI.exe" >nul
+  if errorlevel 1 (
+    echo [AVISO] O app fechou logo apos abrir. Rodando no console para capturar o erro...
+    "%FOUND_EXE%" > "%~dp0app-log.txt" 2>&1
+    powershell -NoProfile -Command "if (Test-Path '%~dp0app-log.txt') { Get-Content -Tail 25 '%~dp0app-log.txt' }"
+    echo.
+    echo Log completo em: %~dp0app-log.txt
+    pause
+    exit /b 1
+  )
   echo.
   echo Pronto. Na primeira execucao, siga a tela de setup para baixar FFmpeg e whisper.cpp.
   timeout /t 3 /nobreak >nul
