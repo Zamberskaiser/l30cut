@@ -58,6 +58,9 @@ export const PREMIERE_WINDOWS_PRESET: BindingMap = {
   // Clip
   "audio.gain": ["KeyG"],
   "clip.speed": ["Ctrl+KeyR"],
+  "edit.openTrim": ["Shift+KeyT"],
+  "effects.fadeIn": ["Shift+KeyF"],
+  "effects.fadeOut": ["Ctrl+Shift+KeyF"],
   "clip.link": ["Ctrl+KeyL"],
   "clip.unlink": ["Ctrl+Shift+KeyL"],
 

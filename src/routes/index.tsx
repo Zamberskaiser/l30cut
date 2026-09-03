@@ -7,6 +7,8 @@ import { useCommandContext } from "@/core/commands/useCommandContext";
 import { useEditorShortcuts } from "@/core/shortcuts/useEditorShortcuts";
 import { useUi } from "@/core/store/uiStore";
 import { AssistantPanel } from "@/features/assistant/AssistantPanel";
+import { EffectsPanel } from "@/features/effects/EffectsPanel";
+import { TrimDialog } from "@/features/effects/TrimDialog";
 import { PreviewMonitor } from "@/features/editor/PreviewMonitor";
 import { StatusBar } from "@/features/editor/StatusBar";
 import { TopBar } from "@/features/editor/TopBar";
@@ -57,12 +59,15 @@ function EditorPage() {
             onPointerDownCapture={() => ui.setFocused("media")}
           >
             <Tabs defaultValue="media" className="flex min-h-0 flex-1 flex-col gap-0">
-              <TabsList className={`m-2 grid ${pro ? "grid-cols-3" : "grid-cols-2"}`}>
+              <TabsList className={`m-2 grid ${pro ? "grid-cols-4" : "grid-cols-3"}`}>
                 <TabsTrigger value="media" className="text-[11px]">
                   Mídia
                 </TabsTrigger>
                 <TabsTrigger value="transcript" className="text-[11px]">
                   Fala
+                </TabsTrigger>
+                <TabsTrigger value="effects" className="text-[11px]">
+                  Efeitos
                 </TabsTrigger>
                 {pro ? (
                   <TabsTrigger value="jobs" className="text-[11px]">
@@ -75,6 +80,9 @@ function EditorPage() {
               </TabsContent>
               <TabsContent value="transcript" className="min-h-0 flex-1">
                 <TranscriptPanel />
+              </TabsContent>
+              <TabsContent value="effects" className="min-h-0 flex-1">
+                <EffectsPanel />
               </TabsContent>
               {pro ? (
                 <TabsContent value="jobs" className="min-h-0 flex-1">
@@ -138,6 +146,7 @@ function EditorPage() {
       <StatusBar />
       <ShortcutsDialog />
       <CommandPalette />
+      <TrimDialog />
     </div>
   );
 }
