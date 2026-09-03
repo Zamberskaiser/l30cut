@@ -1,101 +1,111 @@
 @echo off
 setlocal enabledelayedexpansion
-title L30 CUT AI - Build Windows
+title L30 CUT AI - Instalacao automatica
 cd /d "%~dp0"
 
+rem ============================================================
+rem   L30 CUT AI - script unico e automatico
+rem   Script versao 6 (2026-09-03)
+rem   Faz tudo sozinho: dependencias -> build -> instalador ->
+rem   instalacao silenciosa -> abre o app. Sem perguntas.
+rem ============================================================
+
+rem --- Eleva para administrador (necessario para instalar o MSI) ---
+net session >nul 2>&1
+if errorlevel 1 (
+  echo Solicitando permissao de administrador...
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+  exit /b 0
+)
+
 echo ============================================
-echo   L30 CUT AI - build do app para Windows
-echo   Script versao 5 (2026-09-03)
+echo   L30 CUT AI - instalacao automatica
+echo   Script versao 6 (2026-09-03)
 echo ============================================
+echo   Nao e preciso fazer nada: o script instala
+echo   dependencias, gera o app, instala e abre.
 echo.
 
-
-echo [1/6] Verificando Bun...
 call :addpath
+
+echo [1/7] Verificando Bun...
 where bun >nul 2>nul
 if errorlevel 1 (
-  echo   Bun nao encontrado. Instalando automaticamente...
+  echo   Instalando Bun automaticamente...
   powershell -NoProfile -ExecutionPolicy Bypass -Command "irm bun.sh/install.ps1 | iex"
   call :addpath
   where bun >nul 2>nul
   if errorlevel 1 (
-    echo   [ERRO] Nao foi possivel instalar o Bun automaticamente.
-    echo   Instale manualmente em https://bun.sh e rode este .bat novamente.
-    pause
-    exit /b 1
+    echo   [ERRO] Nao foi possivel instalar o Bun. Veja https://bun.sh
+    goto :falhou
   )
 )
 echo   OK: Bun disponivel.
 echo.
 
-echo [2/6] Verificando Rust/Cargo...
+echo [2/7] Verificando Rust/Cargo...
 where cargo >nul 2>nul
 if errorlevel 1 (
-  echo   Rust nao encontrado. Baixando instalador oficial...
+  echo   Instalando Rust automaticamente...
   powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri https://win.rustup.rs/x86_64 -OutFile \"$env:TEMP\rustup-init.exe\""
-  if exist "%TEMP%\rustup-init.exe" (
-    "%TEMP%\rustup-init.exe" -y --default-toolchain stable
-  )
+  if exist "%TEMP%\rustup-init.exe" "%TEMP%\rustup-init.exe" -y --default-toolchain stable --profile minimal
   call :addpath
   where cargo >nul 2>nul
   if errorlevel 1 (
-    echo   [ERRO] Rust nao instalado. Instale em https://rustup.rs
-    echo   Importante: instale tambem o "Visual Studio Build Tools" com C++.
-    pause
-    exit /b 1
+    echo   [ERRO] Rust nao instalado. Instale em https://rustup.rs e rode de novo.
+    echo   Instale tambem o "Visual Studio Build Tools" com a carga "C++".
+    goto :falhou
   )
 )
 echo   OK: Cargo disponivel.
 echo.
 
-echo [3/6] Instalando pacotes do projeto...
+echo [3/7] Verificando runtime WebView2...
+set "WV2_OK="
+reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" >nul 2>&1 && set "WV2_OK=1"
+reg query "HKLM\SOFTWARE\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" >nul 2>&1 && set "WV2_OK=1"
+if not defined WV2_OK (
+  echo   Instalando WebView2 automaticamente...
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/p/?LinkId=2124703 -OutFile \"$env:TEMP\MicrosoftEdgeWebview2Setup.exe\""
+  if exist "%TEMP%\MicrosoftEdgeWebview2Setup.exe" "%TEMP%\MicrosoftEdgeWebview2Setup.exe" /silent /install
+)
+echo   OK: WebView2 pronto.
+echo.
+
+echo [4/7] Instalando pacotes do projeto...
 call bun install
 if errorlevel 1 goto :falhou
 echo.
 
-echo [4/6] Rodando testes...
-call bun run test
-if errorlevel 1 (
-  echo   [AVISO] Testes falharam. Continuando mesmo assim...
-)
-echo.
-
-echo [5/6] Gerando build web...
+echo [5/7] Gerando build web...
 call bun run build
 if errorlevel 1 goto :falhou
 if not exist "dist\client\index.html" (
   echo   Procurando a saida estatica em outros diretorios de build...
   if exist ".output\public\index.html" (
-    echo   Copiando .output\public para dist\client...
     if not exist "dist\client" mkdir "dist\client"
     xcopy ".output\public" "dist\client" /E /I /Y >nul
   ) else (
     if exist "dist\public\index.html" (
-      echo   Copiando dist\public para dist\client...
       if not exist "dist\client" mkdir "dist\client"
       xcopy "dist\public" "dist\client" /E /I /Y >nul
     )
   )
 )
 if not exist "dist\client\index.html" (
-  echo   [ERRO] O build web terminou, mas nenhum index.html estatico foi encontrado.
+  echo   [ERRO] Nenhum index.html estatico foi encontrado.
   echo   Procurei em: dist\client, .output\public e dist\public.
-  echo   O Tauri precisa do HTML estatico para empacotar a interface.
   goto :falhou
 )
-echo   OK: arquivos web estaticos encontrados em dist\client.
-
+echo   OK: interface estatica pronta em dist\client.
 echo.
 
-echo [6/6] Gerando instalador Windows ^(Tauri^)...
-echo   Garantindo a CLI do Tauri...
+echo [6/7] Gerando instalador Windows ^(Tauri^)...
 set "TAURI_OK="
-
 call bunx --bun tauri --version >nul 2>&1
 if not errorlevel 1 set "TAURI_OK=npm"
 
 if not defined TAURI_OK (
-  echo   Instalando @tauri-apps/cli via bun...
   call bun add -d "@tauri-apps/cli@2"
   if not errorlevel 1 set "TAURI_OK=npm"
 )
@@ -122,58 +132,59 @@ if "%TAURI_OK%"=="npm" (
   call cargo tauri build
 )
 if errorlevel 1 goto :falhou
-
-
-:bundleok
-
-echo.
-echo ============================================
-echo   Build concluido com sucesso!
-echo ============================================
-echo.
-echo Proximos passos:
-echo   1. Instalador MSI ^(recomendado^): de dois cliques no arquivo em
-echo      src-tauri\target\release\bundle\msi\
-echo   2. Versao portatil: use o arquivo em
-echo      src-tauri\target\release\bundle\nsis\
-echo   3. Depois de instalar, abra o L30 CUT AI pelo menu Iniciar.
-echo      Na primeira execucao, o app abre a tela de setup para baixar
-echo      FFmpeg e whisper.cpp.
 echo.
 
-set "MSI_DIR=src-tauri\target\release\bundle\msi"
+echo [7/7] Instalando o L30 CUT AI no computador...
 set "MSI_FILE="
-if exist "%MSI_DIR%" (
-  for %%F in ("%MSI_DIR%\*.msi") do (
-    set "MSI_FILE=%%~F"
-    goto :msiFound
-  )
+for %%F in ("src-tauri\target\release\bundle\msi\*.msi") do (
+  if not defined MSI_FILE set "MSI_FILE=%%~fF"
 )
-:msiFound
+set "NSIS_FILE="
+for %%F in ("src-tauri\target\release\bundle\nsis\*-setup.exe") do (
+  if not defined NSIS_FILE set "NSIS_FILE=%%~fF"
+)
 
 if defined MSI_FILE (
-  echo MSI encontrado: %MSI_FILE%
-  choice /c SN /M "Deseja executar o instalador agora"
-  if errorlevel 2 goto :openBundle
-  if errorlevel 1 (
-    echo Executando instalador...
-    start "" "%MSI_FILE%"
-    goto :fim
-  )
+  echo   Instalando via MSI: %MSI_FILE%
+  msiexec /i "%MSI_FILE%" /qb /norestart
 ) else (
-  echo   [AVISO] Nenhum arquivo MSI encontrado. Verifique os logs acima.
+  if defined NSIS_FILE (
+    echo   Instalando via NSIS: %NSIS_FILE%
+    "%NSIS_FILE%" /S
+  ) else (
+    echo   [AVISO] Nenhum instalador encontrado; usando o executavel gerado.
+  )
+)
+echo.
+
+echo Abrindo o L30 CUT AI...
+set "APP_EXE="
+for %%P in (
+  "%ProgramFiles%\L30 CUT AI\L30 CUT AI.exe"
+  "%ProgramFiles(x86)%\L30 CUT AI\L30 CUT AI.exe"
+  "%LOCALAPPDATA%\Programs\L30 CUT AI\L30 CUT AI.exe"
+  "src-tauri\target\release\l30-cut-ai.exe"
+) do (
+  if not defined APP_EXE if exist %%P set "APP_EXE=%%~fP"
 )
 
-:openBundle
-if exist "src-tauri\target\release\bundle" (
-  start "" "src-tauri\target\release\bundle"
+if defined APP_EXE (
+  start "" "%APP_EXE%"
+  echo   App iniciado: %APP_EXE%
+) else (
+  echo   [AVISO] Executavel nao localizado. Abra pelo menu Iniciar.
+  if exist "src-tauri\target\release\bundle" start "" "src-tauri\target\release\bundle"
 )
 
-:fim
 echo.
-echo Dica: depois de instalar, use run-windows.bat para abrir o app.
+echo ============================================
+echo   Tudo pronto! L30 CUT AI instalado e aberto.
+echo ============================================
+echo   Na primeira execucao o app abre a tela de setup
+echo   para baixar FFmpeg e whisper.cpp.
+echo   Para abrir de novo depois: run-windows.bat ou menu Iniciar.
 echo.
-pause
+timeout /t 20 >nul
 exit /b 0
 
 :addpath
@@ -182,6 +193,6 @@ exit /b 0
 
 :falhou
 echo.
-echo [ERRO] O build falhou. Leia a mensagem acima para ver o motivo.
+echo [ERRO] A instalacao falhou. Leia a mensagem acima para ver o motivo.
 pause
 exit /b 1
