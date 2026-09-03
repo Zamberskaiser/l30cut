@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -7,6 +7,7 @@ import {
   Loader2,
   Pencil,
   Send,
+  Settings2,
   Sparkles,
   ThumbsDown,
   X,
@@ -33,7 +34,16 @@ import { newId } from "@/core/store/timelineReducer";
 import { planDeterministically } from "./deterministicPlanner";
 import { compilePlan } from "./planExecutor";
 import { previewPlan, type PlanPreview, type PlanPreviewFailure } from "./planPreview";
-import { DEFAULT_PROVIDERS, requestPlanFromProvider } from "./provider";
+import { requestPlanFromProvider, type ProviderConfig } from "./provider";
+import { LlmSettingsDialog } from "./LlmSettingsDialog";
+import { ollamaChatEndpoint } from "@/core/ai/ollama";
+import {
+  DEFAULT_LLM_SETTINGS,
+  isGenerativeReady,
+  loadLlmSettings,
+  saveLlmSettings,
+  type LlmSettings,
+} from "@/core/ai/llmSettings";
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
 
 const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
@@ -56,11 +66,22 @@ export function AssistantPanel() {
   const sequence = useActiveSequence();
   const [prompt, setPrompt] = useState("");
   const [scopeKind, setScopeKind] = useState<PlanScope["kind"]>("sequence");
-  const [providerId, setProviderId] = useState("deterministic");
+  const [llm, setLlm] = useState<LlmSettings>(DEFAULT_LLM_SETTINGS);
+  const [llmOpen, setLlmOpen] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [confirming, setConfirming] = useState<{ plan: AiEditPlan; messageId: string } | null>(
     null,
   );
+
+  // Preferences live in localStorage; read after hydration only.
+  useEffect(() => setLlm(loadLlmSettings()), []);
+
+  function updateLlm(next: LlmSettings) {
+    setLlm(next);
+    saveLlmSettings(next);
+  }
+
+  const generative = isGenerativeReady(llm);
 
   const scope: PlanScope = {
     kind: scopeKind,
@@ -81,8 +102,16 @@ export function AssistantPanel() {
     const assistantId = newId("msg");
     try {
       let plan: AiEditPlan | null = null;
-      const provider = DEFAULT_PROVIDERS.find((p) => p.id === providerId)!;
-      if (provider.id !== "deterministic") {
+      if (generative) {
+        // Local Ollama server on the user's own machine — nothing leaves it.
+        const provider: ProviderConfig = {
+          id: "ollama",
+          label: `Ollama · ${llm.model}`,
+          endpoint: ollamaChatEndpoint(llm.baseUrl),
+          model: llm.model,
+          enabled: true,
+          requiresKey: false,
+        };
         try {
           const { context } = buildAssistantContext(
             editor.project,
@@ -99,11 +128,21 @@ export function AssistantPanel() {
             modelInfo: { ...response.plan.modelInfo, latencyMs: response.latencyMs },
           };
         } catch (error) {
-          toast.warning("Provider local indisponível — usando planejador determinístico", {
+          if (!llm.fallbackToDeterministic) {
+            editor.pushMessage({
+              id: assistantId,
+              role: "assistant",
+              text: `A IA local não respondeu: ${(error as Error).message}. Verifique se o Ollama está rodando em ${llm.baseUrl}.`,
+              at: Date.now(),
+            });
+            return;
+          }
+          toast.warning("IA local indisponível — usando planejador determinístico", {
             description: (error as Error).message,
           });
         }
       }
+
       plan =
         plan ??
         planDeterministically({
@@ -269,7 +308,7 @@ export function AssistantPanel() {
           variant="outline"
           className="ml-auto border-border-strong text-[10px] text-muted-foreground"
         >
-          {editor.runtime.mode === "tauri" ? "IA local" : "planejador local"}
+          {generative ? "IA local (Ollama)" : "regras locais"}
         </Badge>
       </div>
 
@@ -290,19 +329,19 @@ export function AssistantPanel() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Provider</label>
-          <Select value={providerId} onValueChange={setProviderId}>
-            <SelectTrigger className="h-7 text-[11px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DEFAULT_PROVIDERS.filter((p) => p.enabled).map((p) => (
-                <SelectItem key={p.id} value={p.id} className="text-xs">
-                  {p.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Motor</label>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 w-full justify-start gap-1.5 text-[11px]"
+            onClick={() => setLlmOpen(true)}
+            title="Configurar IA generativa local (Ollama)"
+          >
+            <Settings2 className="size-3.5" />
+            <span className="truncate">
+              {generative ? `Ollama · ${llm.model}` : "Regras determinísticas"}
+            </span>
+          </Button>
         </div>
         <p className="col-span-2 text-[10px] leading-relaxed text-muted-foreground">
           Contexto: {sequence.clips.length} clips · {editor.selection.length} selecionados ·{" "}
@@ -386,6 +425,14 @@ export function AssistantPanel() {
           if (confirming) void applyPlan(confirming.plan, confirming.messageId, true);
           setConfirming(null);
         }}
+      />
+
+      <LlmSettingsDialog
+        open={llmOpen}
+        onOpenChange={setLlmOpen}
+        settings={llm}
+        onChange={updateLlm}
+        desktop={editor.runtime.mode === "tauri"}
       />
     </div>
   );
