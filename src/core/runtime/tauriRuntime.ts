@@ -276,4 +276,19 @@ export class TauriRuntime implements RuntimeAdapter {
   aspectResolution(aspect: Aspect) {
     return ASPECT_RESOLUTIONS[aspect];
   }
+
+  async checkForUpdate(): Promise<UpdateInfo | null> {
+    const invoke = await getInvoke();
+    const raw = await invoke<unknown>(TAURI_COMMANDS.checkForUpdate);
+    if (raw == null) return null;
+    const parsed = z
+      .object({ version: z.string(), date: z.string().nullable().optional(), body: z.string().nullable().optional() })
+      .parse(raw);
+    return { version: parsed.version, date: parsed.date ?? null, body: parsed.body ?? null };
+  }
+
+  async installUpdate(): Promise<void> {
+    const invoke = await getInvoke();
+    await invoke(TAURI_COMMANDS.installUpdate);
+  }
 }
