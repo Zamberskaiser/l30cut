@@ -7,6 +7,9 @@ import {
   GainKeyframeSchema,
   MarkerSchema,
   TrackKindSchema,
+  ChromaKeySchema,
+  ClipTrackerSchema,
+  ClipTransitionSchema,
 } from "./domain";
 
 /**
@@ -134,6 +137,31 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
     })
     .strict(),
   z.object({ type: z.literal("unlinkClips"), clipId: IdSchema }).strict(),
+
+  /* ---------- effects: transitions, chroma key, tracking ---------- */
+  z
+    .object({
+      type: z.literal("setClipTransition"),
+      clipId: IdSchema,
+      edge: z.enum(["in", "out"]),
+      /** null removes the transition on that edge. */
+      transition: ClipTransitionSchema.nullable(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("setClipChromaKey"),
+      clipId: IdSchema,
+      chroma: ChromaKeySchema.nullable(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("setClipTracker"),
+      clipId: IdSchema,
+      tracker: ClipTrackerSchema.nullable(),
+    })
+    .strict(),
 
   z
     .object({

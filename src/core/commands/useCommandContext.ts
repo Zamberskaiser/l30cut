@@ -53,6 +53,7 @@ export function useCommandContext(): CommandContext {
       setMode: ui.setMode,
       openShortcuts: () => ui.setShortcutsOpen(true),
       openPalette: () => ui.setPaletteOpen(true),
+      openTrim: () => ui.setTrimOpen(true),
       requestImport: () => emitAppEvent("import"),
       requestExport: () => emitAppEvent("export"),
       cancelGesture,

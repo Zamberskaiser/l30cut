@@ -420,6 +420,51 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         }
       });
 
+    case "setClipTransition":
+      return withSequence(project, (seq) => {
+        const clip = requireClip(seq, command.clipId);
+        requireUnlockedTrack(seq, clip.trackId);
+        if (command.transition === null) {
+          if (command.edge === "in") delete clip.transitionIn;
+          else delete clip.transitionOut;
+          return;
+        }
+        const max = Math.floor(clipDuration(clip) / 2);
+        if (command.transition.durationUs > max) {
+          throw new CommandError("transição maior que metade do clip");
+        }
+        if (command.edge === "in") clip.transitionIn = command.transition;
+        else clip.transitionOut = command.transition;
+      });
+
+    case "setClipChromaKey":
+      return withSequence(project, (seq) => {
+        const clip = requireClip(seq, command.clipId);
+        requireUnlockedTrack(seq, clip.trackId);
+        const track = seq.tracks.find((t) => t.id === clip.trackId);
+        if (track && track.kind === "audio") {
+          throw new CommandError("chroma key só existe em trilha de vídeo");
+        }
+        if (command.chroma === null) delete clip.chroma;
+        else clip.chroma = command.chroma;
+      });
+
+    case "setClipTracker":
+      return withSequence(project, (seq) => {
+        const clip = requireClip(seq, command.clipId);
+        requireUnlockedTrack(seq, clip.trackId);
+        if (command.tracker === null) {
+          delete clip.tracker;
+          return;
+        }
+        const duration = clipDuration(clip);
+        const points = [...command.tracker.points].sort((a, b) => a.atUs - b.atUs);
+        for (const p of points) {
+          if (p.atUs > duration) throw new CommandError("ponto de rastreio fora do clip");
+        }
+        clip.tracker = { ...command.tracker, points };
+      });
+
     case "setSequenceAspect":
       return withSequence(project, (seq) => {
         seq.aspect = command.aspect;

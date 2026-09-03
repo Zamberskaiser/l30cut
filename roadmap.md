@@ -40,6 +40,15 @@
 - [x] Arquivo de projeto real `*.l30cut`: schema versionado, Salvar como / Abrir (nativo no Tauri, download no web)
 - [x] Host Rust: save_project/load_project/list_projects/write_project_file/read_project_file + diagnose_system
 
+## Entrega atual: efeitos e trim avançado
+
+- [x] Transições de entrada/saída (fade, cross, dip) com limite de metade do clip
+- [x] Chroma key com similaridade, suavização e supressão de spill (preview em canvas)
+- [x] Rastreamento de objeto (SAD determinístico) com alvos caixa/blur/pixelate/texto
+- [x] Janela de aparar quadro a quadro com ripple e rolling edit
+- [x] Comandos e atalhos: edit.openTrim, effects.fadeIn/fadeOut, effects.chromaToggle
+- [x] Filtros ffmpeg determinísticos para exportação (colorkey, fade, pixelize/boxblur)
+
 ## Backlog (próximas melhorias)
 
 - [x] Clips A/V vinculados (link/unlink) com sincronismo em mover, cortar, aparar e apagar

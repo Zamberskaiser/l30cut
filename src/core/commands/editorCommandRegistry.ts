@@ -55,6 +55,8 @@ export interface CommandContext {
   setMode: (mode: "essential" | "pro") => void;
   openShortcuts: () => void;
   openPalette: () => void;
+  /** Opens the advanced trim window. */
+  openTrim: () => void;
   requestImport: () => void;
   requestExport: () => void;
   /** Cancels the running timeline gesture, if any. Returns true when it did. */
@@ -98,6 +100,87 @@ const hasSelection = (ctx: CommandContext) => ctx.selection.length > 0;
 
 export function buildEditorCommands(): EditorCommand[] {
   return [
+    /* ---------- Effects ---------- */
+    {
+      id: "edit.openTrim",
+      label: "Aparar (trim avançado)",
+      description: "Abre a janela de trim quadro a quadro com ripple e rolling",
+      category: "Edição",
+      contexts: ["global"],
+      canExecute: always,
+      execute: (ctx) => ctx.openTrim(),
+    },
+    {
+      id: "effects.fadeIn",
+      label: "Fade de entrada",
+      description: "Aplica meio segundo de fade na entrada dos clips selecionados",
+      category: "Edição",
+      contexts: ["global"],
+      canExecute: hasSelection,
+      execute: (ctx) => {
+        const clips = ctx.sequence.clips.filter((c) => ctx.selection.includes(c.id));
+        const cmds = clips
+          .filter((c) => clipDuration(c) >= SECOND)
+          .map((c) => ({
+            type: "setClipTransition" as const,
+            clipId: c.id,
+            edge: "in" as const,
+            transition: { kind: "fade" as const, durationUs: 500_000 },
+          }));
+        if (cmds.length) ctx.run(cmds, "Fade de entrada");
+      },
+    },
+    {
+      id: "effects.fadeOut",
+      label: "Fade de saída",
+      description: "Aplica meio segundo de fade na saída dos clips selecionados",
+      category: "Edição",
+      contexts: ["global"],
+      canExecute: hasSelection,
+      execute: (ctx) => {
+        const clips = ctx.sequence.clips.filter((c) => ctx.selection.includes(c.id));
+        const cmds = clips
+          .filter((c) => clipDuration(c) >= SECOND)
+          .map((c) => ({
+            type: "setClipTransition" as const,
+            clipId: c.id,
+            edge: "out" as const,
+            transition: { kind: "fade" as const, durationUs: 500_000 },
+          }));
+        if (cmds.length) ctx.run(cmds, "Fade de saída");
+      },
+    },
+    {
+      id: "effects.chromaToggle",
+      label: "Chroma key (fundo verde)",
+      description: "Liga ou desliga o recorte de fundo verde no clip selecionado",
+      category: "Edição",
+      contexts: ["global"],
+      canExecute: hasSelection,
+      execute: (ctx) => {
+        const clip = ctx.sequence.clips.find((c) => ctx.selection.includes(c.id));
+        if (!clip) return;
+        ctx.run(
+          [
+            {
+              type: "setClipChromaKey",
+              clipId: clip.id,
+              chroma: clip.chroma
+                ? null
+                : {
+                    enabled: true,
+                    colorHex: "#00b140",
+                    similarity: 0.35,
+                    smoothness: 0.08,
+                    spill: 0.1,
+                  },
+            },
+          ],
+          clip.chroma ? "Remover chroma key" : "Chroma key",
+        );
+      },
+    },
+
     /* ---------- Tools ---------- */
     tool("tool.selection", "selection", "Seleção", "Selecionar, mover e aparar clips"),
     {

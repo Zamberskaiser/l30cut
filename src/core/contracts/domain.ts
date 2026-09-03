@@ -63,6 +63,60 @@ export const GainKeyframeSchema = z
   .strict();
 export type GainKeyframe = z.infer<typeof GainKeyframeSchema>;
 
+/* ---------- effects: transitions, chroma key, motion tracking ---------- */
+
+export const TransitionKindSchema = z.enum(["fade", "cross", "dip"]);
+export type TransitionKind = z.infer<typeof TransitionKindSchema>;
+
+/** Fade/cross applied to one edge of a clip. Duration is timeline space. */
+export const ClipTransitionSchema = z
+  .object({
+    kind: TransitionKindSchema,
+    durationUs: Micros.min(40_000),
+  })
+  .strict();
+export type ClipTransition = z.infer<typeof ClipTransitionSchema>;
+
+/** Chroma key (green/blue screen) parameters. Values are normalized 0..1. */
+export const ChromaKeySchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    /** Key color as #rrggbb. */
+    colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+    similarity: z.number().min(0).max(1).default(0.35),
+    smoothness: z.number().min(0).max(1).default(0.08),
+    spill: z.number().min(0).max(1).default(0.1),
+  })
+  .strict();
+export type ChromaKey = z.infer<typeof ChromaKeySchema>;
+
+/** One tracked box. Coordinates are normalized 0..1 in the frame. */
+export const TrackPointSchema = z
+  .object({
+    atUs: Micros,
+    x: z.number().min(0).max(1),
+    y: z.number().min(0).max(1),
+    w: z.number().min(0.01).max(1),
+    h: z.number().min(0.01).max(1),
+  })
+  .strict();
+export type TrackPoint = z.infer<typeof TrackPointSchema>;
+
+export const TrackerTargetSchema = z.enum(["box", "blur", "pixelate", "text"]);
+export type TrackerTarget = z.infer<typeof TrackerTargetSchema>;
+
+/** Motion tracking attached to a clip: a box that follows the subject. */
+export const ClipTrackerSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    target: TrackerTargetSchema.default("blur"),
+    label: z.string().max(80).default(""),
+    /** Sorted by atUs (clip-relative microseconds). */
+    points: z.array(TrackPointSchema).min(1).max(2000),
+  })
+  .strict();
+export type ClipTracker = z.infer<typeof ClipTrackerSchema>;
+
 export const ClipSchema = z
   .object({
     id: IdSchema,
@@ -87,6 +141,13 @@ export const ClipSchema = z
      * deleted together. Absent means the clip is independent.
      */
     linkGroupId: z.string().min(1).optional(),
+    /** Transition on the incoming/outgoing edge (absent = hard cut). */
+    transitionIn: ClipTransitionSchema.optional(),
+    transitionOut: ClipTransitionSchema.optional(),
+    /** Chroma key (green screen removal). */
+    chroma: ChromaKeySchema.optional(),
+    /** Motion tracking data produced by the tracking tool. */
+    tracker: ClipTrackerSchema.optional(),
     enabled: z.boolean().default(true),
   })
   .strict()
@@ -123,6 +184,52 @@ export function clipGainDbAt(c: Clip, offsetUs: Micros): number {
     }
   }
   return last.gainDb;
+}
+
+/**
+ * Opacity multiplier (0..1) produced by the clip's edge transitions at a
+ * clip-relative offset. Without transitions it is always 1.
+ */
+export function clipTransitionOpacityAt(c: Clip, offsetUs: Micros): number {
+  const duration = clipDuration(c);
+  let opacity = 1;
+  const inT = c.transitionIn;
+  if (inT && offsetUs < inT.durationUs) {
+    opacity = Math.min(opacity, Math.max(0, offsetUs) / inT.durationUs);
+  }
+  const outT = c.transitionOut;
+  if (outT && offsetUs > duration - outT.durationUs) {
+    opacity = Math.min(opacity, Math.max(0, duration - offsetUs) / outT.durationUs);
+  }
+  return Math.min(1, Math.max(0, opacity));
+}
+
+/** Interpolated tracker box at a clip-relative offset, or null when absent. */
+export function trackerBoxAt(
+  tracker: ClipTracker | undefined,
+  offsetUs: Micros,
+): { x: number; y: number; w: number; h: number } | null {
+  if (!tracker || !tracker.enabled || tracker.points.length === 0) return null;
+  const pts = [...tracker.points].sort((a, b) => a.atUs - b.atUs);
+  const first = pts[0]!;
+  const last = pts[pts.length - 1]!;
+  if (offsetUs <= first.atUs) return { x: first.x, y: first.y, w: first.w, h: first.h };
+  if (offsetUs >= last.atUs) return { x: last.x, y: last.y, w: last.w, h: last.h };
+  for (let i = 1; i < pts.length; i += 1) {
+    const a = pts[i - 1]!;
+    const b = pts[i]!;
+    if (offsetUs <= b.atUs) {
+      const span = b.atUs - a.atUs;
+      const t = span <= 0 ? 1 : (offsetUs - a.atUs) / span;
+      return {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+        w: a.w + (b.w - a.w) * t,
+        h: a.h + (b.h - a.h) * t,
+      };
+    }
+  }
+  return { x: last.x, y: last.y, w: last.w, h: last.h };
 }
 
 /** Linear amplitude multiplier for a dB value (0 dB → 1). */
