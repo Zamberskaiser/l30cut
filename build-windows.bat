@@ -104,7 +104,7 @@ if errorlevel 1 goto :falhou
 echo.
 
 
-echo [8/8] Instalando o L30 CUT AI no computador...
+echo [7/7] Instalando o L30 CUT AI no computador...
 set "MSI_FILE="
 for %%F in ("src-tauri\target\release\bundle\msi\*.msi") do (
   if not defined MSI_FILE set "MSI_FILE=%%~fF"
