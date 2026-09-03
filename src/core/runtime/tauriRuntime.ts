@@ -30,6 +30,7 @@ import type {
   RuntimeAdapter,
   SetupProfile,
   SystemDiagnostics,
+  UpdateInfo,
 } from "./types";
 
 /**
@@ -51,6 +52,8 @@ export const TAURI_COMMANDS = {
   writeProjectFile: "write_project_file",
   readProjectFile: "read_project_file",
   validateAiTransaction: "validate_ai_transaction",
+  checkForUpdate: "check_for_update",
+  installUpdate: "install_update",
 } as const;
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
@@ -88,6 +91,7 @@ export class TauriRuntime implements RuntimeAdapter {
     localTranscription: true,
     componentDownloads: true,
     secureKeyStorage: true,
+    updater: true,
   };
 
   async diagnose(): Promise<SystemDiagnostics> {
@@ -271,5 +275,20 @@ export class TauriRuntime implements RuntimeAdapter {
 
   aspectResolution(aspect: Aspect) {
     return ASPECT_RESOLUTIONS[aspect];
+  }
+
+  async checkForUpdate(): Promise<UpdateInfo | null> {
+    const invoke = await getInvoke();
+    const raw = await invoke<unknown>(TAURI_COMMANDS.checkForUpdate);
+    if (raw == null) return null;
+    const parsed = z
+      .object({ version: z.string(), date: z.string().nullable().optional(), body: z.string().nullable().optional() })
+      .parse(raw);
+    return { version: parsed.version, date: parsed.date ?? null, body: parsed.body ?? null };
+  }
+
+  async installUpdate(): Promise<void> {
+    const invoke = await getInvoke();
+    await invoke(TAURI_COMMANDS.installUpdate);
   }
 }

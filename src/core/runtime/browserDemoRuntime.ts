@@ -24,6 +24,7 @@ import type {
   RuntimeAdapter,
   SetupProfile,
   SystemDiagnostics,
+  UpdateInfo,
 } from "./types";
 
 class Canceled extends Error {
@@ -69,6 +70,7 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     localTranscription: false,
     componentDownloads: false,
     secureKeyStorage: false,
+    updater: false,
   };
 
   private components: ComponentStatus[] = COMPONENT_CATALOG.map((c) => ({
@@ -247,6 +249,14 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
 
   aspectResolution(aspect: Aspect) {
     return ASPECT_RESOLUTIONS[aspect];
+  }
+
+  async checkForUpdate(): Promise<UpdateInfo | null> {
+    return null;
+  }
+
+  async installUpdate(): Promise<void> {
+    throw new Error("Atualizações só funcionam no aplicativo instalado.");
   }
 }
 

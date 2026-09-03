@@ -11,6 +11,7 @@ const runtime = {
     localTranscription: false,
     componentDownloads: false,
     secureKeyStorage: false,
+    updater: false,
   },
 };
 
