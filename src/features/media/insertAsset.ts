@@ -22,14 +22,14 @@ export function insertAssetCommands(
   const wantsAudioOnly = asset.kind === "audio" || preferred?.kind === "audio";
   const videoTrack = wantsAudioOnly
     ? undefined
-    : (preferred?.kind === "video" ? preferred : undefined) ??
-      sequence.tracks.find((t) => t.kind === "video");
+    : ((preferred?.kind === "video" ? preferred : undefined) ??
+      sequence.tracks.find((t) => t.kind === "video"));
   const audioTrack =
     asset.kind === "image"
       ? undefined
       : wantsAudioOnly
-        ? (preferred?.kind === "audio" ? preferred : undefined) ??
-          sequence.tracks.find((t) => t.kind === "audio")
+        ? ((preferred?.kind === "audio" ? preferred : undefined) ??
+          sequence.tracks.find((t) => t.kind === "audio"))
         : asset.audioChannels > 0
           ? sequence.tracks.find((t) => t.kind === "audio")
           : undefined;

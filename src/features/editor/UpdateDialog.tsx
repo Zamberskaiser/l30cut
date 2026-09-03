@@ -77,7 +77,11 @@ export function UpdateDialog({ open, onOpenChange, state, onCheck, onInstall }: 
         </div>
 
         <DialogFooter className="gap-2 sm:justify-between">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={state.phase === "downloading"}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={state.phase === "downloading"}
+          >
             {state.phase === "downloading" ? "Aguarde..." : "Fechar"}
           </Button>
 
@@ -87,7 +91,11 @@ export function UpdateDialog({ open, onOpenChange, state, onCheck, onInstall }: 
               Baixar e instalar
             </Button>
           ) : (
-            <Button onClick={onCheck} disabled={state.phase === "checking" || state.phase === "downloading"} className="gap-2">
+            <Button
+              onClick={onCheck}
+              disabled={state.phase === "checking" || state.phase === "downloading"}
+              className="gap-2"
+            >
               {state.phase === "checking" || state.phase === "downloading" ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
