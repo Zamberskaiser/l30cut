@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { DEFAULT_OLLAMA_BASE_URL, normalizeOllamaBaseUrl } from "./ollama";
+import {
+  DEFAULT_OLLAMA_BASE_URL,
+  DEFAULT_OLLAMA_MODEL,
+  normalizeOllamaBaseUrl,
+} from "./ollama";
 
 /**
  * Local generative-AI preferences. Persisted in localStorage only — the app
@@ -11,7 +15,8 @@ export const LlmSettingsSchema = z
     enabled: z.boolean().default(false),
     provider: z.literal("ollama").default("ollama"),
     baseUrl: z.string().min(1).default(DEFAULT_OLLAMA_BASE_URL),
-    model: z.string().default(""),
+    /** Modelo padrão do produto (Llama 3.1 8B); pode ser trocado no diálogo. */
+    model: z.string().default(DEFAULT_OLLAMA_MODEL),
     /** Falls back to the rule-based planner when the model fails or is offline. */
     fallbackToDeterministic: z.boolean().default(true),
     temperature: z.number().min(0).max(1).default(0.2),
