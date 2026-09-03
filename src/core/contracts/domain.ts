@@ -63,6 +63,60 @@ export const GainKeyframeSchema = z
   .strict();
 export type GainKeyframe = z.infer<typeof GainKeyframeSchema>;
 
+/* ---------- effects: transitions, chroma key, motion tracking ---------- */
+
+export const TransitionKindSchema = z.enum(["fade", "cross", "dip"]);
+export type TransitionKind = z.infer<typeof TransitionKindSchema>;
+
+/** Fade/cross applied to one edge of a clip. Duration is timeline space. */
+export const ClipTransitionSchema = z
+  .object({
+    kind: TransitionKindSchema,
+    durationUs: Micros.min(40_000),
+  })
+  .strict();
+export type ClipTransition = z.infer<typeof ClipTransitionSchema>;
+
+/** Chroma key (green/blue screen) parameters. Values are normalized 0..1. */
+export const ChromaKeySchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    /** Key color as #rrggbb. */
+    colorHex: z.string().regex(/^#[0-9a-fA-F]{6}$/),
+    similarity: z.number().min(0).max(1).default(0.35),
+    smoothness: z.number().min(0).max(1).default(0.08),
+    spill: z.number().min(0).max(1).default(0.1),
+  })
+  .strict();
+export type ChromaKey = z.infer<typeof ChromaKeySchema>;
+
+/** One tracked box. Coordinates are normalized 0..1 in the frame. */
+export const TrackPointSchema = z
+  .object({
+    atUs: Micros,
+    x: z.number().min(0).max(1),
+    y: z.number().min(0).max(1),
+    w: z.number().min(0.01).max(1),
+    h: z.number().min(0.01).max(1),
+  })
+  .strict();
+export type TrackPoint = z.infer<typeof TrackPointSchema>;
+
+export const TrackerTargetSchema = z.enum(["box", "blur", "pixelate", "text"]);
+export type TrackerTarget = z.infer<typeof TrackerTargetSchema>;
+
+/** Motion tracking attached to a clip: a box that follows the subject. */
+export const ClipTrackerSchema = z
+  .object({
+    enabled: z.boolean().default(true),
+    target: TrackerTargetSchema.default("blur"),
+    label: z.string().max(80).default(""),
+    /** Sorted by atUs (clip-relative microseconds). */
+    points: z.array(TrackPointSchema).min(1).max(2000),
+  })
+  .strict();
+export type ClipTracker = z.infer<typeof ClipTrackerSchema>;
+
 export const ClipSchema = z
   .object({
     id: IdSchema,
