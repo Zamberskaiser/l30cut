@@ -149,7 +149,6 @@ describe("llm settings", () => {
     expect(isGenerativeReady(DEFAULT_LLM_SETTINGS)).toBe(false);
   });
 
-
   it("rejects unknown fields and providers", () => {
     expect(LlmSettingsSchema.safeParse({ provider: "openai" }).success).toBe(false);
     expect(LlmSettingsSchema.safeParse({ apiKey: "secret" }).success).toBe(false);

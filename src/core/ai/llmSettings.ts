@@ -1,9 +1,5 @@
 import { z } from "zod";
-import {
-  DEFAULT_OLLAMA_BASE_URL,
-  DEFAULT_OLLAMA_MODEL,
-  normalizeOllamaBaseUrl,
-} from "./ollama";
+import { DEFAULT_OLLAMA_BASE_URL, DEFAULT_OLLAMA_MODEL, normalizeOllamaBaseUrl } from "./ollama";
 
 /**
  * Local generative-AI preferences. Persisted in localStorage only — the app
