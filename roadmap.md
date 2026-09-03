@@ -57,6 +57,13 @@
 - [x] Arrastar mídia para pasta, arrastar pasta para pasta, importar direto na pasta selecionada
 - [x] Excluir pasta reparenteia conteúdo (nunca apaga mídia nem clips)
 
+## Próxima entrega: importação real e criador de vídeos com IA local
+
+- [ ] Host Rust: probe_media com ffprobe (duração, resolução, fps, trilhas de áudio) + install_component real (FFmpeg/whisper.cpp)
+- [ ] Importar vídeo com áudio cria clip de vídeo + clip de áudio vinculados (A/V link estilo Premiere)
+- [ ] Criador de vídeos com IA local: roteiro (llama.cpp), narração (Piper TTS), imagens (stable-diffusion.cpp/SDXL),
+      montagem determinística com FFmpeg; opcional LTX-Video/Wan via ComfyUI em GPUs potentes
+
 ## Backlog (próximas melhorias)
 
 - [x] Clips A/V vinculados (link/unlink) com sincronismo em mover, cortar, aparar e apagar
