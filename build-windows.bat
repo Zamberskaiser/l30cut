@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 echo ============================================
 echo   L30 CUT AI - build do app para Windows
-echo   Script versao 4 (2026-09-03)
+echo   Script versao 5 (2026-09-03)
 echo ============================================
 echo.
 
@@ -64,11 +64,27 @@ echo [5/6] Gerando build web...
 call bun run build
 if errorlevel 1 goto :falhou
 if not exist "dist\client\index.html" (
-  echo   [ERRO] O build web terminou, mas dist\client\index.html nao foi criado.
+  echo   Procurando a saida estatica em outros diretorios de build...
+  if exist ".output\public\index.html" (
+    echo   Copiando .output\public para dist\client...
+    if not exist "dist\client" mkdir "dist\client"
+    xcopy ".output\public" "dist\client" /E /I /Y >nul
+  ) else (
+    if exist "dist\public\index.html" (
+      echo   Copiando dist\public para dist\client...
+      if not exist "dist\client" mkdir "dist\client"
+      xcopy "dist\public" "dist\client" /E /I /Y >nul
+    )
+  )
+)
+if not exist "dist\client\index.html" (
+  echo   [ERRO] O build web terminou, mas nenhum index.html estatico foi encontrado.
+  echo   Procurei em: dist\client, .output\public e dist\public.
   echo   O Tauri precisa do HTML estatico para empacotar a interface.
   goto :falhou
 )
 echo   OK: arquivos web estaticos encontrados em dist\client.
+
 echo.
 
 echo [6/6] Gerando instalador Windows ^(Tauri^)...
