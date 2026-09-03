@@ -234,6 +234,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_updater::init())
         .invoke_handler(tauri::generate_handler![
             diagnose_system,
             prepare_data_dirs,
@@ -243,7 +244,9 @@ pub fn run() {
             load_project,
             write_project_file,
             read_project_file,
-            list_projects
+            list_projects,
+            check_for_update,
+            install_update
         ])
         .run(tauri::generate_context!())
         .expect("erro ao iniciar o L30 CUT AI");
