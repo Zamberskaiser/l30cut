@@ -99,14 +99,18 @@ if errorlevel 1 (
   )
 )
 echo   OK: CLI local do Tauri pronta.
-call bun run tauri build > "%~dp0build-log.txt" 2>&1
+echo   Compilando... isso leva de 5 a 20 minutos na primeira vez.
+echo   Acompanhe o progresso abaixo (tambem salvo em build-log.txt):
+echo.
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & bun run tauri build 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo   [ERRO] A geracao do instalador falhou. Log completo em: %~dp0build-log.txt
-  powershell -NoProfile -Command "Get-Content -Tail 30 '%~dp0build-log.txt'"
+  powershell -NoProfile -Command "Get-Content -Tail 40 '%~dp0build-log.txt'"
   goto :falhou
 )
 echo   OK: build concluido. Log em: %~dp0build-log.txt
 echo.
+
 
 
 echo [7/7] Instalando o L30 CUT AI no computador...
