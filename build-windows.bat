@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 echo ============================================
 echo   L30 CUT AI - build do app para Windows
-echo   Script versao 3 (2026-09-03)
+echo   Script versao 4 (2026-09-03)
 echo ============================================
 echo.
 
@@ -63,6 +63,12 @@ echo.
 echo [5/6] Gerando build web...
 call bun run build
 if errorlevel 1 goto :falhou
+if not exist "dist\client\index.html" (
+  echo   [ERRO] O build web terminou, mas dist\client\index.html nao foi criado.
+  echo   O Tauri precisa do HTML estatico para empacotar a interface.
+  goto :falhou
+)
+echo   OK: arquivos web estaticos encontrados em dist\client.
 echo.
 
 echo [6/6] Gerando instalador Windows ^(Tauri^)...

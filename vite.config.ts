@@ -11,5 +11,13 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // Tauri embeds static files and cannot run the TanStack server bundle.
+    // Prerender every desktop route into dist/client while preserving the
+    // regular Nitro server output used by the hosted web build.
+    prerender: {
+      enabled: true,
+      autoStaticPathsDiscovery: true,
+      failOnError: true,
+    },
   },
 });

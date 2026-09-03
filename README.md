@@ -60,8 +60,12 @@ Para testar o app desktop real, use:
 
 ```bash
 bun run build
-cargo tauri build
+bunx --bun tauri build
 ```
+
+O build gera as páginas estáticas do desktop em `dist/client`; esse é o diretório
+empacotado pelo Tauri. O `build-windows.bat` confirma a presença de
+`dist/client/index.html` antes de iniciar a geração do MSI/NSIS.
 
 ## Primeira execução
 
