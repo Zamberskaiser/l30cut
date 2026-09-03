@@ -206,6 +206,39 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
     })
     .strict(),
 
+  /* ---------- media bins (folders) ---------- */
+  z
+    .object({
+      type: z.literal("createBin"),
+      binId: IdSchema,
+      name: z.string().min(1).max(80),
+      parentId: IdSchema.optional(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("renameBin"),
+      binId: IdSchema,
+      name: z.string().min(1).max(80),
+    })
+    .strict(),
+  /** Deletes the bin and reparents its bins/assets to the bin's parent. */
+  z.object({ type: z.literal("deleteBin"), binId: IdSchema }).strict(),
+  z
+    .object({
+      type: z.literal("moveBin"),
+      binId: IdSchema,
+      parentId: IdSchema.nullable(),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("moveAssetsToBin"),
+      assetIds: z.array(IdSchema).min(1).max(500),
+      binId: IdSchema.nullable(),
+    })
+    .strict(),
+
   /* ---------- tracks ---------- */
   z
     .object({

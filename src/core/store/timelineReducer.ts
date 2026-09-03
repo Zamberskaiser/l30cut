@@ -5,6 +5,7 @@ import {
   clipEnd,
   clipRate,
   clipSourceSpan,
+  isBinInside,
   type Clip,
   type Project,
   type Sequence,
@@ -464,6 +465,88 @@ export function applyCommand(project: Project, command: EditCommand): Project {
         }
         clip.tracker = { ...command.tracker, points };
       });
+
+    case "createBin": {
+      const next = clone(project);
+      if (next.bins.some((b) => b.id === command.binId)) {
+        throw new CommandError("pasta já existe");
+      }
+      if (command.parentId && !next.bins.some((b) => b.id === command.parentId)) {
+        throw new CommandError("pasta de destino não encontrada");
+      }
+      next.bins.push({
+        id: command.binId,
+        name: command.name,
+        ...(command.parentId ? { parentId: command.parentId } : {}),
+      });
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "renameBin": {
+      const next = clone(project);
+      const bin = next.bins.find((b) => b.id === command.binId);
+      if (!bin) throw new CommandError("pasta não encontrada");
+      bin.name = command.name;
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "deleteBin": {
+      const next = clone(project);
+      const bin = next.bins.find((b) => b.id === command.binId);
+      if (!bin) throw new CommandError("pasta não encontrada");
+      const parentId = bin.parentId;
+      for (const child of next.bins) {
+        if (child.parentId === bin.id) {
+          if (parentId) child.parentId = parentId;
+          else delete child.parentId;
+        }
+      }
+      for (const asset of next.assets) {
+        if (asset.binId === bin.id) {
+          if (parentId) asset.binId = parentId;
+          else delete asset.binId;
+        }
+      }
+      next.bins = next.bins.filter((b) => b.id !== bin.id);
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "moveBin": {
+      const next = clone(project);
+      const bin = next.bins.find((b) => b.id === command.binId);
+      if (!bin) throw new CommandError("pasta não encontrada");
+      if (command.parentId === null) {
+        delete bin.parentId;
+      } else {
+        if (!next.bins.some((b) => b.id === command.parentId)) {
+          throw new CommandError("pasta de destino não encontrada");
+        }
+        if (isBinInside(next.bins, command.parentId, bin.id)) {
+          throw new CommandError("não é possível mover uma pasta para dentro dela mesma");
+        }
+        bin.parentId = command.parentId;
+      }
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "moveAssetsToBin": {
+      const next = clone(project);
+      if (command.binId !== null && !next.bins.some((b) => b.id === command.binId)) {
+        throw new CommandError("pasta de destino não encontrada");
+      }
+      for (const assetId of command.assetIds) {
+        const asset = next.assets.find((a) => a.id === assetId);
+        if (!asset) throw new CommandError(`mídia não encontrada: ${assetId}`);
+        if (command.binId === null) delete asset.binId;
+        else asset.binId = command.binId;
+      }
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
 
     case "setSequenceAspect":
       return withSequence(project, (seq) => {
