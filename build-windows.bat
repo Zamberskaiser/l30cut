@@ -68,8 +68,20 @@ echo.
 echo [6/6] Gerando instalador Windows ^(Tauri^)...
 echo   Garantindo a CLI do Tauri...
 set "TAURI_OK="
-call cargo tauri --version >nul 2>&1
-if not errorlevel 1 set "TAURI_OK=cargo"
+
+call bunx --bun tauri --version >nul 2>&1
+if not errorlevel 1 set "TAURI_OK=npm"
+
+if not defined TAURI_OK (
+  echo   Instalando @tauri-apps/cli via bun...
+  call bun add -d "@tauri-apps/cli@^2.0.0"
+  if not errorlevel 1 set "TAURI_OK=npm"
+)
+
+if not defined TAURI_OK (
+  call cargo tauri --version >nul 2>&1
+  if not errorlevel 1 set "TAURI_OK=cargo"
+)
 
 if not defined TAURI_OK (
   echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
@@ -78,22 +90,17 @@ if not defined TAURI_OK (
 )
 
 if not defined TAURI_OK (
-  echo   [AVISO] cargo install falhou. Tentando a CLI npm ^(@tauri-apps/cli^)...
-  call bun add -d "@tauri-apps/cli@2"
-  if not errorlevel 1 set "TAURI_OK=npm"
-)
-
-if not defined TAURI_OK (
   echo   [ERRO] Nao foi possivel instalar a CLI do Tauri.
   goto :falhou
 )
 
-if "%TAURI_OK%"=="cargo" (
-  call cargo tauri build
+if "%TAURI_OK%"=="npm" (
+  call bunx --bun tauri build
 ) else (
-  call bunx tauri build
+  call cargo tauri build
 )
 if errorlevel 1 goto :falhou
+
 
 :bundleok
 
