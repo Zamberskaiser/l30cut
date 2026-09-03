@@ -124,7 +124,10 @@ export class TauriRuntime implements RuntimeAdapter {
         directory: false,
         title: "Importar mídia",
         filters: [
-          { name: "Mídia", extensions: ["mp4", "mov", "mkv", "wav", "mp3", "m4a", "png", "jpg", "jpeg"] },
+          {
+            name: "Mídia",
+            extensions: ["mp4", "mov", "mkv", "wav", "mp3", "m4a", "png", "jpg", "jpeg"],
+          },
         ],
       },
     });
