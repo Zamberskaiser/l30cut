@@ -71,6 +71,7 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     componentDownloads: false,
     secureKeyStorage: false,
     updater: false,
+    videoCreator: false,
   };
 
   private components: ComponentStatus[] = COMPONENT_CATALOG.map((c) => ({

@@ -54,6 +54,9 @@ export const TAURI_COMMANDS = {
   validateAiTransaction: "validate_ai_transaction",
   checkForUpdate: "check_for_update",
   installUpdate: "install_update",
+  listAiEngines: "list_ai_engines",
+  llmGenerate: "llm_generate",
+  createVideo: "create_ai_video",
 } as const;
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
@@ -92,6 +95,7 @@ export class TauriRuntime implements RuntimeAdapter {
     componentDownloads: true,
     secureKeyStorage: true,
     updater: true,
+    videoCreator: true,
   };
 
   async diagnose(): Promise<SystemDiagnostics> {
