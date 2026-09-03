@@ -30,7 +30,6 @@ export function AppMenu() {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            type="button"
             variant="ghost"
             size="sm"
             className="h-8 gap-2 px-2 text-foreground hover:bg-accent"
