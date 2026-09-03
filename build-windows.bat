@@ -113,22 +113,13 @@ rem 1) CLI local do projeto (node_modules\.bin\tauri.cmd) - caminho mais confiav
 if not exist "node_modules\@tauri-apps\cli\package.json" (
   echo   Instalando @tauri-apps/cli...
   call bun add -d "@tauri-apps/cli@2"
+  if errorlevel 1 goto :falhou
 )
 if exist "node_modules\.bin\tauri.cmd" set "TAURI_CMD=node_modules\.bin\tauri.cmd"
 
-rem 2) Fallback: cargo-tauri
 if not defined TAURI_CMD (
-  call cargo tauri --version >nul 2>&1
-  if errorlevel 1 (
-    echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
-    call cargo install tauri-cli --version ^2.0.0 --locked
-  )
-  call cargo tauri --version >nul 2>&1
-  if not errorlevel 1 set "TAURI_CMD=cargo tauri"
-)
-
-if not defined TAURI_CMD (
-  echo   [ERRO] Nao foi possivel preparar a CLI do Tauri.
+  echo   [ERRO] A CLI local do Tauri nao foi criada pelo Bun.
+  echo   Apague a pasta node_modules e execute este batch novamente.
   goto :falhou
 )
 
@@ -197,9 +188,6 @@ exit /b 0
 
 :preparemsvc
 rem O Rust para Windows usa o linker MSVC. VS Code sozinho nao fornece link.exe.
-where link >nul 2>nul
-if not errorlevel 1 exit /b 0
-
 set "VCVARS_FILE="
 if exist "C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 if not defined VCVARS_FILE if exist "%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
@@ -217,7 +205,8 @@ if not exist "%VS_BOOTSTRAPPER%" (
 )
 
 "%VS_BOOTSTRAPPER%" --quiet --wait --norestart --nocache --installPath "C:\BuildTools" --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended
-if errorlevel 1 (
+set "VS_EXIT=%ERRORLEVEL%"
+if not "%VS_EXIT%"=="0" if not "%VS_EXIT%"=="3010" (
   echo   [ERRO] A instalacao do Visual C++ Build Tools falhou.
   echo   Abra https://visualstudio.microsoft.com/visual-cpp-build-tools/ e instale "Desenvolvimento para desktop com C++".
   exit /b 1
