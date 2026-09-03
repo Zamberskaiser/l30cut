@@ -37,7 +37,7 @@ pub struct InstallArgs {
 }
 
 #[tauri::command]
-fn diagnostics(app: tauri::AppHandle) -> Result<SystemDiagnostics, String> {
+fn diagnose_system(app: tauri::AppHandle) -> Result<SystemDiagnostics, String> {
     let mut sys = System::new_all();
     sys.refresh_all();
     let data_dir = tauri::Manager::path(&app)
