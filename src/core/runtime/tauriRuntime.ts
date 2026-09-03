@@ -21,6 +21,10 @@ import {
 import { ASPECT_RESOLUTIONS } from "./catalog";
 import type {
   AiValidationReport,
+  CreatorEngines,
+  CreatorRenderOptions,
+  CreatorResult,
+  CreatorScene,
   ComponentId,
   ComponentStatus,
   ExportRequest,
