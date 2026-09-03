@@ -48,7 +48,7 @@ function EngineBadge({ ready, label }: { ready: boolean; label: string }) {
  * produces a real MP4 that lands on the timeline.
  */
 export function CreatorPanel() {
-  const { project, runtime, enqueue, addAsset, run } = useEditor();
+  const { runtime, enqueue, addAsset, run } = useEditor();
   const sequence = useActiveSequence();
   const supported = runtime.capabilities.videoCreator;
 
@@ -111,7 +111,7 @@ export function CreatorPanel() {
 
   async function render() {
     if (!runtime.createVideo || scenes.length === 0) return;
-    const resolution = ASPECT_RESOLUTIONS[project.aspect] ?? { width: 1920, height: 1080 };
+    const resolution = ASPECT_RESOLUTIONS[sequence.aspect] ?? { width: 1920, height: 1080 };
     const outputName = `criacao-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}`;
     setRendering(true);
     const { done } = enqueue({
