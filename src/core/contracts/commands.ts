@@ -6,6 +6,7 @@ import {
   CaptionSegmentSchema,
   GainKeyframeSchema,
   MarkerSchema,
+  TrackKindSchema,
 } from "./domain";
 
 /**
