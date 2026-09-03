@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -7,6 +7,7 @@ import {
   Loader2,
   Pencil,
   Send,
+  Settings2,
   Sparkles,
   ThumbsDown,
   X,
@@ -33,7 +34,16 @@ import { newId } from "@/core/store/timelineReducer";
 import { planDeterministically } from "./deterministicPlanner";
 import { compilePlan } from "./planExecutor";
 import { previewPlan, type PlanPreview, type PlanPreviewFailure } from "./planPreview";
-import { DEFAULT_PROVIDERS, requestPlanFromProvider } from "./provider";
+import { requestPlanFromProvider, type ProviderConfig } from "./provider";
+import { LlmSettingsDialog } from "./LlmSettingsDialog";
+import { ollamaChatEndpoint } from "@/core/ai/ollama";
+import {
+  DEFAULT_LLM_SETTINGS,
+  isGenerativeReady,
+  loadLlmSettings,
+  saveLlmSettings,
+  type LlmSettings,
+} from "@/core/ai/llmSettings";
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
 
 const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
@@ -298,7 +308,7 @@ export function AssistantPanel() {
           variant="outline"
           className="ml-auto border-border-strong text-[10px] text-muted-foreground"
         >
-          {editor.runtime.mode === "tauri" ? "IA local" : "planejador local"}
+          {generative ? "IA local (Ollama)" : "regras locais"}
         </Badge>
       </div>
 
@@ -319,19 +329,19 @@ export function AssistantPanel() {
           </Select>
         </div>
         <div>
-          <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Provider</label>
-          <Select value={providerId} onValueChange={setProviderId}>
-            <SelectTrigger className="h-7 text-[11px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DEFAULT_PROVIDERS.filter((p) => p.enabled).map((p) => (
-                <SelectItem key={p.id} value={p.id} className="text-xs">
-                  {p.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Motor</label>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 w-full justify-start gap-1.5 text-[11px]"
+            onClick={() => setLlmOpen(true)}
+            title="Configurar IA generativa local (Ollama)"
+          >
+            <Settings2 className="size-3.5" />
+            <span className="truncate">
+              {generative ? `Ollama · ${llm.model}` : "Regras determinísticas"}
+            </span>
+          </Button>
         </div>
         <p className="col-span-2 text-[10px] leading-relaxed text-muted-foreground">
           Contexto: {sequence.clips.length} clips · {editor.selection.length} selecionados ·{" "}
