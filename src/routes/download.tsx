@@ -108,8 +108,8 @@ function DownloadPage() {
             Pacote com todo o código-fonte do editor, o projeto Tauri (src-tauri), a documentação de
             arquitetura/release e os workflows de CI. Dentro dele há o{" "}
             <span className="tabular">build-windows.bat</span>: dê dois cliques no Windows e ele
-            instala Bun, Rust, Visual C++ Build Tools e WebView2, depois gera e instala o
-            MSI/EXE automaticamente.
+            instala Bun, Rust, Visual C++ Build Tools e WebView2, depois gera e instala o MSI/EXE
+            automaticamente.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
