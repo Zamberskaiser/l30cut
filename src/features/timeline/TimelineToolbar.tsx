@@ -1,4 +1,4 @@
-import { Magnet, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown, Magnet, ZoomIn, ZoomOut } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
