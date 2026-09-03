@@ -25,15 +25,31 @@ echo.
 set "FOUND_EXE="
 set "FOUND_LABEL="
 
-REM 1. Instalacao padrao do MSI
-set "CANDIDATE=%LOCALAPPDATA%\L30 CUT AI\L30 CUT AI.exe"
+REM 1. Instalacao MSI por maquina (WiX usa Arquivos de Programas)
+set "CANDIDATE=%ProgramFiles%\L30 CUT AI\L30 CUT AI.exe"
 if exist "%CANDIDATE%" (
   set "FOUND_EXE=%CANDIDATE%"
-  set "FOUND_LABEL=instalacao padrao"
+  set "FOUND_LABEL=instalacao MSI (Arquivos de Programas)"
   goto :run
 )
 
-REM 2. Build de release local
+REM 2. Instalacao NSIS por usuario
+set "CANDIDATE=%LOCALAPPDATA%\Programs\L30 CUT AI\L30 CUT AI.exe"
+if exist "%CANDIDATE%" (
+  set "FOUND_EXE=%CANDIDATE%"
+  set "FOUND_LABEL=instalacao NSIS (por usuario)"
+  goto :run
+)
+
+REM 3. Instalacao antiga em LOCALAPPDATA
+set "CANDIDATE=%LOCALAPPDATA%\L30 CUT AI\L30 CUT AI.exe"
+if exist "%CANDIDATE%" (
+  set "FOUND_EXE=%CANDIDATE%"
+  set "FOUND_LABEL=instalacao local"
+  goto :run
+)
+
+REM 4. Build de release local (sem instalar)
 set "CANDIDATE=src-tauri\target\release\L30 CUT AI.exe"
 if exist "%CANDIDATE%" (
   set "FOUND_EXE=%CANDIDATE%"
@@ -41,23 +57,18 @@ if exist "%CANDIDATE%" (
   goto :run
 )
 
-REM 3. Pasta do bundle NSIS (instalador portatil ja extraido)
-if exist "src-tauri\target\release\bundle\nsis" (
-  for %%F in ("src-tauri\target\release\bundle\nsis\L30 CUT AI.exe") do (
-    set "FOUND_EXE=%%~F"
-    set "FOUND_LABEL=bundle portatil"
-    goto :run
+REM 5. Nenhuma instalacao: oferecer o instalador gerado, se existir
+for %%F in ("src-tauri\target\release\bundle\msi\*.msi") do (
+  echo Nenhuma instalacao encontrada, mas ha um instalador MSI gerado:
+  echo   %%~fF
+  choice /c SN /M "Deseja instalar agora"
+  if not errorlevel 2 (
+    start "" "%%~fF"
+    exit /b 0
   )
+  goto :notfound
 )
 
-REM 4. Pasta do bundle MSI (o proprio MSI nao e executavel, mas o app pode estar la)
-if exist "src-tauri\target\release\bundle\msi" (
-  for %%F in ("src-tauri\target\release\bundle\msi\L30 CUT AI.exe") do (
-    set "FOUND_EXE=%%~F"
-    set "FOUND_LABEL=bundle msi"
-    goto :run
-  )
-)
 
 :run
 if defined FOUND_EXE (
