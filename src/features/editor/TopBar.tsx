@@ -1,15 +1,11 @@
 import { Link } from "@tanstack/react-router";
 import {
   Activity,
-  Clapperboard,
   Download,
-  FileDown,
-  FolderOpen,
+  GraduationCap,
   Keyboard,
   Redo2,
-  Save,
   Undo2,
-  GraduationCap,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,20 +14,15 @@ import { useEditor } from "@/core/store/editorStore";
 import { useUi } from "@/core/store/uiStore";
 import { ExportDialog } from "@/features/export/ExportDialog";
 import { DiagnosticsDialog } from "@/features/setup/DiagnosticsDialog";
+import { AppMenu } from "./AppMenu";
 
 export function TopBar() {
-  const { project, history, undo, redo, save, saveAsFile, openFromFile, dirty, runtime } =
-    useEditor();
+  const { project, history, undo, redo, dirty, runtime } = useEditor();
   const ui = useUi();
 
   return (
     <header className="chrome-surface flex h-12 shrink-0 items-center gap-3 border-b px-3">
-      <div className="flex items-center gap-2">
-        <span className="grid size-7 place-items-center rounded-sm bg-primary text-primary-foreground">
-          <Clapperboard className="size-4" />
-        </span>
-        <span className="text-sm font-semibold tracking-tight">L30 CUT AI</span>
-      </div>
+      <AppMenu />
 
       <Separator orientation="vertical" className="h-6" />
 
@@ -45,32 +36,6 @@ export function TopBar() {
       </div>
 
       <div className="ml-2 flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void save()}
-          className="gap-1.5 text-muted-foreground hover:text-foreground"
-        >
-          <Save className="size-4" /> Salvar
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void saveAsFile()}
-          title="Salvar projeto em um arquivo .l30cut"
-          className="gap-1.5 text-muted-foreground hover:text-foreground"
-        >
-          <FileDown className="size-4" /> Salvar como
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => void openFromFile()}
-          title="Abrir um arquivo .l30cut"
-          className="gap-1.5 text-muted-foreground hover:text-foreground"
-        >
-          <FolderOpen className="size-4" /> Abrir
-        </Button>
         <Button
           variant="ghost"
           size="icon"
