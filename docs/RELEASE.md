@@ -13,9 +13,9 @@ bunx --bun tauri build
 ```
 
 Artefatos em `src-tauri/target/release/bundle/` (MSI e NSIS `.exe`).
-Os arquivos da interface são lidos de `.output/public`, saída pública do build
-TanStack Start. O script Windows interrompe com uma mensagem específica se esse
-diretório não tiver sido gerado.
+Os arquivos da interface são lidos de `dist/client`, incluindo o HTML estático
+gerado pelo prerender do TanStack Start. O script Windows interrompe com uma
+mensagem específica se `dist/client/index.html` não tiver sido gerado.
 
 ## Depois do build
 

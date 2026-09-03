@@ -63,12 +63,12 @@ echo.
 echo [5/6] Gerando build web...
 call bun run build
 if errorlevel 1 goto :falhou
-if not exist ".output\public" (
-  echo   [ERRO] O build web terminou, mas a pasta .output\public nao foi criada.
-  echo   O Tauri precisa dessa pasta para empacotar a interface.
+if not exist "dist\client\index.html" (
+  echo   [ERRO] O build web terminou, mas dist\client\index.html nao foi criado.
+  echo   O Tauri precisa do HTML estatico para empacotar a interface.
   goto :falhou
 )
-echo   OK: arquivos web encontrados em .output\public.
+echo   OK: arquivos web estaticos encontrados em dist\client.
 echo.
 
 echo [6/6] Gerando instalador Windows ^(Tauri^)...

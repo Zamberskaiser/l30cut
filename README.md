@@ -63,9 +63,9 @@ bun run build
 bunx --bun tauri build
 ```
 
-O build web do TanStack Start é gerado em `.output/public`; esse é o diretório
-empacotado pelo Tauri. O `build-windows.bat` valida sua existência antes de
-iniciar a geração do MSI/NSIS.
+O build gera as páginas estáticas do desktop em `dist/client`; esse é o diretório
+empacotado pelo Tauri. O `build-windows.bat` confirma a presença de
+`dist/client/index.html` antes de iniciar a geração do MSI/NSIS.
 
 ## Primeira execução
 
