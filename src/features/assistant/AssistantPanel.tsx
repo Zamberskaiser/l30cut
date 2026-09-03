@@ -434,7 +434,6 @@ export function AssistantPanel() {
         onChange={updateLlm}
         desktop={editor.runtime.mode === "tauri"}
       />
-
     </div>
   );
 }

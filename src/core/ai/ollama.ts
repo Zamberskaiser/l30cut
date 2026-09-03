@@ -154,7 +154,7 @@ export async function checkOllama(
       reachable: true,
       version:
         typeof (version as { version?: unknown })?.version === "string"
-          ? ((version as { version: string }).version)
+          ? (version as { version: string }).version
           : null,
       models: parseOllamaTags(tags),
       error: null,
