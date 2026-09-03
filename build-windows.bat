@@ -83,42 +83,22 @@ call bun install
 if errorlevel 1 goto :falhou
 echo.
 
-echo [6/8] Gerando build web...
-call bun run build
-if errorlevel 1 goto :falhou
-if not exist "dist\client\index.html" (
-  echo   Procurando a saida estatica em outros diretorios de build...
-  if exist ".output\public\index.html" (
-    if not exist "dist\client" mkdir "dist\client"
-    xcopy ".output\public" "dist\client" /E /I /Y >nul
-  ) else (
-    if exist "dist\public\index.html" (
-      if not exist "dist\client" mkdir "dist\client"
-      xcopy "dist\public" "dist\client" /E /I /Y >nul
-    )
-  )
-)
-if not exist "dist\client\index.html" (
-  echo   [ERRO] Nenhum index.html estatico foi encontrado.
-  echo   Procurei em: dist\client, .output\public e dist\public.
-  goto :falhou
-)
-echo   OK: interface estatica pronta em dist\client.
-echo.
-
-echo [7/8] Gerando instalador Windows ^(Tauri^)...
-
-call bun run tauri --version
+echo [6/7] Gerando instalador Windows ^(Tauri^)...
+call bun run tauri --version >nul 2>&1
 if errorlevel 1 (
-  echo   Instalando @tauri-apps/cli...
+  echo   Preparando a CLI local do Tauri...
   call bun add --dev --exact "@tauri-apps/cli@2.11.4"
-  call bun run tauri --version
+  if errorlevel 1 (
+    echo   [ERRO] Nao foi possivel instalar a CLI local do Tauri via Bun.
+    goto :falhou
+  )
+  call bun run tauri --version >nul 2>&1
   if errorlevel 1 (
     echo   [ERRO] Nao foi possivel preparar a CLI local do Tauri via Bun.
     goto :falhou
   )
 )
-
+echo   OK: CLI local do Tauri pronta.
 call bun run tauri build
 if errorlevel 1 goto :falhou
 echo.
