@@ -2,8 +2,11 @@ import { useRef } from "react";
 import { toast } from "sonner";
 import { clipEnd, formatTimecode, SECOND, sequenceDuration } from "@/core/contracts/domain";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
+import { newId } from "@/core/store/timelineReducer";
 import { useUi } from "@/core/store/uiStore";
 import { HEADER_WIDTH, usToPx } from "./geometry";
+import { SequenceTabs } from "./SequenceTabs";
+import { TrackControls } from "./TrackControls";
 import { TimelinePlayhead } from "./TimelinePlayhead";
 import { TimelineRuler } from "./TimelineRuler";
 import { TimelineToolbar } from "./TimelineToolbar";
@@ -72,11 +75,48 @@ export function TimelinePanel() {
     },
   };
 
+  /** Drop from the media bin: insert the whole asset at the drop position. */
+  function dropAsset(trackId: string, assetId: string, startUs: number) {
+    const asset = editor.project.assets.find((a) => a.id === assetId);
+    if (!asset) return;
+    const target = sequence.tracks.find((t) => t.id === trackId);
+    if (!target) return;
+    if (target.kind === "caption") {
+      toast.info("Trilha de legendas não aceita mídia");
+      return;
+    }
+    editor.run(
+      [
+        {
+          type: "insertClip",
+          clipId: newId("clip"),
+          trackId,
+          assetId,
+          startUs: Math.round(startUs),
+          sourceInUs: 0,
+          sourceOutUs: asset.durationUs,
+          label: asset.name.replace(/\.[^.]+$/, ""),
+        },
+      ],
+      `Inserir ${asset.name}`,
+    );
+  }
+
+  function renameTrack(trackId: string, current: string) {
+    const next = window.prompt("Nome da trilha", current);
+    if (!next || next.trim() === current) return;
+    editor.run(
+      [{ type: "renameTrack", trackId, name: next.trim().slice(0, 60) }],
+      "Renomear trilha",
+    );
+  }
+
   return (
     <section
       className="flex h-full min-h-0 flex-col border-t border-border bg-panel"
       onPointerDownCapture={() => ui.setFocused("timeline")}
     >
+      <SequenceTabs />
       <TimelineToolbar />
 
       <div className="flex min-h-0 flex-1">
@@ -87,6 +127,11 @@ export function TimelinePanel() {
               key={track.id}
               track={track}
               pro={pro}
+              height={ui.trackHeight}
+              onRename={() => renameTrack(track.id, track.name)}
+              onRemove={() =>
+                editor.run([{ type: "removeTrack", trackId: track.id }], "Remover trilha")
+              }
               onToggleLock={() =>
                 editor.run(
                   [{ type: "setTrackLock", trackId: track.id, locked: !track.locked }],
@@ -101,6 +146,7 @@ export function TimelinePanel() {
               }
             />
           ))}
+          <TrackControls />
         </div>
 
         <div
@@ -127,7 +173,9 @@ export function TimelinePanel() {
                   project={editor.project}
                   selection={editor.selection}
                   pxPerSecond={ui.pxPerSecond}
+                  height={ui.trackHeight}
                   pro={pro}
+                  onDropAsset={dropAsset}
                   interaction={interaction}
                   actions={actions}
                   peaks={peaks}
