@@ -1,16 +1,11 @@
-import { ChevronsDownUp, ChevronsUpDown, Film, Music, Plus } from "lucide-react";
+import { Film, Music, Plus } from "lucide-react";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { newId } from "@/core/store/timelineReducer";
-import { useUi } from "@/core/store/uiStore";
 
-/**
- * Footer of the track header column: add video/audio tracks and change the
- * timeline's vertical zoom (lane height), Premiere-style.
- */
+/** Footer of the track header column: add video/audio tracks, Premiere-style. */
 export function TrackControls() {
   const editor = useEditor();
   const sequence = useActiveSequence();
-  const ui = useUi();
 
   const addTrack = (kind: "video" | "audio") => {
     const count = sequence.tracks.filter((t) => t.kind === kind).length + 1;
@@ -47,26 +42,6 @@ export function TrackControls() {
         <Plus className="size-3" />
         <Music className="size-3" />
       </button>
-      <span className="flex items-center gap-0.5">
-        <button
-          type="button"
-          aria-label="Diminuir altura das trilhas"
-          title="Diminuir altura das trilhas"
-          onClick={() => ui.setTrackHeight((h) => h - 10)}
-          className="rounded-sm p-0.5 text-muted-foreground hover:bg-panel-raised hover:text-foreground"
-        >
-          <ChevronsDownUp className="size-3" />
-        </button>
-        <button
-          type="button"
-          aria-label="Aumentar altura das trilhas"
-          title="Aumentar altura das trilhas"
-          onClick={() => ui.setTrackHeight((h) => h + 10)}
-          className="rounded-sm p-0.5 text-muted-foreground hover:bg-panel-raised hover:text-foreground"
-        >
-          <ChevronsUpDown className="size-3" />
-        </button>
-      </span>
     </div>
   );
 }
