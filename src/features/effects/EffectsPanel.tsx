@@ -173,7 +173,9 @@ export function EffectsPanel() {
                 <div className="flex items-center justify-between">
                   <Label className="text-[11px]">
                     {edge === "in" ? "Entrada" : "Saída"}
-                    {current ? ` · ${current.kind} ${(current.durationUs / SECOND).toFixed(2)}s` : ""}
+                    {current
+                      ? ` · ${current.kind} ${(current.durationUs / SECOND).toFixed(2)}s`
+                      : ""}
                   </Label>
                   {current ? (
                     <Button

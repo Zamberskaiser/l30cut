@@ -30,7 +30,9 @@ describe("effect commands", () => {
       edge: "in",
       transition: null,
     });
-    expect(activeSequence(removed).clips.find((c) => c.id === clip.id)!.transitionIn).toBeUndefined();
+    expect(
+      activeSequence(removed).clips.find((c) => c.id === clip.id)!.transitionIn,
+    ).toBeUndefined();
   });
 
   it("rejects a transition longer than half the clip", () => {
