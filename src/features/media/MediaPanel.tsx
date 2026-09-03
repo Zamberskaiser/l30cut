@@ -5,12 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
-import { clipDuration, formatDuration, type MediaAsset } from "@/core/contracts/domain";
+import {
+  binWithDescendants,
+  clipDuration,
+  formatDuration,
+  type MediaAsset,
+} from "@/core/contracts/domain";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { newId } from "@/core/store/timelineReducer";
 import { EmptyState } from "@/features/editor/EmptyState";
 import { onAppEvent } from "@/core/commands/appEvents";
 import { ASSET_DND_MIME } from "@/features/timeline/dnd";
+import { BinTree } from "./BinTree";
 
 const ACCEPTED = ".mp4,.mov,.wav,.mp3,.m4a,.png,.jpg,.jpeg";
 const MAX_BYTES = 4 * 1024 * 1024 * 1024;
@@ -26,6 +32,15 @@ export function MediaPanel() {
   const sequence = useActiveSequence();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [selectedBinId, setSelectedBinId] = useState<string | null>(null);
+
+  // Assets of the selected folder and of everything nested inside it.
+  const visibleBinIds =
+    selectedBinId === null ? null : new Set(binWithDescendants(project.bins, selectedBinId));
+  const visibleAssets = project.assets.filter(
+    (a) => visibleBinIds === null || (a.binId ? visibleBinIds.has(a.binId) : false),
+  );
+  const selectedBin = project.bins.find((b) => b.id === selectedBinId);
 
   const importJob = jobs.find((j) => j.kind === "import" && j.status === "running");
 
@@ -74,6 +89,13 @@ export function MediaPanel() {
     try {
       const assets = await done;
       addAsset(assets);
+      // Imports land in the folder the user is looking at.
+      if (selectedBinId && assets.length > 0) {
+        run(
+          [{ type: "moveAssetsToBin", assetIds: assets.map((a) => a.id), binId: selectedBinId }],
+          "Importar para pasta",
+        );
+      }
       toast.success(`${assets.length} mídia(s) importada(s)`, {
         description:
           runtime.mode === "tauri"
@@ -148,8 +170,8 @@ export function MediaPanel() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-3 py-2">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Mídia
+        <h2 className="min-w-0 truncate text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {selectedBin ? `Mídia · ${selectedBin.name}` : "Mídia"}
         </h2>
         <Button
           size="sm"
@@ -177,12 +199,18 @@ export function MediaPanel() {
         </div>
       ) : null}
 
+      <BinTree selectedBinId={selectedBinId} onSelect={setSelectedBinId} />
+
       <ScrollArea className="flex-1 scrollbar-thin-dark">
         <div className="space-y-1 px-2 pb-3">
-          {project.assets.length === 0 ? (
+          {visibleAssets.length === 0 ? (
             <EmptyState
-              title="Nenhuma mídia"
-              description="Importe MP4, MOV, WAV ou imagem para começar."
+              title={selectedBin ? `${selectedBin.name} está vazia` : "Nenhuma mídia"}
+              description={
+                selectedBin
+                  ? "Arraste mídias para esta pasta ou importe direto nela."
+                  : "Importe MP4, MOV, WAV ou imagem para começar."
+              }
               action={
                 <Button size="sm" variant="secondary" onClick={() => void startImport()}>
                   Importar arquivo
@@ -190,7 +218,7 @@ export function MediaPanel() {
               }
             />
           ) : null}
-          {project.assets.map((asset) => {
+          {visibleAssets.map((asset) => {
             const Icon = assetIcon(asset.kind);
             return (
               <div
@@ -219,6 +247,11 @@ export function MediaPanel() {
                   <span className="tabular text-[10px] text-muted-foreground">
                     {asset.width}×{asset.height}
                   </span>
+                  {asset.binId && selectedBinId === null ? (
+                    <span className="truncate text-[10px] text-muted-foreground">
+                      {project.bins.find((b) => b.id === asset.binId)?.name}
+                    </span>
+                  ) : null}
                   <div className="ml-auto flex opacity-0 transition-opacity group-hover:opacity-100">
                     <Button
                       size="icon"
