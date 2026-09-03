@@ -426,6 +426,15 @@ export function AssistantPanel() {
           setConfirming(null);
         }}
       />
+
+      <LlmSettingsDialog
+        open={llmOpen}
+        onOpenChange={setLlmOpen}
+        settings={llm}
+        onChange={updateLlm}
+        desktop={editor.runtime.mode === "tauri"}
+      />
+
     </div>
   );
 }
