@@ -19,7 +19,6 @@ import {
   pxToUs,
   snapTargets,
   SNAP_TOLERANCE_PX,
-  TRACK_HEIGHT,
   usToPx,
   type ClipZone,
 } from "./geometry";
