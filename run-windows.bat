@@ -83,6 +83,7 @@ if defined FOUND_EXE (
   exit /b 0
 )
 
+:notfound
 echo [ERRO] Nao encontrei o executavel do L30 CUT AI.
 echo.
 echo Possiveis causas:
