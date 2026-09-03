@@ -249,6 +249,14 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
   aspectResolution(aspect: Aspect) {
     return ASPECT_RESOLUTIONS[aspect];
   }
+
+  async checkForUpdate(): Promise<UpdateInfo | null> {
+    return null;
+  }
+
+  async installUpdate(): Promise<void> {
+    throw new Error("Atualizações só funcionam no aplicativo instalado.");
+  }
 }
 
 async function probeInBrowser(
