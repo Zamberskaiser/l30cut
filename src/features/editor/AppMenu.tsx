@@ -29,16 +29,18 @@ export function AppMenu() {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button
+          <Button
             type="button"
-            className="inline-flex h-8 items-center gap-2 rounded-md px-2 text-sm font-medium text-foreground hover:bg-accent"
+            variant="ghost"
+            size="sm"
+            className="h-8 gap-2 px-2 text-foreground hover:bg-accent"
             aria-label="Menu do aplicativo"
           >
             <span className="grid size-7 place-items-center rounded-sm bg-primary text-primary-foreground">
               <Clapperboard className="size-4" />
             </span>
             <span className="text-sm font-semibold tracking-tight">L30 CUT AI</span>
-          </button>
+          </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
           <DropdownMenuItem
