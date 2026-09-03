@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 7 (2026-09-03)
+rem   Script versao 8 (2026-09-03)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem ============================================================
@@ -20,7 +20,7 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 7 (2026-09-03)
+echo   Script versao 8 (2026-09-03)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
@@ -115,7 +115,7 @@ if not defined TAURI_CMD (
   call cargo tauri --version >nul 2>&1
   if errorlevel 1 (
     echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
-    call cargo install tauri-cli --version 2 --locked
+    call cargo install tauri-cli --version ^2.0.0 --locked
   )
   call cargo tauri --version >nul 2>&1
   if not errorlevel 1 set "TAURI_CMD=cargo tauri"
