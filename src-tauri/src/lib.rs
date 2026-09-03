@@ -192,6 +192,44 @@ fn list_projects(app: tauri::AppHandle) -> Result<Vec<String>, String> {
     Ok(found)
 }
 
+/* ------------------------- in-app updater ------------------------- */
+
+#[derive(Serialize)]
+struct UpdateInfo {
+    version: String,
+    date: Option<String>,
+    body: Option<String>,
+}
+
+/// Checks the configured updater endpoint (GitHub Releases by default)
+/// and returns the latest version, if newer than the running build.
+#[tauri::command]
+async fn check_for_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, String> {
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    let update = updater.check().await.map_err(|e| e.to_string())?;
+    Ok(update.map(|u| UpdateInfo {
+        version: u.version,
+        date: u.date,
+        body: u.body,
+    }))
+}
+
+/// Downloads and installs the pending update, then restarts the app.
+#[tauri::command]
+async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
+    let updater = app.updater().map_err(|e| e.to_string())?;
+    let update = updater
+        .check()
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "nenhuma atualização disponível".to_string())?;
+    update
+        .download_and_install(|_chunk, _total| {}, || {})
+        .await
+        .map_err(|e| e.to_string())?;
+    app.restart();
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
