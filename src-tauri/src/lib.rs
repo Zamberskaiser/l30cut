@@ -9,6 +9,7 @@
 //! layer is convenience, not a security boundary.
 
 pub mod ai_ops;
+pub mod creator;
 pub mod media;
 
 use serde::Serialize;
@@ -232,6 +233,9 @@ pub fn run() {
             media::detect_silence,
             media::transcribe_asset,
             media::export_sequence,
+            creator::list_ai_engines,
+            creator::llm_generate,
+            creator::create_ai_video,
             validate_ai_transaction,
             save_project,
             load_project,
