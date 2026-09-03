@@ -197,7 +197,7 @@ async fn check_for_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, S
     let update = updater.check().await.map_err(|e| e.to_string())?;
     Ok(update.map(|u| UpdateInfo {
         version: u.version,
-        date: u.date,
+        date: u.date.map(|d| d.to_string()),
         body: u.body,
     }))
 }
@@ -222,7 +222,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .plugin(tauri_plugin_updater::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             diagnose_system,
             prepare_data_dirs,
