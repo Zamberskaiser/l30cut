@@ -1,4 +1,4 @@
-import { Magnet, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown, Magnet, ZoomIn, ZoomOut } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { Toggle } from "@/components/ui/toggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -76,7 +76,28 @@ export function TimelineToolbar() {
           </TooltipContent>
         </Tooltip>
 
-        <div className="ml-auto flex w-48 items-center gap-2">
+        <div className="ml-auto flex items-center gap-0.5 pr-2">
+          <button
+            type="button"
+            aria-label="Diminuir altura das trilhas"
+            title="Diminuir altura das trilhas"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => ui.setTrackHeight((h) => h - 10)}
+          >
+            <ChevronsDownUp className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            aria-label="Aumentar altura das trilhas"
+            title="Aumentar altura das trilhas"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => ui.setTrackHeight((h) => h + 10)}
+          >
+            <ChevronsUpDown className="size-3.5" />
+          </button>
+        </div>
+
+        <div className="flex w-48 items-center gap-2">
           <button
             type="button"
             aria-label="Zoom out"

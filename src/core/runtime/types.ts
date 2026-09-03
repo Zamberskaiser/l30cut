@@ -122,6 +122,14 @@ export interface RuntimeAdapter {
   ): Promise<ExportResult>;
   loadProject(id: string): Promise<Project | null>;
   saveProject(project: Project): Promise<void>;
+  /**
+   * Writes a real `*.l30cut` file. Tauri opens the native save dialog and
+   * writes through an allowlisted Rust command; the browser demo downloads it.
+   * Returns the target path/file name, or null when the user cancels.
+   */
+  saveProjectToFile?(project: Project): Promise<string | null>;
+  /** Opens a `*.l30cut` file from disk. Returns null when the user cancels. */
+  openProjectFromFile?(): Promise<{ project: Project; path: string } | null>;
   aspectResolution(aspect: Aspect): { width: number; height: number };
   /**
    * Native (Rust) allowlist validation of an AI-proposed command transaction.

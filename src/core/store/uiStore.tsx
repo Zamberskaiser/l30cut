@@ -22,9 +22,16 @@ export type EditorMode = "essential" | "pro";
 
 const LS_KEY = "l30cut.ui.v1";
 
+export const DEFAULT_TRACK_HEIGHT = 44;
+export const MIN_TRACK_HEIGHT = 28;
+export const MAX_TRACK_HEIGHT = 140;
+const clampTrackHeight = (px: number): number =>
+  Math.round(Math.min(MAX_TRACK_HEIGHT, Math.max(MIN_TRACK_HEIGHT, px)));
+
 interface PersistedUi {
   mode: EditorMode;
   snap: boolean;
+  trackHeight: number;
   overrides: ShortcutOverrides;
   assistantCollapsed: boolean;
 }
@@ -59,6 +66,9 @@ export interface UiStore {
   setPlayRate: (rate: number) => void;
   pxPerSecond: number;
   setPxPerSecond: (px: number | ((prev: number) => number)) => void;
+  /** Vertical zoom of the timeline tracks, in pixels. */
+  trackHeight: number;
+  setTrackHeight: (px: number | ((prev: number) => number)) => void;
   assistantCollapsed: boolean;
   setAssistantCollapsed: (collapsed: boolean) => void;
   shortcutsOpen: boolean;
@@ -84,6 +94,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
   const [playing, setPlaying] = useState(false);
   const [playRate, setPlayRate] = useState(1);
   const [pxPerSecond, setPxPerSecondState] = useState(28);
+  const [trackHeight, setTrackHeightState] = useState(DEFAULT_TRACK_HEIGHT);
   const [assistantCollapsed, setAssistantCollapsed] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -95,6 +106,7 @@ export function UiProvider({ children }: { children: ReactNode }) {
     const p = loadPersisted();
     if (p.mode) setMode(p.mode);
     if (typeof p.snap === "boolean") setSnap(p.snap);
+    if (typeof p.trackHeight === "number") setTrackHeightState(clampTrackHeight(p.trackHeight));
     if (typeof p.assistantCollapsed === "boolean") setAssistantCollapsed(p.assistantCollapsed);
     if (p.overrides) setOverrides(p.overrides);
     setHydrated(true);
@@ -102,13 +114,13 @@ export function UiProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!hydrated || typeof window === "undefined") return;
-    const payload: PersistedUi = { mode, snap, overrides, assistantCollapsed };
+    const payload: PersistedUi = { mode, snap, trackHeight, overrides, assistantCollapsed };
     try {
       window.localStorage.setItem(LS_KEY, JSON.stringify(payload));
     } catch {
       /* storage unavailable — preferences stay in memory only */
     }
-  }, [hydrated, mode, snap, overrides, assistantCollapsed]);
+  }, [hydrated, mode, snap, trackHeight, overrides, assistantCollapsed]);
 
   const bindings = useMemo(() => mergeBindings(PREMIERE_WINDOWS_PRESET, overrides), [overrides]);
 
@@ -117,6 +129,10 @@ export function UiProvider({ children }: { children: ReactNode }) {
       const raw = typeof next === "function" ? next(prev) : next;
       return Math.min(400, Math.max(2, raw));
     });
+  }, []);
+
+  const setTrackHeight = useCallback((next: number | ((prev: number) => number)) => {
+    setTrackHeightState((prev) => clampTrackHeight(typeof next === "function" ? next(prev) : next));
   }, []);
 
   const setTool = useCallback((next: ToolId) => setToolState(next), []);
@@ -147,6 +163,8 @@ export function UiProvider({ children }: { children: ReactNode }) {
     setPlayRate,
     pxPerSecond,
     setPxPerSecond,
+    trackHeight,
+    setTrackHeight,
     assistantCollapsed,
     setAssistantCollapsed,
     shortcutsOpen,

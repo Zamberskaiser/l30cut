@@ -7,6 +7,12 @@ import type {
 } from "@/core/contracts/domain";
 import { SECOND } from "@/core/contracts/domain";
 import { createDemoProject } from "@/core/demo/demoProject";
+import {
+  parseProjectFile,
+  projectFileName,
+  serializeProjectFile,
+  PROJECT_FILE_EXTENSION,
+} from "@/core/project/projectFile";
 import { ASPECT_RESOLUTIONS, COMPONENT_CATALOG, SETUP_PROFILES } from "./catalog";
 import type {
   ComponentId,
@@ -209,6 +215,34 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     const store = readStore();
     store[project.id] = project;
     window.localStorage.setItem(PROJECT_KEY, JSON.stringify(store));
+  }
+
+  /** Browser demo: the "file" is a download in the user's Downloads folder. */
+  async saveProjectToFile(project: Project): Promise<string | null> {
+    if (typeof window === "undefined") return null;
+    const name = projectFileName(project);
+    const blob = new Blob([serializeProjectFile(project)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = name;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return name;
+  }
+
+  async openProjectFromFile(): Promise<{ project: Project; path: string } | null> {
+    if (typeof window === "undefined") return null;
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = `.${PROJECT_FILE_EXTENSION},application/json`;
+    const file = await new Promise<File | null>((resolve) => {
+      input.onchange = () => resolve(input.files?.[0] ?? null);
+      input.oncancel = () => resolve(null);
+      input.click();
+    });
+    if (!file) return null;
+    return { project: parseProjectFile(await file.text()), path: file.name };
   }
 
   aspectResolution(aspect: Aspect) {

@@ -98,6 +98,10 @@ export interface EditorActions {
   newProject: (name: string) => void;
   loadDemoProject: () => void;
   save: () => Promise<void>;
+  /** "Salvar como": writes a real *.l30cut file chosen by the user. */
+  saveAsFile: () => Promise<void>;
+  /** "Abrir projeto": reads a *.l30cut file from disk. */
+  openFromFile: () => Promise<void>;
   enqueue: <T>(spec: JobSpec<T>) => { id: string; done: Promise<T> };
   cancelJob: (id: string) => void;
   clearFinishedJobs: () => void;
@@ -239,6 +243,37 @@ export function EditorProvider({ children }: { children: ReactNode }) {
             ? "Gravado em disco no diretório de projetos."
             : "Salvo no armazenamento local do navegador (modo demonstração).",
       });
+    },
+    saveAsFile: async () => {
+      if (!runtime.saveProjectToFile) {
+        toast.info("Salvar em arquivo não está disponível neste modo");
+        return;
+      }
+      try {
+        const path = await runtime.saveProjectToFile(project);
+        if (!path) return;
+        setDirty(false);
+        toast.success("Projeto salvo em arquivo", { description: path });
+      } catch (error) {
+        toast.error("Falha ao salvar o arquivo", { description: (error as Error).message });
+      }
+    },
+    openFromFile: async () => {
+      if (!runtime.openProjectFromFile) {
+        toast.info("Abrir arquivo não está disponível neste modo");
+        return;
+      }
+      try {
+        const result = await runtime.openProjectFromFile();
+        if (!result) return;
+        setProject(result.project);
+        setHistory(emptyHistory);
+        setSelection([]);
+        setDirty(false);
+        toast.success(`Projeto aberto: ${result.project.name}`, { description: result.path });
+      } catch (error) {
+        toast.error("Falha ao abrir o projeto", { description: (error as Error).message });
+      }
     },
     enqueue: (spec) => queue.current.enqueue(spec),
     cancelJob: (id) => queue.current.cancel(id),

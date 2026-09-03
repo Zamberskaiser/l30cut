@@ -30,10 +30,21 @@
 - Fundação completa: domínio µs, command bus transacional, planner determinístico, runtimes demo/Tauri,
   jobs, setup, download, treinamento inicial, CI/release, scaffolding Tauri
 
+## Entrega atual: múltiplas timelines, trilhas e arquivos de projeto
+
+- [x] Comandos de sequência: setActiveSequence, renameSequence, deleteSequence, duplicateSequence (ids de clip novos)
+- [x] Comandos de trilha: addTrack (índice), removeTrack (com clips), renameTrack — com testes
+- [x] Abas de sequência estilo Premiere (criar/abrir/renomear/duplicar/fechar)
+- [x] Adicionar trilhas de vídeo/áudio e zoom vertical (altura das trilhas persistida)
+- [x] Drag and drop da mídia para qualquer trilha na posição solta (MIME próprio, trilha travada recusa)
+- [x] Arquivo de projeto real `*.l30cut`: schema versionado, Salvar como / Abrir (nativo no Tauri, download no web)
+- [x] Host Rust: save_project/load_project/list_projects/write_project_file/read_project_file + diagnose_system
+
 ## Backlog (próximas melhorias)
 
 - [x] Clips A/V vinculados (link/unlink) com sincronismo em mover, cortar, aparar e apagar
 - [x] Automação de ganho com interpolação linear aplicada ao volume da reprodução demo
+- [ ] Comandos nativos restantes do contrato IPC (probe_media, proxy, silêncio, transcrição, export)
 
 - [x] Waveforms reais nos clips de áudio (Web Audio no browser; ffmpeg no Tauri segue contrato)
 - [x] Fluxo pós-build: instruções no BAT, run-windows.bat, README e /download explicam como instalar e rodar

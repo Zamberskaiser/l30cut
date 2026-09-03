@@ -470,6 +470,108 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       next.updatedAt = new Date().toISOString();
       return next;
     }
+
+    case "setActiveSequence": {
+      const next = clone(project);
+      if (!next.sequences.some((s) => s.id === command.sequenceId)) {
+        throw new CommandError(`sequence not found: ${command.sequenceId}`);
+      }
+      next.activeSequenceId = command.sequenceId;
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "renameSequence": {
+      const next = clone(project);
+      const seq = next.sequences.find((s) => s.id === command.sequenceId);
+      if (!seq) throw new CommandError(`sequence not found: ${command.sequenceId}`);
+      seq.name = command.name;
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "deleteSequence": {
+      const next = clone(project);
+      if (next.sequences.length <= 1) {
+        throw new CommandError("o projeto precisa de pelo menos uma sequência");
+      }
+      const index = next.sequences.findIndex((s) => s.id === command.sequenceId);
+      if (index < 0) throw new CommandError(`sequence not found: ${command.sequenceId}`);
+      next.sequences.splice(index, 1);
+      if (next.activeSequenceId === command.sequenceId) {
+        const fallback = next.sequences[Math.max(0, index - 1)] ?? next.sequences[0]!;
+        next.activeSequenceId = fallback.id;
+      }
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "duplicateSequence": {
+      const next = clone(project);
+      if (next.sequences.some((s) => s.id === command.newSequenceId)) {
+        throw new CommandError("sequence id already exists");
+      }
+      const source = next.sequences.find((s) => s.id === command.sequenceId);
+      if (!source) throw new CommandError(`sequence not found: ${command.sequenceId}`);
+      // Clip ids must stay unique across the whole project.
+      const linkRemap = new Map<string, string>();
+      const copy = {
+        ...clone(source),
+        id: command.newSequenceId,
+        name: command.name,
+        clips: source.clips.map((clip) => {
+          const cloned = clone(clip);
+          cloned.id = newId("clip");
+          if (cloned.linkGroupId) {
+            const mapped = linkRemap.get(cloned.linkGroupId) ?? newId("link");
+            linkRemap.set(cloned.linkGroupId, mapped);
+            cloned.linkGroupId = mapped;
+          }
+          return cloned;
+        }),
+      };
+      next.sequences.push(copy);
+      if (command.activate) next.activeSequenceId = copy.id;
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "addTrack":
+      return withSequence(project, (seq) => {
+        if (seq.tracks.some((t) => t.id === command.trackId)) {
+          throw new CommandError("track id already exists");
+        }
+        if (seq.tracks.length >= 32) throw new CommandError("limite de 32 trilhas por sequência");
+        const track = {
+          id: command.trackId,
+          kind: command.kind,
+          name: command.name,
+          muted: false,
+          locked: false,
+        };
+        const at = command.index === undefined ? seq.tracks.length : command.index;
+        seq.tracks.splice(Math.min(at, seq.tracks.length), 0, track);
+      });
+
+    case "removeTrack":
+      return withSequence(project, (seq) => {
+        const track = seq.tracks.find((t) => t.id === command.trackId);
+        if (!track) throw new CommandError(`track not found: ${command.trackId}`);
+        if (track.locked) throw new CommandError("trilha bloqueada");
+        if (seq.tracks.length <= 1) {
+          throw new CommandError("a sequência precisa de pelo menos uma trilha");
+        }
+        seq.tracks = seq.tracks.filter((t) => t.id !== command.trackId);
+        seq.clips = seq.clips.filter((c) => c.trackId !== command.trackId);
+        if (track.kind === "caption") seq.captions = [];
+      });
+
+    case "renameTrack":
+      return withSequence(project, (seq) => {
+        const track = seq.tracks.find((t) => t.id === command.trackId);
+        if (!track) throw new CommandError(`track not found: ${command.trackId}`);
+        track.name = command.name;
+      });
   }
 }
 

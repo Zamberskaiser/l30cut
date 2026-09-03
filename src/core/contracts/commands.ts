@@ -6,6 +6,7 @@ import {
   CaptionSegmentSchema,
   GainKeyframeSchema,
   MarkerSchema,
+  TrackKindSchema,
 } from "./domain";
 
 /**
@@ -156,6 +157,46 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
     })
     .strict(),
   z.object({ type: z.literal("setSequenceAspect"), aspect: AspectSchema }).strict(),
+
+  /* ---------- multi-sequence (Premiere-like tabs) ---------- */
+  z.object({ type: z.literal("setActiveSequence"), sequenceId: IdSchema }).strict(),
+  z
+    .object({
+      type: z.literal("renameSequence"),
+      sequenceId: IdSchema,
+      name: z.string().min(1).max(120),
+    })
+    .strict(),
+  z.object({ type: z.literal("deleteSequence"), sequenceId: IdSchema }).strict(),
+  z
+    .object({
+      type: z.literal("duplicateSequence"),
+      sequenceId: IdSchema,
+      newSequenceId: IdSchema,
+      name: z.string().min(1).max(120),
+      activate: z.boolean().default(true),
+    })
+    .strict(),
+
+  /* ---------- tracks ---------- */
+  z
+    .object({
+      type: z.literal("addTrack"),
+      trackId: IdSchema,
+      kind: TrackKindSchema,
+      name: z.string().min(1).max(60),
+      /** Insertion index inside the sequence track list; appended when absent. */
+      index: z.number().int().min(0).max(64).optional(),
+    })
+    .strict(),
+  z.object({ type: z.literal("removeTrack"), trackId: IdSchema }).strict(),
+  z
+    .object({
+      type: z.literal("renameTrack"),
+      trackId: IdSchema,
+      name: z.string().min(1).max(60),
+    })
+    .strict(),
 ]);
 
 export type EditCommand = z.infer<typeof EditCommandSchema>;

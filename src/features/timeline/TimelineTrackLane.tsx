@@ -1,6 +1,8 @@
 import type { Clip, Project, Sequence, Track } from "@/core/contracts/domain";
 import type { PeakData } from "@/core/audio/waveform";
-import { TRACK_HEIGHT, usToPx } from "./geometry";
+import { useState } from "react";
+import { ASSET_DND_MIME } from "./dnd";
+import { pxToUs, usToPx } from "./geometry";
 import { TimelineClip, type ClipActions } from "./TimelineClip";
 import type { TimelineInteraction } from "./useTimelineInteraction";
 
@@ -10,6 +12,8 @@ interface Props {
   project: Project;
   selection: string[];
   pxPerSecond: number;
+  /** Lane height in pixels (timeline vertical zoom). */
+  height: number;
   pro: boolean;
   interaction: TimelineInteraction;
   actions: ClipActions;
@@ -23,22 +27,43 @@ export function TimelineTrackLane({
   project,
   selection,
   pxPerSecond,
+  height,
   pro,
   interaction,
   actions,
   peaks,
-}: Props) {
+  onDropAsset,
+}: Props & { onDropAsset?: (trackId: string, assetId: string, startUs: number) => void }) {
+  const [dropActive, setDropActive] = useState(false);
   const ghostMove = interaction.ghostMove;
   const ghostTrim = interaction.ghostTrim;
   const ghostShift = interaction.ghostShift;
 
   return (
     <div
-      className="relative border-b border-border"
-      style={{ height: TRACK_HEIGHT }}
+      className={`relative border-b border-border ${dropActive ? "bg-primary/10 ring-1 ring-inset ring-primary" : ""}`}
+      style={{ height }}
       data-track-id={track.id}
       onPointerDown={(event) => {
         if (event.target === event.currentTarget) interaction.onLanePointerDown(event, track.id);
+      }}
+      onDragOver={(event) => {
+        if (!onDropAsset || track.locked) return;
+        if (!event.dataTransfer.types.includes(ASSET_DND_MIME)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+        setDropActive(true);
+      }}
+      onDragLeave={() => setDropActive(false)}
+      onDrop={(event) => {
+        setDropActive(false);
+        if (!onDropAsset || track.locked) return;
+        const assetId = event.dataTransfer.getData(ASSET_DND_MIME);
+        if (!assetId) return;
+        event.preventDefault();
+        const rect = event.currentTarget.getBoundingClientRect();
+        const startUs = Math.max(0, pxToUs(event.clientX - rect.left, pxPerSecond));
+        onDropAsset(track.id, assetId, startUs);
       }}
     >
       {track.kind === "caption"

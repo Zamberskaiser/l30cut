@@ -1,5 +1,6 @@
 import { clipEnd, SECOND, type Marker, type Sequence } from "@/core/contracts/domain";
 
+/** Default lane height; the live value comes from the UI store (vertical zoom). */
 export const TRACK_HEIGHT = 44;
 export const HEADER_WIDTH = 96;
 export const RULER_HEIGHT = 24;
@@ -72,4 +73,5 @@ export function clipZoneAt(offsetPx: number, widthPx: number): ClipZone {
   return "body";
 }
 
-export const trackIndexFromY = (y: number): number => Math.floor(y / TRACK_HEIGHT);
+export const trackIndexFromY = (y: number, trackHeight: number = TRACK_HEIGHT): number =>
+  Math.floor(y / trackHeight);

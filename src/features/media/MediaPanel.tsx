@@ -10,6 +10,7 @@ import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { newId } from "@/core/store/timelineReducer";
 import { EmptyState } from "@/features/editor/EmptyState";
 import { onAppEvent } from "@/core/commands/appEvents";
+import { ASSET_DND_MIME } from "@/features/timeline/dnd";
 
 const ACCEPTED = ".mp4,.mov,.wav,.mp3,.m4a,.png,.jpg,.jpeg";
 const MAX_BYTES = 4 * 1024 * 1024 * 1024;
@@ -194,7 +195,13 @@ export function MediaPanel() {
             return (
               <div
                 key={asset.id}
-                className="group rounded-md border border-transparent bg-panel-raised/60 px-2 py-2 transition-colors hover:border-border-strong"
+                draggable
+                onDragStart={(event) => {
+                  event.dataTransfer.setData(ASSET_DND_MIME, asset.id);
+                  event.dataTransfer.effectAllowed = "copy";
+                }}
+                title="Arraste para a timeline"
+                className="group cursor-grab rounded-md border border-transparent bg-panel-raised/60 px-2 py-2 transition-colors hover:border-border-strong active:cursor-grabbing"
               >
                 <div className="flex items-center gap-2">
                   <Icon className="size-4 shrink-0 text-accent" />

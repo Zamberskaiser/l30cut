@@ -3,6 +3,8 @@ import {
   Activity,
   Clapperboard,
   Download,
+  FileDown,
+  FolderOpen,
   Keyboard,
   Redo2,
   Save,
@@ -18,7 +20,8 @@ import { ExportDialog } from "@/features/export/ExportDialog";
 import { DiagnosticsDialog } from "@/features/setup/DiagnosticsDialog";
 
 export function TopBar() {
-  const { project, history, undo, redo, save, dirty, runtime } = useEditor();
+  const { project, history, undo, redo, save, saveAsFile, openFromFile, dirty, runtime } =
+    useEditor();
   const ui = useUi();
 
   return (
@@ -49,6 +52,24 @@ export function TopBar() {
           className="gap-1.5 text-muted-foreground hover:text-foreground"
         >
           <Save className="size-4" /> Salvar
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void saveAsFile()}
+          title="Salvar projeto em um arquivo .l30cut"
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          <FileDown className="size-4" /> Salvar como
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => void openFromFile()}
+          title="Abrir um arquivo .l30cut"
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          <FolderOpen className="size-4" /> Abrir
         </Button>
         <Button
           variant="ghost"
