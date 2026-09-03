@@ -99,8 +99,13 @@ if errorlevel 1 (
   )
 )
 echo   OK: CLI local do Tauri pronta.
-call bun run tauri build
-if errorlevel 1 goto :falhou
+call bun run tauri build > "%~dp0build-log.txt" 2>&1
+if errorlevel 1 (
+  echo   [ERRO] A geracao do instalador falhou. Log completo em: %~dp0build-log.txt
+  powershell -NoProfile -Command "Get-Content -Tail 30 '%~dp0build-log.txt'"
+  goto :falhou
+)
+echo   OK: build concluido. Log em: %~dp0build-log.txt
 echo.
 
 
@@ -113,6 +118,15 @@ set "NSIS_FILE="
 for %%F in ("src-tauri\target\release\bundle\nsis\*-setup.exe") do (
   if not defined NSIS_FILE set "NSIS_FILE=%%~fF"
 )
+
+rem Copia os instaladores gerados para uma pasta simples de achar.
+if not exist "%~dp0instaladores" mkdir "%~dp0instaladores"
+if defined MSI_FILE copy /y "%MSI_FILE%" "%~dp0instaladores" >nul
+if defined NSIS_FILE copy /y "%NSIS_FILE%" "%~dp0instaladores" >nul
+if defined MSI_FILE echo   Instalador copiado para: %~dp0instaladores
+if not defined MSI_FILE if defined NSIS_FILE echo   Instalador copiado para: %~dp0instaladores
+if not defined MSI_FILE if not defined NSIS_FILE echo   [AVISO] Nenhum instalador foi gerado. Veja %~dp0build-log.txt
+
 
 if defined MSI_FILE (
   echo   Instalando via MSI: %MSI_FILE%
