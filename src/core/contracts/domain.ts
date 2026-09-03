@@ -52,7 +52,10 @@ export const BinSchema = z
     name: z.string().min(1).max(80),
     /** Parent bin id; `undefined` means a root-level bin. */
     parentId: IdSchema.optional(),
-    color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    color: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/)
+      .optional(),
   })
   .strict();
 export type Bin = z.infer<typeof BinSchema>;

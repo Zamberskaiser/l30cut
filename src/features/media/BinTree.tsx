@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { ChevronDown, ChevronRight, Folder, FolderOpen, FolderPlus, Pencil, Trash2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Folder,
+  FolderOpen,
+  FolderPlus,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +49,14 @@ export function BinTree({ selectedBinId, onSelect }: BinTreeProps) {
     const binId = newId("bin");
     const siblings = project.bins.filter((b) => (b.parentId ?? undefined) === parentId).length;
     run(
-      [{ type: "createBin", binId, name: `Pasta ${siblings + 1}`, ...(parentId ? { parentId } : {}) }],
+      [
+        {
+          type: "createBin",
+          binId,
+          name: `Pasta ${siblings + 1}`,
+          ...(parentId ? { parentId } : {}),
+        },
+      ],
       "Nova pasta",
     );
     onSelect(binId);
@@ -76,8 +91,10 @@ export function BinTree({ selectedBinId, onSelect }: BinTreeProps) {
   }
 
   function acceptsDrag(event: React.DragEvent): boolean {
-    return event.dataTransfer.types.includes(ASSET_DND_MIME) ||
-      event.dataTransfer.types.includes(BIN_DND_MIME);
+    return (
+      event.dataTransfer.types.includes(ASSET_DND_MIME) ||
+      event.dataTransfer.types.includes(BIN_DND_MIME)
+    );
   }
 
   return (

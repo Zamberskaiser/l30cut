@@ -20,9 +20,9 @@ describe("media bin commands", () => {
     expect(a1).toBe(a + 1);
     expect(rows[a1]!.depth).toBe(1);
     expect(binWithDescendants(p.bins, "bin_a").sort()).toEqual(["bin_a", "bin_a1"]);
-    expect(() =>
-      applyCommand(p, { type: "createBin", binId: "bin_a", name: "Duplicada" }),
-    ).toThrow(CommandError);
+    expect(() => applyCommand(p, { type: "createBin", binId: "bin_a", name: "Duplicada" })).toThrow(
+      CommandError,
+    );
   });
 
   it("moves assets between bins and back to the root", () => {
