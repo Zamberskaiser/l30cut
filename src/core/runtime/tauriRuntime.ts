@@ -12,6 +12,12 @@ import {
   TranscriptSegmentSchema,
 } from "@/core/contracts/domain";
 import { z } from "zod";
+import {
+  parseProjectFile,
+  projectFileName,
+  serializeProjectFile,
+  PROJECT_FILE_EXTENSION,
+} from "@/core/project/projectFile";
 import { ASPECT_RESOLUTIONS } from "./catalog";
 import type {
   AiValidationReport,
