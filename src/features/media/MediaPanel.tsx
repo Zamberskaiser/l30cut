@@ -26,9 +26,26 @@ export function MediaPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => onAppEvent("import", () => inputRef.current?.click()), []);
-
   const importJob = jobs.find((j) => j.kind === "import" && j.status === "running");
+
+  // No app instalado o seletor nativo devolve caminhos absolutos; no navegador usamos <input type=file>.
+  async function startImport() {
+    if (busy) return;
+    if (runtime.pickMediaFiles) {
+      try {
+        const paths = await runtime.pickMediaFiles();
+        if (paths.length > 0) await importFiles(paths);
+      } catch (error) {
+        toast.error("Falha ao abrir o seletor de arquivos", {
+          description: (error as Error).message,
+        });
+      }
+      return;
+    }
+    inputRef.current?.click();
+  }
+
+  useEffect(() => onAppEvent("import", () => void startImport()));
 
   async function handleFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
@@ -38,6 +55,10 @@ export function MediaPanel() {
       toast.error("Arquivo acima do limite de 4 GB", { description: tooBig.name });
       return;
     }
+    await importFiles(files);
+  }
+
+  async function importFiles(files: Array<File | string>) {
     setBusy(true);
     const { done } = enqueue({
       kind: "import",
@@ -133,7 +154,7 @@ export function MediaPanel() {
           size="sm"
           variant="secondary"
           className="h-7 gap-1.5"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => void startImport()}
           disabled={busy}
         >
           <Plus className="size-3.5" /> Importar
@@ -162,7 +183,7 @@ export function MediaPanel() {
               title="Nenhuma mídia"
               description="Importe MP4, MOV, WAV ou imagem para começar."
               action={
-                <Button size="sm" variant="secondary" onClick={() => inputRef.current?.click()}>
+                <Button size="sm" variant="secondary" onClick={() => void startImport()}>
                   Importar arquivo
                 </Button>
               }

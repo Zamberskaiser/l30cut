@@ -6,17 +6,12 @@ import { resolve } from "node:path";
 const root = process.cwd();
 const target = resolve(root, "dist/client");
 
-const candidates = ["dist/client", ".output/public", "dist/public"].map((p) =>
-  resolve(root, p),
-);
+const candidates = ["dist/client", ".output/public", "dist/public"].map((p) => resolve(root, p));
 
 const source = candidates.find((dir) => existsSync(resolve(dir, "index.html")));
 
 if (!source) {
-  console.error(
-    "[prepare-desktop-dist] Nao encontrei index.html em: " +
-      candidates.join(", "),
-  );
+  console.error("[prepare-desktop-dist] Nao encontrei index.html em: " + candidates.join(", "));
   process.exit(1);
 }
 

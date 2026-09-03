@@ -116,6 +116,34 @@ export class TauriRuntime implements RuntimeAdapter {
     return invoke<string[]>(TAURI_COMMANDS.prepareDirs);
   }
 
+  async pickMediaFiles(): Promise<string[]> {
+    const invoke = await getInvoke();
+    const picked = await invoke<unknown>("plugin:dialog|open", {
+      options: {
+        multiple: true,
+        directory: false,
+        title: "Importar mídia",
+        filters: [
+          {
+            name: "Mídia",
+            extensions: ["mp4", "mov", "mkv", "wav", "mp3", "m4a", "png", "jpg", "jpeg"],
+          },
+        ],
+      },
+    });
+    if (picked == null) return [];
+    const list = Array.isArray(picked) ? picked : [picked];
+    return list
+      .map((item) =>
+        typeof item === "string"
+          ? item
+          : typeof (item as { path?: unknown })?.path === "string"
+            ? (item as { path: string }).path
+            : null,
+      )
+      .filter((p): p is string => Boolean(p));
+  }
+
   async importMedia(request: ImportRequest, onProgress: ProgressSink): Promise<MediaAsset[]> {
     const invoke = await getInvoke();
     const assets: MediaAsset[] = [];
