@@ -51,6 +51,8 @@ export const TAURI_COMMANDS = {
   writeProjectFile: "write_project_file",
   readProjectFile: "read_project_file",
   validateAiTransaction: "validate_ai_transaction",
+  checkForUpdate: "check_for_update",
+  installUpdate: "install_update",
 } as const;
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
