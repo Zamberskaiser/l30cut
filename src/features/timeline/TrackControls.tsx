@@ -26,7 +26,7 @@ export function TrackControls() {
   };
 
   return (
-    <div className="flex items-center gap-1 border-b border-border px-1.5 py-1">
+    <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 overflow-hidden border-b border-border px-1 py-1">
       <button
         type="button"
         aria-label="Adicionar trilha de vídeo"
@@ -47,7 +47,7 @@ export function TrackControls() {
         <Plus className="size-3" />
         <Music className="size-3" />
       </button>
-      <span className="ml-auto flex items-center gap-0.5">
+      <span className="flex items-center gap-0.5">
         <button
           type="button"
           aria-label="Diminuir altura das trilhas"
