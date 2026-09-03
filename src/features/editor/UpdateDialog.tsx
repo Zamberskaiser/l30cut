@@ -82,17 +82,13 @@ export function UpdateDialog({ open, onOpenChange, state, onCheck, onInstall }: 
           </Button>
 
           {state.phase === "available" ? (
-            <Button onClick={onInstall} disabled={state.phase === "downloading"} className="gap-2">
-              {state.phase === "downloading" ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <Check className="size-4" />
-              )}
+            <Button onClick={onInstall} className="gap-2">
+              <Check className="size-4" />
               Baixar e instalar
             </Button>
           ) : (
-            <Button onClick={onCheck} disabled={state.phase === "checking"} className="gap-2">
-              {state.phase === "checking" ? (
+            <Button onClick={onCheck} disabled={state.phase === "checking" || state.phase === "downloading"} className="gap-2">
+              {state.phase === "checking" || state.phase === "downloading" ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (
                 <RefreshCw className="size-4" />
