@@ -115,7 +115,7 @@ if not defined TAURI_CMD (
   call cargo tauri --version >nul 2>&1
   if errorlevel 1 (
     echo   Instalando tauri-cli via cargo ^(pode levar alguns minutos^)...
-    call cargo install tauri-cli --version ^^2 --locked
+    call cargo install tauri-cli --version 2 --locked
   )
   call cargo tauri --version >nul 2>&1
   if not errorlevel 1 set "TAURI_CMD=cargo tauri"
