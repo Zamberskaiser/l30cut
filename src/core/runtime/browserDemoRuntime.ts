@@ -15,6 +15,8 @@ import {
 } from "@/core/project/projectFile";
 import { ASPECT_RESOLUTIONS, COMPONENT_CATALOG, SETUP_PROFILES } from "./catalog";
 import type {
+  CreatorEngines,
+  CreatorResult,
   ComponentId,
   ComponentStatus,
   ExportRequest,
