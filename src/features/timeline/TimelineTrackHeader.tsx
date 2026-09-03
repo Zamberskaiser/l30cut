@@ -1,21 +1,39 @@
-import { Lock, LockOpen, Volume2, VolumeX } from "lucide-react";
+import { Lock, LockOpen, Trash2, Volume2, VolumeX } from "lucide-react";
 import type { Track } from "@/core/contracts/domain";
-import { TRACK_HEIGHT } from "./geometry";
 
 interface Props {
   track: Track;
   pro: boolean;
+  /** Current vertical zoom of the timeline, in pixels. */
+  height: number;
   onToggleLock: () => void;
   onToggleMute: () => void;
+  onRename: () => void;
+  onRemove: () => void;
 }
 
-export function TimelineTrackHeader({ track, pro, onToggleLock, onToggleMute }: Props) {
+export function TimelineTrackHeader({
+  track,
+  pro,
+  height,
+  onToggleLock,
+  onToggleMute,
+  onRename,
+  onRemove,
+}: Props) {
   return (
     <div
       className="flex items-center justify-between gap-1 border-b border-border px-2 text-[11px]"
-      style={{ height: TRACK_HEIGHT }}
+      style={{ height }}
     >
-      <span className="truncate font-medium">{track.name}</span>
+      <button
+        type="button"
+        onDoubleClick={onRename}
+        title={`${track.name} — duplo clique para renomear`}
+        className="min-w-0 flex-1 truncate text-left font-medium"
+      >
+        {track.name}
+      </button>
       {pro ? (
         <span className="flex items-center gap-1">
           <button
@@ -42,6 +60,14 @@ export function TimelineTrackHeader({ track, pro, onToggleLock, onToggleMute }: 
               {track.muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5" />}
             </button>
           )}
+          <button
+            type="button"
+            aria-label={`Remover ${track.name}`}
+            onClick={onRemove}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
         </span>
       ) : (
         <span className="text-[10px] uppercase text-muted-foreground">{track.kind[0]}</span>

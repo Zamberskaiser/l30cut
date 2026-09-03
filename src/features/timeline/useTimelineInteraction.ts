@@ -145,7 +145,7 @@ export function useTimelineInteraction({
       const rect = contentRef.current?.getBoundingClientRect();
       if (!rect) return null;
       const lanesTop = rect.top;
-      const index = Math.floor((clientY - lanesTop) / TRACK_HEIGHT);
+      const index = Math.floor((clientY - lanesTop) / stateRef.current.ui.trackHeight);
       return stateRef.current.sequence.tracks[index]?.id ?? null;
     },
     [contentRef],
@@ -435,8 +435,9 @@ export function useTimelineInteraction({
         setMarquee(box);
         const fromUs = pxToUs(box.left, u.pxPerSecond);
         const toUs = pxToUs(box.left + box.width, u.pxPerSecond);
-        const firstTrack = Math.floor(box.top / TRACK_HEIGHT);
-        const lastTrack = Math.floor((box.top + box.height) / TRACK_HEIGHT);
+        const laneHeight = u.trackHeight;
+        const firstTrack = Math.floor(box.top / laneHeight);
+        const lastTrack = Math.floor((box.top + box.height) / laneHeight);
         const trackIds = new Set(
           seq.tracks.slice(Math.max(0, firstTrack), lastTrack + 1).map((t) => t.id),
         );
