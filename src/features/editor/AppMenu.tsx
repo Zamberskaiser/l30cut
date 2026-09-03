@@ -42,10 +42,7 @@ export function AppMenu() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          <DropdownMenuItem
-            onClick={() => newProject("Novo projeto")}
-            className="gap-2"
-          >
+          <DropdownMenuItem onClick={() => newProject("Novo projeto")} className="gap-2">
             <Sparkles className="size-4 text-muted-foreground" /> Novo projeto
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void openFromFile()} className="gap-2">

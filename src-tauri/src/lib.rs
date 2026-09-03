@@ -9,8 +9,9 @@
 //! layer is convenience, not a security boundary.
 
 pub mod ai_ops;
+pub mod media;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use sysinfo::System;
 use tauri_plugin_updater::UpdaterExt;
 
@@ -28,13 +29,6 @@ pub struct SystemDiagnostics {
     pub free_disk_gb: f64,
     #[serde(rename = "dataDir")]
     pub data_dir: String,
-}
-
-#[derive(Deserialize)]
-pub struct InstallArgs {
-    pub id: String,
-    pub source: String,
-    pub sha256: Option<String>,
 }
 
 #[tauri::command]
@@ -81,13 +75,6 @@ fn prepare_data_dirs(app: tauri::AppHandle) -> Result<Vec<String>, String> {
         created.push(path.to_string_lossy().to_string());
     }
     Ok(created)
-}
-
-/// TODO(local-binaries): download + SHA-256 verify ffmpeg/ffprobe/whisper.cpp
-/// from the allowlisted `source`, streaming progress events to the frontend.
-#[tauri::command]
-fn install_component(_args: InstallArgs) -> Result<(), String> {
-    Err("install_component ainda não implementado neste host".into())
 }
 
 /// Native security gate for AI-proposed edit transactions (see `ai_ops`).
@@ -238,7 +225,13 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             diagnose_system,
             prepare_data_dirs,
-            install_component,
+            media::list_components,
+            media::install_component,
+            media::probe_media,
+            media::generate_proxy,
+            media::detect_silence,
+            media::transcribe_asset,
+            media::export_sequence,
             validate_ai_transaction,
             save_project,
             load_project,

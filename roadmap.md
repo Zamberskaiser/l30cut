@@ -59,8 +59,9 @@
 
 ## Próxima entrega: importação real e criador de vídeos com IA local
 
-- [ ] Host Rust: probe_media com ffprobe (duração, resolução, fps, trilhas de áudio) + install_component real (FFmpeg/whisper.cpp)
-- [ ] Importar vídeo com áudio cria clip de vídeo + clip de áudio vinculados (A/V link estilo Premiere)
+- [x] Host Rust: probe_media com ffprobe (duração, resolução, fps, trilhas de áudio) + install_component real (FFmpeg/whisper.cpp/modelo)
+- [x] Host Rust: generate_proxy (miniaturas), detect_silence (silencedetect), transcribe_asset (whisper.cpp), export_sequence (concat H.264)
+- [x] Importar vídeo com áudio cria clip de vídeo + clip de áudio vinculados (A/V link estilo Premiere)
 - [ ] Criador de vídeos com IA local: roteiro (llama.cpp), narração (Piper TTS), imagens (stable-diffusion.cpp/SDXL),
       montagem determinística com FFmpeg; opcional LTX-Video/Wan via ComfyUI em GPUs potentes
 
@@ -68,7 +69,7 @@
 
 - [x] Clips A/V vinculados (link/unlink) com sincronismo em mover, cortar, aparar e apagar
 - [x] Automação de ganho com interpolação linear aplicada ao volume da reprodução demo
-- [ ] Comandos nativos restantes do contrato IPC (probe_media, proxy, silêncio, transcrição, export)
+- [x] Comandos nativos restantes do contrato IPC (probe_media, proxy, silêncio, transcrição, export)
 
 - [x] Waveforms reais nos clips de áudio (Web Audio no browser; ffmpeg no Tauri segue contrato)
 - [x] Fluxo pós-build: instruções no BAT, run-windows.bat, README e /download explicam como instalar e rodar

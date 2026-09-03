@@ -19,7 +19,11 @@ export function useUpdater() {
 
   const check = useCallback(async () => {
     if (!enabled) {
-      setState({ phase: "error", info: null, error: "Atualizações só funcionam no aplicativo instalado." });
+      setState({
+        phase: "error",
+        info: null,
+        error: "Atualizações só funcionam no aplicativo instalado.",
+      });
       setDialogOpen(true);
       return;
     }
@@ -33,7 +37,11 @@ export function useUpdater() {
         setState({ phase: "idle", info: null, error: null });
       }
     } catch (err) {
-      setState({ phase: "error", info: null, error: err instanceof Error ? err.message : String(err) });
+      setState({
+        phase: "error",
+        info: null,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }, [enabled, runtime]);
 
@@ -45,7 +53,11 @@ export function useUpdater() {
       // If install completes without restart, mark idle; normally the app restarts.
       setState({ phase: "idle", info: null, error: null });
     } catch (err) {
-      setState({ phase: "error", info: null, error: err instanceof Error ? err.message : String(err) });
+      setState({
+        phase: "error",
+        info: null,
+        error: err instanceof Error ? err.message : String(err),
+      });
     }
   }, [enabled, runtime]);
 
