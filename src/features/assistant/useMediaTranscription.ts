@@ -67,7 +67,12 @@ export function useMediaTranscription(onText: (text: string) => void) {
     async (asset: MediaAsset) => {
       setBusy(asset.name);
       try {
-        const segments = await runtime.transcribe(asset, () => undefined);
+        const segments = await runtime.transcribe(
+          asset,
+          () => undefined,
+          new AbortController().signal,
+        );
+
         deliver(asset.name, joinSegments(segments));
       } catch (error) {
         toast.error("Não consegui transcrever essa mídia", {
