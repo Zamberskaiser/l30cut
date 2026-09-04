@@ -10,7 +10,11 @@
 export const DICTATION_SAMPLE_RATE = 16_000;
 
 /** Averages neighbouring samples down to `targetRate` (mono input). */
-export function downsample(input: Float32Array, sourceRate: number, targetRate: number): Float32Array {
+export function downsample(
+  input: Float32Array,
+  sourceRate: number,
+  targetRate: number,
+): Float32Array {
   if (targetRate >= sourceRate) return input;
   const ratio = sourceRate / targetRate;
   const output = new Float32Array(Math.floor(input.length / ratio));
