@@ -4,7 +4,7 @@ Data: 04/09/2026
 CORRECAO PRINCIPAL
 
 O build-windows.bat nao possui mais nenhuma rota alternativa para instalar
-ou executar a ferramenta Tauri via Cargo. Ele executa exclusivamente:
+ou executar a ferramenta Tauri pelo gerenciador do Rust. Ele executa exclusivamente:
 
   bun node_modules\@tauri-apps\cli\tauri.js
 

@@ -10,7 +10,7 @@ rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem   v20: restaura a chamada direta do Tauri usada na versao 13.
 rem   v22: chama diretamente a CLI JavaScript instalada pelo Bun.
-rem   Nao usa bunx, PowerShell intermediario nem cargo install.
+rem   Nao usa bunx, PowerShell intermediario nem instalacao da CLI pelo Rust.
 rem ============================================================
 
 set "L30_NOADMIN="
@@ -275,7 +275,7 @@ exit /b 0
 
 :tauri
 rem Ponto unico de execucao: o arquivo oficial do pacote npm, usando Bun.
-rem Esta rotina nunca chama cargo install, bunx ou uma CLI global.
+rem Esta rotina nunca instala a CLI pelo Rust e nunca usa bunx ou CLI global.
 if not exist "%~dp0node_modules\@tauri-apps\cli\tauri.js" exit /b 1
 call bun "%~dp0node_modules\@tauri-apps\cli\tauri.js" %*
 exit /b %ERRORLEVEL%
