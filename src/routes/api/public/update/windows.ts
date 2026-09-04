@@ -16,7 +16,11 @@ const DEFAULT_REPO = "l30cut/l30-cut-ai";
 
 function repoSlug(): string {
   const raw = process.env["UPDATE_GITHUB_REPO"] ?? DEFAULT_REPO;
-  return raw.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/i, "").replace(/\/+$/, "");
+  return raw
+    .trim()
+    .replace(/^https?:\/\/github\.com\//i, "")
+    .replace(/\.git$/i, "")
+    .replace(/\/+$/, "");
 }
 
 type GithubAsset = { name: string; browser_download_url: string };
@@ -63,7 +67,9 @@ export const Route = createFileRoute("/api/public/update/windows")({
         const token = process.env["GITHUB_API_KEY"];
         if (token) headers["authorization"] = `Bearer ${token}`;
 
-        const res = await fetch(`https://api.github.com/repos/${slug}/releases/latest`, { headers });
+        const res = await fetch(`https://api.github.com/repos/${slug}/releases/latest`, {
+          headers,
+        });
         if (!res.ok) {
           const body = await res.text();
           console.error(`GitHub releases falhou [${res.status}]: ${body}`);
@@ -80,7 +86,9 @@ export const Route = createFileRoute("/api/public/update/windows")({
         }
 
         const assets = release.assets ?? [];
-        const installer = assets.find((a) => /(-setup\.exe|\.msi)(\.zip)?$/i.test(a.name) && !a.name.endsWith(".sig"));
+        const installer = assets.find(
+          (a) => /(-setup\.exe|\.msi)(\.zip)?$/i.test(a.name) && !a.name.endsWith(".sig"),
+        );
         const sigAsset = assets.find((a) => installer && a.name === `${installer.name}.sig`);
         if (!installer || !sigAsset) {
           console.error("Release sem instalador ou sem arquivo .sig correspondente");
