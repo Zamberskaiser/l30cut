@@ -257,6 +257,7 @@ pub fn run() {
             media::generate_proxy,
             media::detect_silence,
             media::transcribe_asset,
+            media::transcribe_speech,
             media::export_sequence,
             creator::list_ai_engines,
             creator::llm_generate,
