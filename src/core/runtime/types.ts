@@ -209,6 +209,11 @@ export interface RuntimeAdapter {
   /** Writes a transcript/script/note file next to the exports. Returns its path. */
   saveTextFile?(name: string, extension: string, text: string): Promise<string>;
   /**
+   * Saves a still as PNG with embedded metadata (title, description, date) and
+   * an automatic file name, preferring the user's Downloads folder.
+   */
+  exportPng?(source: string, title: string, description?: string): Promise<string>;
+  /**
    * Public web search, used only when the user asks the assistant to look
    * something up. Sends the query text and nothing else.
    */

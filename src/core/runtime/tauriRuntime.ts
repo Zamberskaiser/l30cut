@@ -75,6 +75,7 @@ export const TAURI_COMMANDS = {
   createImage: "create_ai_image",
   createAudio: "create_ai_audio",
   saveTextFile: "save_text_file",
+  exportPng: "export_png",
   webSearch: "web_search",
 } as const;
 
@@ -444,6 +445,11 @@ export class TauriRuntime implements RuntimeAdapter {
   async saveTextFile(name: string, extension: string, text: string): Promise<string> {
     const invoke = await getInvoke();
     return invoke<string>(TAURI_COMMANDS.saveTextFile, { name, extension, text });
+  }
+
+  async exportPng(source: string, title: string, description?: string): Promise<string> {
+    const invoke = await getInvoke();
+    return invoke<string>(TAURI_COMMANDS.exportPng, { source, title, description });
   }
 
   async webSearch(query: string): Promise<SearchHit[]> {

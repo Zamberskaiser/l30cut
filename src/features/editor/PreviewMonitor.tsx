@@ -60,35 +60,53 @@ export function PreviewMonitor() {
 
   useChromaKeyCanvas(videoRef, chromaCanvasRef, chroma, playing);
 
-  // Keep the <video> element aligned with the timeline playhead (source time).
+  // Keep the <video> aligned with the playhead. While playing, the element runs
+  // on its own clock: seeking on every frame is what made playback stutter, so
+  // we only correct a real drift and let scrubbing be precise when paused.
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !activeClip) return;
     const sourceUs = activeClip.sourceInUs + (playheadUs - activeClip.startUs);
     const target = sourceUs / 1_000_000;
-    if (Math.abs(el.currentTime - target) > 0.25) el.currentTime = target;
-  }, [activeClip, playheadUs]);
+    const tolerance = playing ? 0.6 : 0.05;
+    if (el.seeking) return;
+    if (Math.abs(el.currentTime - target) > tolerance) el.currentTime = target;
+  }, [activeClip, playheadUs, playing]);
 
-  // Gain automation (pen keyframes) drives the demo playback volume.
+  // Gain automation (pen keyframes) drives the playback volume — only write to
+  // the element when the value actually moved.
+  const lastVolumeRef = useRef(-1);
   useEffect(() => {
     const el = videoRef.current;
     if (!el || !activeClip) return;
     const db = clipGainDbAt(activeClip, playheadUs - activeClip.startUs);
-    el.volume = Math.min(1, Math.max(0, dbToAmplitude(db)));
+    const volume = Math.min(1, Math.max(0, dbToAmplitude(db)));
+    if (Math.abs(volume - lastVolumeRef.current) < 0.01) return;
+    lastVolumeRef.current = volume;
+    el.volume = volume;
   }, [activeClip, playheadUs]);
 
+  // Playback clock. Commits to the store at ~30 Hz instead of every animation
+  // frame: the whole editor re-renders on each commit, and 60 Hz commits were
+  // the main source of dropped frames during playback.
   useEffect(() => {
     if (!playing) return;
+    const COMMIT_MS = 1000 / 30;
     let raf = 0;
     let last = performance.now();
+    let pending = 0;
     const tick = (now: number) => {
-      const delta = (now - last) * 1000 * ui.playRate;
+      pending += now - last;
       last = now;
-      setPlayhead((prev) => {
-        const next = prev + delta;
-        if (next <= 0) return 0;
-        return next >= total ? total : next;
-      });
+      if (pending >= COMMIT_MS) {
+        const delta = pending * 1000 * ui.playRate;
+        pending = 0;
+        setPlayhead((prev) => {
+          const next = prev + delta;
+          if (next <= 0) return 0;
+          return next >= total ? total : next;
+        });
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
@@ -164,6 +182,8 @@ export function PreviewMonitor() {
                   src={assetSrc}
                   muted={sequence.tracks.some((t) => t.kind === "audio" && t.muted)}
                   playsInline
+                  preload="auto"
+                  disablePictureInPicture
                   className={`size-full object-cover ${chroma ? "invisible" : ""}`}
                   crossOrigin={chroma ? "anonymous" : undefined}
                   onError={() => {

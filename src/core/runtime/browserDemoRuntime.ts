@@ -310,6 +310,15 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     throw new Error("A narração roda no seu computador, no aplicativo instalado.");
   }
 
+  // No navegador o download sai pelo próprio navegador, sem metadados embutidos.
+  async exportPng(source: string, title: string): Promise<string> {
+    const link = document.createElement("a");
+    link.href = source;
+    link.download = `${title.replace(/[^\w.-]+/g, "-").toLowerCase() || "imagem"}.png`;
+    link.click();
+    return link.download;
+  }
+
   async createVideo(): Promise<CreatorResult> {
     throw new Error(
       "A renderização do vídeo usa FFmpeg local e só funciona no aplicativo instalado.",
