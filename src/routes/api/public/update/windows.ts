@@ -12,7 +12,7 @@ import { createFileRoute } from "@tanstack/react-router";
  * plugin interpreta como "nenhuma atualizacao disponivel".
  */
 
-const DEFAULT_REPO = "l30cut/l30-cut-ai";
+const DEFAULT_REPO = "Zamberskaiser/l30cut";
 
 function repoSlug(): string {
   const raw = process.env["UPDATE_GITHUB_REPO"] ?? DEFAULT_REPO;
