@@ -1,0 +1,9 @@
+L30 CUT AI — pacote Windows v12 — 04/09/2026
+
+Novidades deste pacote:
+- Tela de configuração instala automaticamente llama.cpp server + Qwen2.5 (3B no perfil Leve, 7B nos demais)
+- Piper TTS + voz pt_BR-faber-medium para narração offline
+- stable-diffusion.cpp + checkpoint SD 1.5 fp16 para as imagens das cenas
+- Extração preservando pastas (espeak-ng-data do Piper) e downloads restritos a github.com / huggingface.co
+
+Extraia este ZIP em uma pasta nova antes de executar build-windows.bat.
