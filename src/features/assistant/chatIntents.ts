@@ -70,7 +70,9 @@ function nearlyEqual(a: string, b: string): boolean {
 /** Index of the first token that matches one of the words (typos allowed). */
 function findWord(list: string[], words: string[]): number {
   return list.findIndex((token) =>
-    words.some((word) => (token.length >= 4 ? nearlyEqual(token, word) : token === word)),
+    // Only longer words are matched loosely; short ones must be exact so a
+    // typo tolerance never turns "partes" into "arte".
+    words.some((word) => (word.length >= 6 ? nearlyEqual(token, word) : token === word)),
   );
 }
 
