@@ -45,8 +45,8 @@ call :addpath
 rem Impede compilar por engano um ZIP antigo que continha a API incorreta do updater.
 findstr /C:"tauri_plugin_updater::Builder::new().build()" "src-tauri\src\lib.rs" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 15^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v15.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
   goto :falhou
 )
 
@@ -54,20 +54,20 @@ rem Versao 14: a visualizacao de video local exige o protocolo de arquivos
 rem liberado na config E compilado no binario (feature protocol-asset).
 findstr /C:"assetProtocol" "src-tauri\tauri.conf.json" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 15^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v15.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
   goto :falhou
 )
 findstr /C:"api/public/update/windows" "src-tauri\tauri.conf.json" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 15^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v15.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
   goto :falhou
 )
 findstr /C:"protocol-asset" "src-tauri\Cargo.toml" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 15^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v15.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
   goto :falhou
 )
 
