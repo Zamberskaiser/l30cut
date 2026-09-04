@@ -90,11 +90,33 @@ pub fn app_dir(app: &tauri::AppHandle, sub: &str) -> Result<PathBuf, String> {
 /// Resolves a bundled binary, falling back to the same name on PATH so a
 /// system-wide FFmpeg install also works.
 pub fn tool(app: &tauri::AppHandle, name: &str) -> Result<PathBuf, String> {
-    let local = app_dir(app, "bin")?.join(exe(name));
-    if local.exists() {
-        return Ok(local);
+    for dir in bin_dirs(app) {
+        let local = dir.join(exe(name));
+        if local.exists() {
+            return Ok(local);
+        }
     }
     Ok(PathBuf::from(name))
+}
+
+/// `bin` plus each of its immediate subdirectories. Every component that ships
+/// its own ggml/llama/stable-diffusion DLLs lives in a private subfolder, so the
+/// DLLs of one package can never overwrite another's (that mismatch shows up as
+/// a Windows "entry point not found" dialog).
+pub fn bin_dirs(app: &tauri::AppHandle) -> Vec<PathBuf> {
+    let Ok(bin) = app_dir(app, "bin") else {
+        return Vec::new();
+    };
+    let mut dirs = vec![bin.clone()];
+    if let Ok(entries) = std::fs::read_dir(&bin) {
+        let mut subs: Vec<PathBuf> = entries
+            .filter_map(|e| e.ok().map(|e| e.path()))
+            .filter(|p| p.is_dir())
+            .collect();
+        subs.sort();
+        dirs.extend(subs);
+    }
+    dirs
 }
 
 /// True when the tool can actually be launched (bundled or on PATH).
@@ -208,7 +230,7 @@ fn status(id: &str, name: &str, description: &str, ready: bool, source: &str) ->
 }
 
 fn binary_ready(app: &tauri::AppHandle, name: &str) -> bool {
-    if app_dir(app, "bin").map(|d| d.join(exe(name)).exists()) == Ok(true) {
+    if bin_dirs(app).iter().any(|d| d.join(exe(name)).exists()) {
         return true;
     }
     // PATH fallback: probe the tool with `-version`.
@@ -218,11 +240,12 @@ fn binary_ready(app: &tauri::AppHandle, name: &str) -> bool {
 }
 
 fn whisper_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
-    let bin = app_dir(app, "bin").ok()?;
-    for candidate in ["whisper-cli", "main", "whisper"] {
-        let path = bin.join(exe(candidate));
-        if path.exists() {
-            return Some(path);
+    for dir in bin_dirs(app) {
+        for candidate in ["whisper-cli", "main", "whisper"] {
+            let path = dir.join(exe(candidate));
+            if path.exists() {
+                return Some(path);
+            }
         }
     }
     None
@@ -265,11 +288,12 @@ pub fn first_asset(app: &tauri::AppHandle, sub: &str, exts: &[&str]) -> Option<P
 
 /// First bundled binary among `names` that exists in the app `bin` dir.
 pub fn bundled_binary(app: &tauri::AppHandle, names: &[&str]) -> Option<PathBuf> {
-    let bin = app_dir(app, "bin").ok()?;
-    names
-        .iter()
-        .map(|n| bin.join(exe(n)))
-        .find(|path| path.exists())
+    for dir in bin_dirs(app) {
+        if let Some(found) = names.iter().map(|n| dir.join(exe(n))).find(|p| p.exists()) {
+            return Some(found);
+        }
+    }
+    None
 }
 
 fn optional(mut component: ComponentStatus) -> ComponentStatus {
