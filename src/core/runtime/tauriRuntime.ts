@@ -446,6 +446,11 @@ export class TauriRuntime implements RuntimeAdapter {
     return invoke<string>(TAURI_COMMANDS.saveTextFile, { name, extension, text });
   }
 
+  async exportPng(source: string, title: string, description?: string): Promise<string> {
+    const invoke = await getInvoke();
+    return invoke<string>(TAURI_COMMANDS.exportPng, { source, title, description });
+  }
+
   async webSearch(query: string): Promise<SearchHit[]> {
     const invoke = await getInvoke();
     return z
