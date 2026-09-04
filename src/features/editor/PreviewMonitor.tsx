@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { Pause, Play, SkipBack, SkipForward, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -46,6 +47,8 @@ export function PreviewMonitor() {
   );
 
   const asset = activeClip ? project.assets.find((a) => a.id === activeClip.assetId) : undefined;
+  // Desktop paths need the asset protocol before the webview can load them.
+  const assetSrc = asset ? runtime.mediaSrc(asset.path) : undefined;
   const caption = sequence.captions.find((c) => playheadUs >= c.startUs && playheadUs < c.endUs);
 
   const clipOffsetUs = activeClip ? playheadUs - activeClip.startUs : 0;
@@ -96,8 +99,14 @@ export function PreviewMonitor() {
     const el = videoRef.current;
     if (!el) return;
     el.playbackRate = Math.min(4, Math.max(0.25, Math.abs(ui.playRate)));
-    if (playing && activeClip && ui.playRate > 0) void el.play().catch(() => setPlaying(false));
-    else el.pause();
+    if (playing && activeClip && ui.playRate > 0) {
+      void el.play().catch((error: unknown) => {
+        setPlaying(false);
+        toast.error("Reprodução bloqueada", {
+          description: error instanceof Error ? error.message : "tente clicar em play novamente",
+        });
+      });
+    } else el.pause();
   }, [playing, activeClip, ui.playRate, setPlaying]);
 
   useEffect(() => {
@@ -147,16 +156,22 @@ export function PreviewMonitor() {
         >
           {asset && asset.kind !== "audio" ? (
             asset.kind === "image" ? (
-              <img src={asset.path} alt={asset.name} className="size-full object-cover" />
+              <img src={assetSrc} alt={asset.name} className="size-full object-cover" />
             ) : (
               <>
                 <video
                   ref={videoRef}
-                  src={asset.path}
+                  src={assetSrc}
                   muted={sequence.tracks.some((t) => t.kind === "audio" && t.muted)}
                   playsInline
                   className={`size-full object-cover ${chroma ? "invisible" : ""}`}
-                  crossOrigin="anonymous"
+                  crossOrigin={chroma ? "anonymous" : undefined}
+                  onError={() => {
+                    setPlaying(false);
+                    toast.error("Não foi possível reproduzir este arquivo", {
+                      description: `${asset.name} — verifique se o arquivo ainda existe em ${asset.path}`,
+                    });
+                  }}
                   style={{ opacity }}
                 />
                 {chroma ? (

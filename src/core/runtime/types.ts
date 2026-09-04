@@ -147,6 +147,12 @@ export interface RuntimeAdapter {
   openProjectFromFile?(): Promise<{ project: Project; path: string } | null>;
   aspectResolution(aspect: Aspect): { width: number; height: number };
   /**
+   * URL the webview can actually load for a media file. On the desktop the raw
+   * Windows path (C:\...) is not loadable, so it is converted to the
+   * asset protocol; in the browser the path is already a URL.
+   */
+  mediaSrc(path: string): string;
+  /**
    * Native (Rust) allowlist validation of an AI-proposed command transaction.
    * Present only on the Tauri runtime — in the browser demo the TypeScript/Zod
    * layer is all there is, and that is documented as NOT a security boundary.

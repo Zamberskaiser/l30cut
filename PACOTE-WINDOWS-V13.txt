@@ -1,0 +1,14 @@
+PACOTE WINDOWS - L30 CUT AI - versao 13 (04/09/2026)
+
+O que mudou nesta versao
+- Visualizacao corrigida: o monitor agora carrega os videos e imagens do disco
+  pelo protocolo de arquivos do app (antes a janela ficava preta ao dar play,
+  porque um caminho tipo C:\videos\a.mp4 nao e uma URL valida no webview).
+- Formas de onda do audio tambem passam a ser lidas do arquivo real.
+- Erro de leitura de arquivo agora aparece como aviso na tela, em vez de
+  simplesmente nao tocar.
+
+Como usar
+1. Extraia este ZIP em uma pasta nova (nao reaproveite pastas antigas).
+2. Execute build-windows.bat e aguarde o fim da compilacao.
+3. Use run-windows.bat para abrir o app depois de instalado.

@@ -53,7 +53,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function EffectsPanel() {
-  const { project, selection, run } = useEditor();
+  const { project, selection, run, runtime } = useEditor();
   const sequence = useActiveSequence();
   const [progress, setProgress] = useState<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -118,7 +118,7 @@ export function EffectsPanel() {
     try {
       const previous = clip.tracker?.points[0];
       const points = await runTracking({
-        src: asset.path,
+        src: runtime.mediaSrc(asset.path),
         sourceInUs: clip.sourceInUs,
         sourceOutUs: clip.sourceOutUs,
         clipDurationUs: clipDuration(clip),

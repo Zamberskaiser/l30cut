@@ -12,6 +12,7 @@ import {
   TranscriptSegmentSchema,
 } from "@/core/contracts/domain";
 import { z } from "zod";
+import { toWebMediaSrc } from "./mediaSrc";
 import {
   parseProjectFile,
   projectFileName,
@@ -279,6 +280,10 @@ export class TauriRuntime implements RuntimeAdapter {
     return z
       .object({ ok: z.boolean(), opCount: z.number().int(), errors: z.array(z.string()) })
       .parse(raw);
+  }
+
+  mediaSrc(path: string) {
+    return toWebMediaSrc(path, true);
   }
 
   aspectResolution(aspect: Aspect) {
