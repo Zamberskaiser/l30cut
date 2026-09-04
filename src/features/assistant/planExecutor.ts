@@ -147,6 +147,51 @@ export function compilePlan(
         requireClip(op.clipId, op.op);
         commands.push({ type: "changeGain", clipId: op.clipId, gainDb: op.gainDb });
         break;
+      case "adjustGain": {
+        const clip = requireClip(op.clipId, op.op);
+        if (clip) {
+          commands.push({
+            type: "changeGain",
+            clipId: clip.id,
+            gainDb: clampGain(clip.gainDb + op.deltaDb),
+          });
+        }
+        break;
+      }
+      case "setAssetGain": {
+        const asset = project.assets.find((a) => a.id === op.assetId);
+        if (!asset) {
+          errors.push(`setAssetGain: arquivo inexistente ${op.assetId}`);
+          break;
+        }
+        const targets = seq.clips.filter((c) => c.assetId === op.assetId);
+        if (targets.length === 0) {
+          errors.push(`setAssetGain: “${asset.name}” não está na timeline`);
+          break;
+        }
+        if (op.gainDb === undefined && op.deltaDb === undefined) {
+          errors.push("setAssetGain: informe gainDb ou deltaDb");
+          break;
+        }
+        for (const clip of targets) {
+          const next = op.gainDb !== undefined ? op.gainDb : clip.gainDb + (op.deltaDb ?? 0);
+          commands.push({ type: "changeGain", clipId: clip.id, gainDb: clampGain(next) });
+        }
+        break;
+      }
+      case "renameAsset": {
+        const asset = project.assets.find((a) => a.id === op.assetId);
+        if (!asset) {
+          errors.push(`renameAsset: arquivo inexistente ${op.assetId}`);
+          break;
+        }
+        commands.push({ type: "renameAsset", assetId: op.assetId, name: op.name });
+        break;
+      }
+      case "renameClip":
+        requireClip(op.clipId, op.op);
+        commands.push({ type: "renameClip", clipId: op.clipId, label: op.label });
+        break;
       case "addCaptions":
         for (const segment of op.segments) {
           if (segment.endUs <= segment.startUs) {
