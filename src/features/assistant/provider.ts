@@ -170,7 +170,11 @@ export async function requestPlanFromProvider(
 
 /** Tolerates fenced or prose-wrapped JSON from smaller local models. */
 export function extractJson(content: string): unknown {
-  const trimmed = content.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const trimmed = content
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
   const candidates = [trimmed];
   const first = trimmed.indexOf("{");
   const last = trimmed.lastIndexOf("}");

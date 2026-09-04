@@ -94,9 +94,10 @@ export function planDeterministically(input: PlannerInput): AiEditPlan | null {
   }
 
   // "renomeia o <arquivo> para <novo nome>"
-  const renameMatch = /(?:renomei\w*|renomear|muda\w*\s+o?\s*nome\w*|chama\w*)[^]*?\b(?:para|como|de)\s+(.{2,80})$/i.exec(
-    input.prompt.trim(),
-  );
+  const renameMatch =
+    /(?:renomei\w*|renomear|muda\w*\s+o?\s*nome\w*|chama\w*)[^]*?\b(?:para|como|de)\s+(.{2,80})$/i.exec(
+      input.prompt.trim(),
+    );
   if (renameMatch) {
     const asset = matchAsset();
     const name = (renameMatch[1] ?? "").replace(/["'.]+$/g, "").trim();
