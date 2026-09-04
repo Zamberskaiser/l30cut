@@ -143,7 +143,9 @@ const SEARCH_WORDS = [
 ];
 // "legendas" stays out on purpose: generating captions from an existing
 // transcript is a timeline edit, not a new transcription job.
-const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcricao", "transcreve"];
+const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcreve", "transcrita"];
+/** Caption work happens on the timeline, so it must not look like a new job. */
+const CAPTION_WORDS = ["legenda", "legendas", "subtitle", "subtitles"];
 
 /** Removes the leading command ("crie um vídeo sobre …" → "…"). */
 function subjectOf(text: string): string {
@@ -184,7 +186,9 @@ export function detectChatIntent(raw: string): ChatIntent {
   const subject = subjectOf(text);
   const make = has(list, MAKE_WORDS);
   const search = has(list, SEARCH_WORDS);
-  if (has(list, TRANSCRIBE_WORDS)) return { kind: "transcribe", subject };
+  if (has(list, TRANSCRIBE_WORDS) && !has(list, CAPTION_WORDS)) {
+    return { kind: "transcribe", subject };
+  }
   if (search && !make) return { kind: "search", subject: clean(text) };
   if (make && has(list, VIDEO_WORDS)) {
     return { kind: "video", subject, sceneCount: parseSceneCount(text) };
