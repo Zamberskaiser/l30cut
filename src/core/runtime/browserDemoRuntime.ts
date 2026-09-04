@@ -306,6 +306,10 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     throw new Error("O gerador de imagens roda no seu computador, no aplicativo instalado.");
   }
 
+  async createAudio(): Promise<string> {
+    throw new Error("A narração roda no seu computador, no aplicativo instalado.");
+  }
+
   async createVideo(): Promise<CreatorResult> {
     throw new Error(
       "A renderização do vídeo usa FFmpeg local e só funciona no aplicativo instalado.",
