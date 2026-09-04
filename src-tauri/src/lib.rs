@@ -13,7 +13,7 @@ pub mod creator;
 pub mod media;
 
 use serde::Serialize;
-use sysinfo::System;
+use sysinfo::{Disks, System};
 use tauri_plugin_updater::UpdaterExt;
 
 #[derive(Serialize)]
@@ -58,7 +58,7 @@ fn diagnose_system(app: tauri::AppHandle) -> Result<SystemDiagnostics, String> {
         cores: sys.cpus().len() as u32,
         ram_gb: (sys.total_memory() as f64) / 1_073_741_824.0,
         gpu: None,
-        free_disk_gb: 0.0,
+        free_disk_gb: free_disk_gb_for(&data_dir),
         data_dir,
     })
 }
