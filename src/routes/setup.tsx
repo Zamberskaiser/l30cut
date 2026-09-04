@@ -149,9 +149,6 @@ function SetupPage() {
                 <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
                   {item.description}
                 </p>
-                {failures[component.id] ? (
-                  <p className="mt-2 text-[10px] text-destructive">{failures[component.id]}</p>
-                ) : null}
                 <p className="tabular mt-2 text-[10px] text-muted-foreground">
                   ~{Math.round(item.downloadBytes / 1_000_000)} MB · modelo {item.whisperModel}
                 </p>
