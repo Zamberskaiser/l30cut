@@ -27,9 +27,7 @@ export function useMediaTranscription(onText: (text: string) => void) {
       onText(clean);
       // Keep the words as a file too, so the transcript is reusable later.
       if (runtime.saveTextFile) {
-        void runtime
-          .saveTextFile(`transcricao-${label}`, "txt", clean)
-          .catch(() => undefined);
+        void runtime.saveTextFile(`transcricao-${label}`, "txt", clean).catch(() => undefined);
       }
       toast.success(`Transcrição de ${label} pronta`, {
         description: "O texto está na caixa do assistente — revise e envie.",

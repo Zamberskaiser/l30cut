@@ -38,7 +38,8 @@ const IMAGE = /\b(imagem|imagens|foto|fotos|ilustra[çc][ãa]o|arte|thumbnail|ca
 const MAKE = /\b(cri(a|e|ar)|gera?(r|e)?|fa[çz]a?|monta(r|e)?|produza?|desenh(a|e|ar))\b/i;
 const SEARCH =
   /\b(pesquis(a|e|ar|ue)|busca|buscar|procur(a|e|ar)|na internet|na web|no google|not[íi]cias|refer[êe]ncias?)\b/i;
-const TRANSCRIBE = /\b(transcrev(a|er|e)|transcri[çc][ãa]o|legendas? do|o que (ele|ela) (diz|fala))\b/i;
+const TRANSCRIBE =
+  /\b(transcrev(a|er|e)|transcri[çc][ãa]o|legendas? do|o que (ele|ela) (diz|fala))\b/i;
 
 /** Reads "6 cenas" / "com 5 partes" out of the request. */
 export function parseSceneCount(text: string): number | undefined {

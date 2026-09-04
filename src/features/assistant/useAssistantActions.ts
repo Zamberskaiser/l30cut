@@ -127,7 +127,9 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       }
       const brief = intent.subject.trim();
       if (brief.length < 4) {
-        return { text: "Diga do que o vídeo deve falar, por exemplo: “crie um vídeo sobre pesca esportiva com 4 cenas”." };
+        return {
+          text: "Diga do que o vídeo deve falar, por exemplo: “crie um vídeo sobre pesca esportiva com 4 cenas”.",
+        };
       }
       const count = intent.sceneCount ?? 4;
       setBusy("Escrevendo o roteiro");
@@ -135,7 +137,11 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       if (runtime.generateScript) {
         try {
           scenes = parseScriptJson(
-            await runtime.generateScript(options.endpoint, options.model, buildScriptPrompt(brief, count)),
+            await runtime.generateScript(
+              options.endpoint,
+              options.model,
+              buildScriptPrompt(brief, count),
+            ),
           );
         } catch {
           scenes = null;
@@ -146,7 +152,8 @@ export function useAssistantActions(options: { endpoint: string; model: string }
 
       const wantsImages = (engines?.images ?? false) || Boolean(runtime.createImage);
       const ready = await prepare({ narrate: true, images: false });
-      if (!ready) return { text: "Faltam módulos locais para criar o vídeo — veja o aviso na tela." };
+      if (!ready)
+        return { text: "Faltam módulos locais para criar o vídeo — veja o aviso na tela." };
 
       const resolution = ASPECT_RESOLUTIONS[sequence.aspect] ?? { width: 1920, height: 1080 };
       const outputName = stamp("criacao");
@@ -247,8 +254,15 @@ export function useAssistantActions(options: { endpoint: string; model: string }
   const transcribeAsset = useCallback(
     async (asset: MediaAsset): Promise<ActionOutcome> => {
       setBusy(`Ouvindo ${asset.name}`);
-      const segments = await runtime.transcribe(asset, () => undefined, new AbortController().signal);
-      const text = segments.map((segment) => segment.text.trim()).filter(Boolean).join("\n");
+      const segments = await runtime.transcribe(
+        asset,
+        () => undefined,
+        new AbortController().signal,
+      );
+      const text = segments
+        .map((segment) => segment.text.trim())
+        .filter(Boolean)
+        .join("\n");
       if (text.length === 0) return { text: `Não encontrei falas em “${asset.name}”.` };
       let saved: string | null = null;
       if (runtime.saveTextFile) {
