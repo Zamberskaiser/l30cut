@@ -22,7 +22,7 @@ pub struct CreatorEngines {
     pub llm: bool,
 }
 
-fn piper_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
+pub fn piper_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
     let bin = app_dir(app, "bin").ok()?;
     for name in ["piper", "piper-cli"] {
         let path = bin.join(crate::media::exe_name(name));
@@ -33,7 +33,7 @@ fn piper_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
     None
 }
 
-fn first_file(app: &tauri::AppHandle, sub: &str, ext: &str) -> Option<PathBuf> {
+pub fn first_file(app: &tauri::AppHandle, sub: &str, ext: &str) -> Option<PathBuf> {
     let dir = app_dir(app, sub).ok()?;
     let mut found: Vec<PathBuf> = std::fs::read_dir(dir)
         .ok()?

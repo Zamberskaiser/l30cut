@@ -289,6 +289,7 @@ pub fn run() {
             creator::llm_generate,
             creator::create_ai_video,
             agent::create_ai_image,
+            agent::create_ai_audio,
             agent::save_text_file,
             agent::web_search,
             validate_ai_transaction,
