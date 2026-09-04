@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Film, FileAudio, Image as ImageIcon, Plus, Wand2, Waves } from "lucide-react";
+import { Film, FileAudio, Image as ImageIcon, Pencil, Plus, Wand2, Waves } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -34,6 +35,8 @@ export function MediaPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [selectedBinId, setSelectedBinId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [draftName, setDraftName] = useState("");
 
   // Assets of the selected folder and of everything nested inside it.
   const visibleBinIds =
@@ -121,6 +124,19 @@ export function MediaPanel() {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
     }
+  }
+
+  function startRename(asset: MediaAsset) {
+    setRenamingId(asset.id);
+    setDraftName(asset.name);
+  }
+
+  // Renaming only changes the name shown in the app (and used to talk to the assistant).
+  function commitRename(asset: MediaAsset) {
+    const name = draftName.trim().slice(0, 120);
+    setRenamingId(null);
+    if (!name || name === asset.name) return;
+    run([{ type: "renameAsset", assetId: asset.id, name }], "Renomear mídia");
   }
 
   function addToTimeline(asset: MediaAsset) {
@@ -219,7 +235,29 @@ export function MediaPanel() {
               >
                 <div className="flex items-center gap-2">
                   <Icon className="size-4 shrink-0 text-accent" />
-                  <span className="min-w-0 flex-1 truncate text-xs">{asset.name}</span>
+                  {renamingId === asset.id ? (
+                    <Input
+                      autoFocus
+                      value={draftName}
+                      onChange={(e) => setDraftName(e.target.value)}
+                      onBlur={() => commitRename(asset)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitRename(asset);
+                        if (e.key === "Escape") setRenamingId(null);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="h-6 flex-1 text-xs"
+                      aria-label="Novo nome do arquivo"
+                    />
+                  ) : (
+                    <span
+                      className="min-w-0 flex-1 truncate text-xs"
+                      onDoubleClick={() => startRename(asset)}
+                      title="Clique duas vezes para renomear"
+                    >
+                      {asset.name}
+                    </span>
+                  )}
                   <span className="tabular text-[11px] text-muted-foreground">
                     {formatDuration(asset.durationUs)}
                   </span>
@@ -239,6 +277,15 @@ export function MediaPanel() {
                     </span>
                   ) : null}
                   <div className="ml-auto flex opacity-0 transition-opacity group-hover:opacity-100">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="size-6"
+                      title="Renomear arquivo"
+                      onClick={() => startRename(asset)}
+                    >
+                      <Pencil className="size-3.5" />
+                    </Button>
                     <Button
                       size="icon"
                       variant="ghost"
