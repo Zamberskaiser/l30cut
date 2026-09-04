@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
 import { Pause, Play, SkipBack, SkipForward, Scissors } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -98,7 +99,14 @@ export function PreviewMonitor() {
     const el = videoRef.current;
     if (!el) return;
     el.playbackRate = Math.min(4, Math.max(0.25, Math.abs(ui.playRate)));
-    if (playing && activeClip && ui.playRate > 0) void el.play().catch(() => setPlaying(false));
+    if (playing && activeClip && ui.playRate > 0) {
+      void el.play().catch((error: unknown) => {
+        setPlaying(false);
+        toast.error("Reprodução bloqueada", {
+          description: error instanceof Error ? error.message : "tente clicar em play novamente",
+        });
+      });
+    }
     else el.pause();
   }, [playing, activeClip, ui.playRate, setPlaying]);
 
@@ -159,6 +167,12 @@ export function PreviewMonitor() {
                   playsInline
                   className={`size-full object-cover ${chroma ? "invisible" : ""}`}
                   crossOrigin={chroma ? "anonymous" : undefined}
+                  onError={() => {
+                    setPlaying(false);
+                    toast.error("Não foi possível reproduzir este arquivo", {
+                      description: `${asset.name} — verifique se o arquivo ainda existe em ${asset.path}`,
+                    });
+                  }}
                   style={{ opacity }}
                 />
                 {chroma ? (
