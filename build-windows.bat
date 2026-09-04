@@ -31,8 +31,16 @@ call :addpath
 rem Impede compilar por engano um ZIP antigo que continha a API incorreta do updater.
 findstr /C:"tauri_plugin_updater::Builder::new().build()" "src-tauri\src\lib.rs" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 11^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v11.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 13^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v13.zip.
+  goto :falhou
+)
+
+rem Versao 13: visualizacao de video local exige o protocolo de arquivos liberado.
+findstr /C:"assetProtocol" "src-tauri\tauri.conf.json" >nul 2>&1
+if errorlevel 1 (
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 13^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v13.zip.
   goto :falhou
 )
 
