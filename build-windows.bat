@@ -134,23 +134,25 @@ rem ============================================================
 set "L30_KEYDIR=%USERPROFILE%\.l30cut"
 set "L30_KEY=%L30_KEYDIR%\updater.key"
 if not exist "%L30_KEYDIR%" mkdir "%L30_KEYDIR%"
-call bun run tauri --version >nul 2>&1
-if errorlevel 1 call bun add --dev --exact "@tauri-apps/cli@2.11.4" >nul 2>&1
-if not exist "%L30_KEY%" (
-  echo   Criando chave de assinatura das atualizacoes...
-  call bun run tauri signer generate -w "%L30_KEY%" -p "" --force >nul 2>&1
+echo [5b/7] Preparando a chave das atualizacoes automaticas...
+set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
+call bun run tauri --version <nul >nul 2>&1
+if errorlevel 1 call bun add --dev --exact "@tauri-apps/cli@2.11.4" <nul >nul 2>&1
+if not exist "%L30_KEY%.pub" (
+  echo   Criando chave de assinatura ^(uma vez apenas^)...
+  call bun run tauri signer generate -w "%L30_KEY%" -p "" --force <nul
 )
 if exist "%L30_KEY%.pub" (
   for /f "usebackq delims=" %%K in ("%L30_KEY%.pub") do set "L30_PUBKEY=%%K"
   for /f "usebackq delims=" %%K in ("%L30_KEY%") do set "L30_PRIVKEY=%%K"
   set "TAURI_SIGNING_PRIVATE_KEY=!L30_PRIVKEY!"
-  set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
   powershell -NoProfile -ExecutionPolicy Bypass -Command "$c=Get-Content -Raw 'src-tauri\tauri.conf.json'; $k='%L30_PUBKEY%'; $c=[regex]::Replace($c,'\"pubkey\": \"[^\"]*\"', '\"pubkey\": \"'+$k+'\"'); Set-Content -NoNewline -Path 'src-tauri\tauri.conf.json' -Value $c"
   echo   OK: atualizacao automatica assinada com a sua chave.
 ) else (
   echo   [AVISO] Nao foi possivel gerar a chave; o app sera gerado sem updates automaticos.
 )
 echo.
+
 
 
 echo [6/7] Gerando instalador Windows ^(Tauri^)...
