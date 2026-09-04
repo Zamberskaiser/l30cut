@@ -163,7 +163,118 @@ pub struct CreatorResult {
     pub used_image_model: bool,
     #[serde(rename = "sceneCount")]
     pub scene_count: usize,
+    /// Plain-language reasons an engine did not contribute to this render.
+    pub notes: Vec<String>,
 }
+
+/// Diffusion models work in multiples of 64 and choke on huge canvases on CPU,
+/// so a 1920x1080 sequence renders its stills at a safe size and the montage
+/// scales them back up.
+pub fn still_size(width: u32, height: u32) -> (u32, u32) {
+    let longest = width.max(height).max(1) as f64;
+    let scale = (768.0 / longest).min(1.0);
+    let fit = |value: u32| -> u32 {
+        let scaled = ((value as f64) * scale).round() as u32;
+        ((scaled.clamp(256, 1024) + 32) / 64 * 64).clamp(256, 1024)
+    };
+    (fit(width), fit(height))
+}
+
+/// Runs the diffusion model for one still and reports why it failed, if it did.
+pub fn draw_still(
+    sd: &std::path::Path,
+    model: &std::path::Path,
+    prompt: &str,
+    width: u32,
+    height: u32,
+    out: &std::path::Path,
+) -> Result<(), String> {
+    let (w, h) = still_size(width, height);
+    let args: Vec<String> = vec![
+        "-M".into(),
+        "txt2img".into(),
+        "-m".into(),
+        model.to_string_lossy().to_string(),
+        "-p".into(),
+        prompt.to_string(),
+        "-W".into(),
+        w.to_string(),
+        "-H".into(),
+        h.to_string(),
+        "--steps".into(),
+        "20".into(),
+        "-o".into(),
+        out.to_string_lossy().to_string(),
+    ];
+    let output = run(sd, &args)?;
+    let size = std::fs::metadata(out).map(|m| m.len()).unwrap_or(0);
+    if output.status.success() && size > 1_024 {
+        return Ok(());
+    }
+    let log = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    Err(last_meaningful_line(&log)
+        .unwrap_or_else(|| "o modelo terminou sem escrever a imagem".into()))
+}
+
+/// Speaks a text with Piper, checking the WAV really has sound in it — a Piper
+/// missing its `.onnx.json` config writes an empty file and exits with 0.
+pub fn speak_to_wav(
+    piper: &std::path::Path,
+    voice: &std::path::Path,
+    text: &str,
+    out: &std::path::Path,
+) -> Result<(), String> {
+    let config = std::path::PathBuf::from(format!("{}.json", voice.to_string_lossy()));
+    if !config.is_file() {
+        return Err(format!(
+            "falta o arquivo de configuração da voz ({}) — reinstale a narração",
+            config
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default()
+        ));
+    }
+    let args: Vec<String> = vec![
+        "--model".into(),
+        voice.to_string_lossy().to_string(),
+        "--output_file".into(),
+        out.to_string_lossy().to_string(),
+    ];
+    let mut child = crate::media::spawn_piped(piper, &args)?;
+    if let Some(stdin) = child.stdin.as_mut() {
+        use std::io::Write;
+        let _ = stdin.write_all(text.as_bytes());
+    }
+    drop(child.stdin.take());
+    let output = child.wait_with_output().map_err(|e| e.to_string())?;
+    let size = std::fs::metadata(out).map(|m| m.len()).unwrap_or(0);
+    // 44 bytes is a header with no samples: that is the "silent file" symptom.
+    if output.status.success() && size > 2_048 {
+        return Ok(());
+    }
+    let log = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    Err(last_meaningful_line(&log).unwrap_or_else(|| {
+        format!("a voz escreveu um arquivo vazio ({size} bytes) — reinstale a narração")
+    }))
+}
+
+/// Last line of a tool log that actually says something, for error messages.
+pub fn last_meaningful_line(log: &str) -> Option<String> {
+    log.lines()
+        .map(|line| line.trim())
+        .filter(|line| line.len() > 3)
+        .next_back()
+        .map(|line| line.chars().take(200).collect())
+}
+
 
 fn hex_to_ffmpeg_color(raw: Option<&String>) -> String {
     let value = raw.map(|s| s.trim().to_string()).unwrap_or_default();
