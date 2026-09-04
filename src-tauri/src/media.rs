@@ -244,9 +244,40 @@ fn any_model(app: &tauri::AppHandle) -> Option<PathBuf> {
     found.into_iter().next()
 }
 
+/// First file in `sub` whose extension is one of `exts` (case-insensitive).
+pub fn first_asset(app: &tauri::AppHandle, sub: &str, exts: &[&str]) -> Option<PathBuf> {
+    let dir = app_dir(app, sub).ok()?;
+    let mut found: Vec<PathBuf> = std::fs::read_dir(dir)
+        .ok()?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| {
+            p.extension()
+                .and_then(|e| e.to_str())
+                .map(|e| exts.iter().any(|w| e.eq_ignore_ascii_case(w)))
+                .unwrap_or(false)
+        })
+        .collect();
+    found.sort();
+    found.into_iter().next()
+}
+
+/// First bundled binary among `names` that exists in the app `bin` dir.
+pub fn bundled_binary(app: &tauri::AppHandle, names: &[&str]) -> Option<PathBuf> {
+    let bin = app_dir(app, "bin").ok()?;
+    names
+        .iter()
+        .map(|n| bin.join(exe(n)))
+        .find(|path| path.exists())
+}
+
+fn optional(mut component: ComponentStatus) -> ComponentStatus {
+    component.optional = Some(true);
+    component
+}
+
 #[tauri::command]
 pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, String> {
-    let mut list = vec![
+    let list = vec![
         status(
             "ffmpeg",
             "FFmpeg",
@@ -275,18 +306,59 @@ pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, St
             any_model(&app).is_some(),
             "https://huggingface.co/ggerganov/whisper.cpp",
         ),
+        optional(status(
+            "llama-server",
+            "llama.cpp server",
+            "Servidor de LLM local para o roteirista do criador de vídeos.",
+            bundled_binary(&app, &["llama-server"]).is_some(),
+            "https://github.com/ggml-org/llama.cpp/releases",
+        )),
+        optional(status(
+            "llm-model",
+            "Modelo de roteiro (Qwen2.5)",
+            "Q4_K_M em GGUF: 3B no perfil Leve, 7B nos demais.",
+            first_asset(&app, "llm", &["gguf"]).is_some(),
+            "https://huggingface.co/bartowski",
+        )),
+        optional(status(
+            "piper",
+            "Piper TTS",
+            "Narração offline em português, rápida até em CPU.",
+            bundled_binary(&app, &["piper", "piper-cli"]).is_some(),
+            "https://github.com/rhasspy/piper/releases",
+        )),
+        optional(status(
+            "piper-voice",
+            "Voz PT-BR (faber medium)",
+            "Modelo de voz brasileira usado na narração.",
+            first_asset(&app, "voices", &["onnx"]).is_some(),
+            "https://huggingface.co/rhasspy/piper-voices",
+        )),
+        optional(status(
+            "stable-diffusion",
+            "stable-diffusion.cpp",
+            "Geração de imagens das cenas direto na sua máquina.",
+            bundled_binary(&app, &["sd", "stable-diffusion"]).is_some(),
+            "https://github.com/leejet/stable-diffusion.cpp/releases",
+        )),
+        optional(status(
+            "sd-model",
+            "Modelo de imagem (SD 1.5)",
+            "Checkpoint fp16 aberto, ~2 GB, roda em CPU.",
+            first_asset(&app, "diffusion", &["safetensors", "gguf", "ckpt"]).is_some(),
+            "https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive",
+        )),
+        optional(status(
+            "llm-provider",
+            "Provider de LLM externo",
+            "Alternativa ao llama.cpp: Ollama ou LM Studio no endpoint local.",
+            false,
+            "http://127.0.0.1:11434",
+        )),
     ];
-    let mut llm = status(
-        "llm-provider",
-        "Provider de LLM local",
-        "Endpoint compatível com OpenAI (Ollama / llama.cpp server).",
-        false,
-        "http://127.0.0.1:11434",
-    );
-    llm.optional = Some(true);
-    list.push(llm);
     Ok(list)
 }
+
 
 async fn download_to(
     app: &tauri::AppHandle,
