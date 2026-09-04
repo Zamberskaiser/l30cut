@@ -29,7 +29,7 @@ function Require-Command([string]$Name, [string]$Help) {
 }
 
 function Invoke-Captured([string]$File, [string[]]$Arguments, [string]$LogPath) {
-  & $File @Arguments 2>&1 | Tee-Object -FilePath $LogPath -Append
+  & $File @Arguments 2>&1 | Tee-Object -FilePath $LogPath -Append | Out-Host
   $exitCode = $LASTEXITCODE
   if ($null -eq $exitCode) { $exitCode = 0 }
   return $exitCode
@@ -50,7 +50,14 @@ try {
   $null = Require-Command "link.exe" "Instale Visual C++ Build Tools e reinicie o build."
   $null = Require-Command "rc.exe" "Instale o Windows SDK pelo Visual C++ Build Tools."
 
-  Write-Stage "Fixando o alvo Rust $Target..."
+  Write-Stage "Fixando o compilador Rust stable para Windows MSVC..."
+  $toolchainExit = Invoke-Captured "rustup.exe" @(
+    "toolchain", "install", "stable-x86_64-pc-windows-msvc", "--profile", "minimal"
+  ) $SetupLog
+  if ($toolchainExit -ne 0) { throw "Nao foi possivel instalar o Rust stable para Windows MSVC." }
+  $env:RUSTUP_TOOLCHAIN = "stable-x86_64-pc-windows-msvc"
+
+  Write-Stage "Garantindo o alvo Rust $Target..."
   $targetExit = Invoke-Captured "rustup.exe" @("target", "add", $Target) $SetupLog
   if ($targetExit -ne 0) { throw "Nao foi possivel preparar o alvo Rust $Target." }
   $rustDetails = (& rustc.exe -vV 2>&1 | Out-String)
@@ -83,7 +90,7 @@ try {
     $escapedCli = $TauriCli.Replace('"', '""')
     $escapedKey = $PrivateKey.Replace('"', '""')
     $signCommand = "call `"$escapedCli`" signer generate -w `"$escapedKey`" -p `"`" --force <nul"
-    cmd.exe /d /s /c $signCommand 2>&1 | Tee-Object -FilePath $SetupLog -Append
+    cmd.exe /d /s /c $signCommand 2>&1 | Tee-Object -FilePath $SetupLog -Append | Out-Host
     if ($LASTEXITCODE -ne 0) { throw "Nao foi possivel gerar a chave de atualizacao." }
   }
   if (-not (Test-Path $PrivateKey) -or -not (Test-Path $PublicKey)) {
@@ -104,7 +111,7 @@ try {
 
   Write-Stage "Iniciando Tauri $TauriVersion com Rust/MSVC..."
   Set-Content -Path $BuildLog -Value "L30 CUT AI - build Tauri para Windows ($Target)"
-  & $TauriCli build 2>&1 | Tee-Object -FilePath $BuildLog -Append
+  & $TauriCli build 2>&1 | Tee-Object -FilePath $BuildLog -Append | Out-Host
   $buildExit = $LASTEXITCODE
   if ($null -eq $buildExit) { $buildExit = 0 }
   if ($buildExit -ne 0) { throw "O Tauri terminou com codigo $buildExit. Consulte build-log.txt." }
