@@ -37,6 +37,7 @@ import type {
   SystemDiagnostics,
   UpdateInfo,
   UpdateSettings,
+  EngineReport,
   GithubRepoRef,
   SearchHit,
 } from "./types";
@@ -47,6 +48,7 @@ import type {
  */
 export const TAURI_COMMANDS = {
   diagnose: "diagnose_system",
+  aiReport: "ai_report",
   listComponents: "list_components",
   installComponent: "install_component",
   prepareDirs: "prepare_data_dirs",
@@ -450,6 +452,21 @@ export class TauriRuntime implements RuntimeAdapter {
   async exportPng(source: string, title: string, description?: string): Promise<string> {
     const invoke = await getInvoke();
     return invoke<string>(TAURI_COMMANDS.exportPng, { source, title, description });
+  }
+
+  async aiReport(): Promise<EngineReport[]> {
+    const invoke = await getInvoke();
+    return z
+      .array(
+        z.object({
+          id: z.string(),
+          label: z.string(),
+          ready: z.boolean(),
+          detail: z.string(),
+          log: z.string().nullish(),
+        }),
+      )
+      .parse(await invoke(TAURI_COMMANDS.aiReport));
   }
 
   async webSearch(query: string): Promise<SearchHit[]> {
