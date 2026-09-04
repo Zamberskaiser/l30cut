@@ -14,7 +14,7 @@ export interface ChatIntent {
   /** What to create / search for, with the command words stripped. */
   subject: string;
   /** Scene count asked for, when the user said one ("6 cenas"). */
-  sceneCount?: number;
+  sceneCount?: number | undefined;
 }
 
 const STRIP =
