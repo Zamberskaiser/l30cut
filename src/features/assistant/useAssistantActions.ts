@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { ASPECT_RESOLUTIONS, SETUP_PROFILES } from "@/core/runtime/catalog";
 import type {
@@ -43,11 +43,37 @@ export interface ActionOutcome {
  * project's media so the work never leaves the timeline.
  */
 export function useAssistantActions(options: { endpoint: string; model: string }) {
-  const { runtime, enqueue, addAsset, run, project } = useEditor();
+  const { runtime, enqueue, cancelJob, addAsset, run, project } = useEditor();
   const sequence = useActiveSequence();
   const [engines, setEngines] = useState<CreatorEngines | null>(null);
   const [components, setComponents] = useState<ComponentStatus[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
+  /** Jobs and downloads of the request in flight, so it can be called off. */
+  const activeJobs = useRef<string[]>([]);
+  const aborter = useRef<AbortController>(new AbortController());
+
+  /** Stops whatever the assistant is doing right now. */
+  const cancel = useCallback(() => {
+    aborter.current.abort();
+    aborter.current = new AbortController();
+    for (const id of activeJobs.current) cancelJob(id);
+    activeJobs.current = [];
+    setBusy(null);
+  }, [cancelJob]);
+
+  /** Queues a job and remembers it while it runs, so cancel can reach it. */
+  const runJob = useCallback(
+    async <T,>(spec: Parameters<typeof enqueue<T>>[0]): Promise<T> => {
+      const { id, done } = enqueue(spec);
+      activeJobs.current = [...activeJobs.current, id];
+      try {
+        return await done;
+      } finally {
+        activeJobs.current = activeJobs.current.filter((item) => item !== id);
+      }
+    },
+    [enqueue],
+  );
 
   useEffect(() => {
     if (runtime.listAiEngines) {
@@ -79,10 +105,10 @@ export function useAssistantActions(options: { endpoint: string; model: string }
         return false;
       }
       const profile = (SETUP_PROFILES[1] ?? SETUP_PROFILES[0]) as SetupProfile;
-      const controller = new AbortController();
       for (const gap of gaps) {
         setBusy(`Preparando ${gap.label}`);
-        const { done } = enqueue({
+        const signal = aborter.current.signal;
+        const status = await runJob({
           kind: "export",
           label: `Preparar ${gap.label}`,
           run: async ({ onProgress }) =>
@@ -90,10 +116,9 @@ export function useAssistantActions(options: { endpoint: string; model: string }
               gap.id,
               profile,
               (event) => onProgress(event.progress, event.detail),
-              controller.signal,
+              signal,
             ),
         });
-        const status = await done;
         setComponents((current) => [...current.filter((item) => item.id !== status.id), status]);
         if (status.state !== "ready") {
           toast.error(`${gap.label} não ficou pronto`, { description: status.error ?? undefined });
@@ -103,7 +128,7 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       if (runtime.listAiEngines) setEngines(await runtime.listAiEngines());
       return true;
     },
-    [components, engines, enqueue, runtime],
+    [components, engines, runJob, runtime],
   );
 
   /** Imports a produced file into the bin, optionally onto the timeline. */
@@ -171,7 +196,7 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       const resolution = ASPECT_RESOLUTIONS[sequence.aspect] ?? { width: 1920, height: 1080 };
       const outputName = stamp("criacao");
       setBusy("Montando o vídeo");
-      const { done } = enqueue({
+      const result = await runJob({
         kind: "export",
         label: `Criar vídeo — ${scenes.length} cena(s)`,
         run: async ({ onProgress }) =>
@@ -181,7 +206,6 @@ export function useAssistantActions(options: { endpoint: string; model: string }
             (event) => onProgress(event.progress, event.detail),
           ),
       });
-      const result = await done;
       const asset = await importIntoBin(result.outputPath, true);
       return {
         text: [
@@ -198,7 +222,7 @@ export function useAssistantActions(options: { endpoint: string; model: string }
           .join(" "),
       };
     },
-    [engines, enqueue, importIntoBin, options.endpoint, options.model, prepare, runtime, sequence],
+    [engines, runJob, importIntoBin, options.endpoint, options.model, prepare, runtime, sequence],
   );
 
   /** One still with the local image model, imported into the bin. */
@@ -213,28 +237,27 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       if (!ready) return { text: "O gerador de imagens ainda não está pronto." };
       const resolution = ASPECT_RESOLUTIONS[sequence.aspect] ?? { width: 1920, height: 1080 };
       setBusy("Gerando a imagem");
-      const { done } = enqueue({
+      const path = await runJob({
         kind: "export",
         label: "Gerar imagem",
         run: async ({ onProgress }) => {
           onProgress(0.15, "Desenhando com o modelo local");
-          const path = await runtime.createImage!(
+          const created = await runtime.createImage!(
             prompt,
             resolution.width,
             resolution.height,
             stamp("imagem"),
           );
           onProgress(1, "Imagem pronta");
-          return path;
+          return created;
         },
       });
-      const path = await done;
       const asset = await importIntoBin(path, false);
       return {
         text: `Imagem gerada e adicionada às mídias${asset ? ` como “${asset.name}”` : ""}. Arquivo: ${path}. Arraste para a timeline quando quiser.`,
       };
     },
-    [enqueue, importIntoBin, prepare, runtime, sequence],
+    [runJob, importIntoBin, prepare, runtime, sequence],
   );
 
   /** Public web search — the only outbound call, and only when asked. */
@@ -269,11 +292,7 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       const ready = await prepare({ narrate: false, images: false, speech: true });
       if (!ready) return { text: "O transcritor de fala ainda não está pronto." };
       setBusy(`Ouvindo ${asset.name}`);
-      const segments = await runtime.transcribe(
-        asset,
-        () => undefined,
-        new AbortController().signal,
-      );
+      const segments = await runtime.transcribe(asset, () => undefined, aborter.current.signal);
       const text = segments
         .map((segment) => segment.text.trim())
         .filter(Boolean)
@@ -324,7 +343,11 @@ export function useAssistantActions(options: { endpoint: string; model: string }
         }
         return { text: "" };
       } catch (error) {
-        return { text: `Não consegui concluir: ${(error as Error).message}` };
+        const message = (error as Error).message;
+        if (aborter.current.signal.aborted || /cancel/i.test(message)) {
+          return { text: "Pedido cancelado." };
+        }
+        return { text: `Não consegui concluir: ${message}` };
       } finally {
         setBusy(null);
       }
@@ -332,5 +355,5 @@ export function useAssistantActions(options: { endpoint: string; model: string }
     [createImage, createVideo, search, transcribable, transcribeAsset],
   );
 
-  return { busy, engines, perform, importIntoBin, transcribable, transcribeAsset };
+  return { busy, cancel, engines, perform, importIntoBin, transcribable, transcribeAsset };
 }
