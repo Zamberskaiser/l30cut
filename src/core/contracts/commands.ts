@@ -238,6 +238,22 @@ export const EditCommandSchema = z.discriminatedUnion("type", [
       binId: IdSchema.nullable(),
     })
     .strict(),
+  /** Renames the media as shown in the app; the file on disk is never touched. */
+  z
+    .object({
+      type: z.literal("renameAsset"),
+      assetId: IdSchema,
+      name: z.string().min(1).max(120),
+    })
+    .strict(),
+  /** Renames a clip label on the timeline. */
+  z
+    .object({
+      type: z.literal("renameClip"),
+      clipId: IdSchema,
+      label: z.string().min(1).max(120),
+    })
+    .strict(),
 
   /* ---------- tracks ---------- */
   z

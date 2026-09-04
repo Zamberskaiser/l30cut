@@ -483,6 +483,21 @@ export function applyCommand(project: Project, command: EditCommand): Project {
       return next;
     }
 
+    case "renameAsset": {
+      const next = clone(project);
+      const asset = next.assets.find((a) => a.id === command.assetId);
+      if (!asset) throw new CommandError("mídia não encontrada");
+      asset.name = command.name;
+      next.updatedAt = new Date().toISOString();
+      return next;
+    }
+
+    case "renameClip":
+      return withSequence(project, (seq) => {
+        const clip = requireClip(seq, command.clipId);
+        clip.label = command.label;
+      });
+
     case "renameBin": {
       const next = clone(project);
       const bin = next.bins.find((b) => b.id === command.binId);

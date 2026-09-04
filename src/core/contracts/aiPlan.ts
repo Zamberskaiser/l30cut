@@ -59,6 +59,27 @@ export const PlanOperationSchema = z.discriminatedUnion("op", [
   z
     .object({ op: z.literal("setGain"), clipId: IdSchema, gainDb: z.number().min(-60).max(12) })
     .strict(),
+  /** Relative volume change on one clip ("aumenta 3 dB"). */
+  z
+    .object({ op: z.literal("adjustGain"), clipId: IdSchema, deltaDb: z.number().min(-60).max(24) })
+    .strict(),
+  /** Volume change applied to every clip that comes from one imported file. */
+  z
+    .object({
+      op: z.literal("setAssetGain"),
+      assetId: IdSchema,
+      gainDb: z.number().min(-60).max(12).optional(),
+      deltaDb: z.number().min(-60).max(24).optional(),
+    })
+    .strict(),
+  /** Renames an imported file inside the app (never on disk). */
+  z
+    .object({ op: z.literal("renameAsset"), assetId: IdSchema, name: z.string().min(1).max(120) })
+    .strict(),
+  /** Renames a clip label on the timeline. */
+  z
+    .object({ op: z.literal("renameClip"), clipId: IdSchema, label: z.string().min(1).max(120) })
+    .strict(),
   z
     .object({
       op: z.literal("addCaptions"),

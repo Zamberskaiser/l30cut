@@ -42,6 +42,87 @@ export function planDeterministically(input: PlannerInput): AiEditPlan | null {
   const p = norm(input.prompt);
   const seq = activeSequence(input.project);
 
+  const matchAsset = () => {
+    const candidates = input.project.assets
+      .map((a) => ({ asset: a, needle: norm(a.name.replace(/\.[a-z0-9]{2,4}$/i, "")) }))
+      .filter((c) => c.needle.length >= 3 && p.includes(c.needle))
+      .sort((a, b) => b.needle.length - a.needle.length);
+    return candidates[0]?.asset;
+  };
+
+  // "aumenta/diminui o volume do <arquivo>" — direct gain edit on imported media.
+  if (/(volume|audio|som|ganho)/.test(p) && /(aument|sub|diminu|abaix|baix|mud|silenc)/.test(p)) {
+    const asset = matchAsset();
+    const dbMatch = /(-?\d+(?:[.,]\d+)?)\s*(db)?/.exec(p.replace(/\d+\s*(ms|s|seg)/g, ""));
+    const magnitude = dbMatch?.[1] ? Math.abs(Number(dbMatch[1].replace(",", "."))) : 3;
+    const mute = /(mud|silenc)/.test(p);
+    const down = /(diminu|abaix|baix)/.test(p);
+    const targetClips = asset
+      ? seq.clips.filter((c) => c.assetId === asset.id)
+      : input.scope.clipIds.length > 0
+        ? seq.clips.filter((c) => input.scope.clipIds.includes(c.id))
+        : seq.clips;
+    if (targetClips.length === 0) return null;
+    const label = asset ? `“${asset.name}”` : "os clipes selecionados";
+    const operations: PlanOperation[] = mute
+      ? targetClips.map((c) => ({ op: "setGain" as const, clipId: c.id, gainDb: -60 }))
+      : targetClips.map((c) => ({
+          op: "adjustGain" as const,
+          clipId: c.id,
+          deltaDb: down ? -magnitude : magnitude,
+        }));
+    return finalize({
+      intent: mute ? "mute-audio" : "adjust-gain",
+      summary: mute
+        ? `Silenciar o áudio de ${label}.`
+        : `${down ? "Diminuir" : "Aumentar"} ${magnitude} dB o áudio de ${label}.`,
+      scope: input.scope,
+      operations,
+      warnings: [],
+      impact: {
+        clipsAdded: 0,
+        clipsRemoved: 0,
+        clipsModified: targetClips.length,
+        durationDeltaUs: 0,
+        sequencesCreated: 0,
+        captionsAdded: 0,
+      },
+      requiresConfirmation: false,
+      confidence: 0.9,
+      rationale: "Ajuste de ganho determinístico nos clipes do arquivo indicado.",
+    });
+  }
+
+  // "renomeia o <arquivo> para <novo nome>"
+  const renameMatch =
+    /(?:renomei\w*|renomear|muda\w*\s+o?\s*nome\w*|chama\w*)[^]*?\b(?:para|como|de)\s+(.{2,80})$/i.exec(
+      input.prompt.trim(),
+    );
+  if (renameMatch) {
+    const asset = matchAsset();
+    const name = (renameMatch[1] ?? "").replace(/["'.]+$/g, "").trim();
+    if (asset && name.length >= 2) {
+      return finalize({
+        intent: "rename-asset",
+        summary: `Renomear “${asset.name}” para “${name}”.`,
+        scope: input.scope,
+        operations: [{ op: "renameAsset", assetId: asset.id, name: name.slice(0, 120) }],
+        warnings: ["O arquivo no disco não muda de nome, apenas o nome usado no programa."],
+        impact: {
+          clipsAdded: 0,
+          clipsRemoved: 0,
+          clipsModified: 0,
+          durationDeltaUs: 0,
+          sequencesCreated: 0,
+          captionsAdded: 0,
+        },
+        requiresConfirmation: false,
+        confidence: 0.85,
+        rationale: "Renomeação de mídia sem efeito no disco.",
+      });
+    }
+  }
+
   if (/(silenci|pausa)/.test(p)) {
     const minSilenceUs = Math.max(100_000, readMs(input.prompt, input.defaults.minSilenceUs));
     const ops: PlanOperation[] = [
