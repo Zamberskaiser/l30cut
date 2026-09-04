@@ -40,30 +40,7 @@ echo   dependencias, gera o app, instala e abre.
 echo   Esta janela so fecha quando voce apertar uma tecla.
 echo.
 
-call :findtauri
-set "L30_TAURI="
-for %%N in (tauri.cmd tauri.exe tauri.bat tauri.bunx) do (
-  if not defined L30_TAURI if exist "%~dp0node_modules\.bin\%%N" set "L30_TAURI="%~dp0node_modules\.bin\%%N""
-)
-if not defined L30_TAURI (
-  echo   Ferramenta do Tauri ausente; instalando com o Bun...
-  call bun add -d @tauri-apps/cli@2.11.4
-  for %%N in (tauri.cmd tauri.exe tauri.bat tauri.bunx) do (
-    if not defined L30_TAURI if exist "%~dp0node_modules\.bin\%%N" set "L30_TAURI="%~dp0node_modules\.bin\%%N""
-  )
-)
-if not defined L30_TAURI (
-  where bunx >nul 2>nul
-  if not errorlevel 1 set "L30_TAURI=bunx --bun @tauri-apps/cli@2.11.4"
-)
-if not defined L30_TAURI (
-  echo   [ERRO] Nao foi possivel preparar a ferramenta do Tauri.
-  exit /b 1
-)
-echo   OK: ferramenta do Tauri: %L30_TAURI%
-exit /b 0
-
-:addpath
+call :addpath
 
 rem Impede compilar por engano um ZIP antigo que continha a API incorreta do updater.
 findstr /C:"tauri_plugin_updater::Builder::new().build()" "src-tauri\src\lib.rs" >nul 2>&1
@@ -288,6 +265,30 @@ echo   Para abrir de novo depois: run-windows.bat ou menu Iniciar.
 echo.
 echo   Aperte qualquer tecla para fechar esta janela.
 pause >nul
+exit /b 0
+
+
+:findtauri
+set "L30_TAURI="
+for %%N in (tauri.cmd tauri.exe tauri.bat tauri.bunx) do (
+  if not defined L30_TAURI if exist "%~dp0node_modules\.bin\%%N" set "L30_TAURI="%~dp0node_modules\.bin\%%N""
+)
+if not defined L30_TAURI (
+  echo   Ferramenta do Tauri ausente; instalando com o Bun...
+  call bun add -d @tauri-apps/cli@2.11.4
+  for %%N in (tauri.cmd tauri.exe tauri.bat tauri.bunx) do (
+    if not defined L30_TAURI if exist "%~dp0node_modules\.bin\%%N" set "L30_TAURI="%~dp0node_modules\.bin\%%N""
+  )
+)
+if not defined L30_TAURI (
+  where bunx >nul 2>nul
+  if not errorlevel 1 set "L30_TAURI=bunx --bun @tauri-apps/cli@2.11.4"
+)
+if not defined L30_TAURI (
+  echo   [ERRO] Nao foi possivel preparar a ferramenta do Tauri.
+  exit /b 1
+)
+echo   OK: ferramenta do Tauri: %L30_TAURI%
 exit /b 0
 
 
