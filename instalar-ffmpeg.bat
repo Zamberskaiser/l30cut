@@ -107,6 +107,9 @@ if defined APP_OK (
   echo   tambem aceita os programas na pasta do projeto.
   echo   Se quiser, copie manualmente ffmpeg.exe e ffprobe.exe de
   echo   %PROJ_BIN% para %APP_BIN%
+  echo   Adicionando a pasta do projeto ao PATH do seu usuario...
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=[Environment]::GetEnvironmentVariable('Path','User'); if ($p -notlike '*%PROJ_BIN%*') { [Environment]::SetEnvironmentVariable('Path', ($p.TrimEnd(';') + ';%PROJ_BIN%'), 'User') }" >nul 2>&1
+  echo   Feito. Reinicie o computador se o aplicativo nao encontrar o FFmpeg.
 )
 echo.
 
