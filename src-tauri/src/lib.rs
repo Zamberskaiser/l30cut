@@ -294,6 +294,7 @@ pub fn run() {
             agent::export_png,
             agent::web_search,
             agent::ai_report,
+            agent::test_image_engine,
             validate_ai_transaction,
             save_project,
             load_project,

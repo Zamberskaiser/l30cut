@@ -10,6 +10,23 @@ use serde::Serialize;
 
 use crate::media::{app_dir, missing_tool, run, sanitize_stem};
 
+fn append_log(app: &tauri::AppHandle, name: &str, entry: &str) {
+    use std::io::Write;
+    if let Ok(dir) = app_dir(app, "logs") {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(dir.join(name))
+        {
+            let stamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|value| value.as_secs())
+                .unwrap_or(0);
+            let _ = writeln!(file, "[{stamp}] {entry}\n");
+        }
+    }
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchHit {
@@ -37,11 +54,28 @@ pub fn create_ai_image(
 
     let out = app_dir(&app, "exports")?.join(format!("{}.png", sanitize_stem(&output_name)));
     match crate::creator::draw_still(&binary, &model, &prompt, width, height, &out) {
-        Ok(()) => Ok(out.to_string_lossy().to_string()),
+        Ok(()) => {
+            append_log(
+                &app,
+                "imagens.log",
+                &format!(
+                    "SUCESSO\nmodo: {}\nmodelo: {}\nprompt: {prompt}\narquivo: {}",
+                    crate::creator::SD_IMAGE_MODE,
+                    model.display(),
+                    out.display()
+                ),
+            );
+            Ok(out.to_string_lossy().to_string())
+        }
         Err(problem) => {
-            let _ = std::fs::write(
-                app_dir(&app, "logs")?.join("imagens.log"),
-                format!("modelo: {}\nprompt: {prompt}\nerro: {problem}\n", model.display()),
+            append_log(
+                &app,
+                "imagens.log",
+                &format!(
+                    "FALHA\nmodo: {}\nmodelo: {}\nprompt: {prompt}\nerro: {problem}",
+                    crate::creator::SD_IMAGE_MODE,
+                    model.display()
+                ),
             );
             Err(format!(
                 "o gerador de imagens falhou: {problem} (detalhes em logs/imagens.log)"
@@ -202,6 +236,65 @@ pub fn ai_report(app: tauri::AppHandle) -> Result<Vec<EngineReport>, String> {
     });
 
     Ok(out)
+}
+
+/// Runs the actual image executable with a tiny render. Presence alone is not
+/// enough: this catches incompatible CLI modes and broken model/DLL installs.
+#[tauri::command]
+pub fn test_image_engine(app: tauri::AppHandle) -> Result<EngineReport, String> {
+    let binary = crate::creator::sd_binary(&app)
+        .ok_or_else(|| missing_tool("stable-diffusion.cpp"))?;
+    let model = crate::creator::sd_model(&app)
+        .ok_or_else(|| "nenhum modelo de imagem instalado".to_string())?;
+    let out = app_dir(&app, "diagnostics")?.join("teste-gerador-imagens.png");
+    let result = crate::creator::draw_still(
+        &binary,
+        &model,
+        "a simple orange circle on a plain dark background",
+        256,
+        256,
+        &out,
+    );
+    match result {
+        Ok(()) => {
+            append_log(
+                &app,
+                "imagens.log",
+                &format!(
+                    "TESTE REAL OK\nmodo: {}\narquivo: {}",
+                    crate::creator::SD_IMAGE_MODE,
+                    out.display()
+                ),
+            );
+            Ok(EngineReport {
+                id: "images".into(),
+                label: "Gerador de imagens".into(),
+                ready: true,
+                detail: format!(
+                    "teste real concluído com o modo {}",
+                    crate::creator::SD_IMAGE_MODE
+                ),
+                log: tail_log(&app, "imagens.log"),
+            })
+        }
+        Err(problem) => {
+            append_log(
+                &app,
+                "imagens.log",
+                &format!(
+                    "TESTE REAL FALHOU\nmodo: {}\nerro: {problem}",
+                    crate::creator::SD_IMAGE_MODE
+                ),
+            );
+            Ok(EngineReport {
+                id: "images".into(),
+                label: "Gerador de imagens".into(),
+                ready: false,
+                detail: problem,
+                log: tail_log(&app, "imagens.log"),
+            })
+        }
+    }
 }
 
 
