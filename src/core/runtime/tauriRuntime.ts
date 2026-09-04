@@ -71,6 +71,9 @@ export const TAURI_COMMANDS = {
   listAiEngines: "list_ai_engines",
   llmGenerate: "llm_generate",
   createVideo: "create_ai_video",
+  createImage: "create_ai_image",
+  saveTextFile: "save_text_file",
+  webSearch: "web_search",
 } as const;
 
 type Invoke = <T>(cmd: string, args?: Record<string, unknown>) => Promise<T>;
@@ -419,5 +422,27 @@ export class TauriRuntime implements RuntimeAdapter {
     const result = await invoke<CreatorResult>(TAURI_COMMANDS.createVideo, { scenes, options });
     onProgress({ progress: 1, detail: "Vídeo pronto" });
     return result;
+  }
+
+  async createImage(
+    prompt: string,
+    width: number,
+    height: number,
+    outputName: string,
+  ): Promise<string> {
+    const invoke = await getInvoke();
+    return invoke<string>(TAURI_COMMANDS.createImage, { prompt, width, height, outputName });
+  }
+
+  async saveTextFile(name: string, extension: string, text: string): Promise<string> {
+    const invoke = await getInvoke();
+    return invoke<string>(TAURI_COMMANDS.saveTextFile, { name, extension, text });
+  }
+
+  async webSearch(query: string): Promise<SearchHit[]> {
+    const invoke = await getInvoke();
+    return z
+      .array(z.object({ title: z.string(), url: z.string(), snippet: z.string() }))
+      .parse(await invoke(TAURI_COMMANDS.webSearch, { query }));
   }
 }
