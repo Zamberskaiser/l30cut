@@ -19,7 +19,11 @@ export function parseQuickCommand(raw: string): QuickCommand | null {
   if (/^(pare de falar|para de falar|silencio|fica quieto|cala a boca)$/.test(text)) {
     return "stopSpeaking";
   }
-  if (/^(cancela|cancele|cancelar|para|pare|parar|cancele? (a )?(exportacao|o pedido|tudo))$/.test(text)) {
+  if (
+    /^(cancela|cancele|cancelar|para|pare|parar|cancele? (a )?(exportacao|o pedido|tudo))$/.test(
+      text,
+    )
+  ) {
     return "cancel";
   }
   if (/^(desfaz|desfaca|desfazer|volta|voltar|volta atras|ctrl\s*z)$/.test(text)) return "undo";

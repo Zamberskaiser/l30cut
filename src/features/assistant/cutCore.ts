@@ -85,7 +85,12 @@ export const CAPABILITY_CATALOG: Capability[] = [
   { id: "setAssetGain", kind: "edit", says: "volume do arquivo inteiro", runBy: "planExecutor" },
   { id: "renameAsset/renameClip", kind: "edit", says: "renomear", runBy: "planExecutor" },
   { id: "addCaptions", kind: "edit", says: "colocar legendas", runBy: "planExecutor" },
-  { id: "createSequence/setAspect", kind: "edit", says: "9:16, 1:1, nova timeline", runBy: "planExecutor" },
+  {
+    id: "createSequence/setAspect",
+    kind: "edit",
+    says: "9:16, 1:1, nova timeline",
+    runBy: "planExecutor",
+  },
   {
     id: "keepTranscriptTopic",
     kind: "edit",

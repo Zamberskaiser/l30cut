@@ -57,7 +57,9 @@ export function findAssetByName(
   const haystack = fold(text);
   let best: { id: string; length: number } | undefined;
   for (const asset of assets) {
-    const bare = fold(asset.name).replace(/\.[a-z0-9]{2,4}$/, "").trim();
+    const bare = fold(asset.name)
+      .replace(/\.[a-z0-9]{2,4}$/, "")
+      .trim();
     if (bare.length < 3) continue;
     if (haystack.includes(bare) && (best === undefined || bare.length > best.length)) {
       best = { id: asset.id, length: bare.length };
