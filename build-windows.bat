@@ -135,12 +135,13 @@ echo.
 
 echo [5b/7] Preparando assinatura das atualizacoes...
 set "L30_KEY_DIR=%USERPROFILE%\.l30cut"
-set "L30_KEY=%USERPROFILE%\.l30cut\updater.key"
-set "L30_PUBLIC_KEY=%USERPROFILE%\.l30cut\updater.key.pub"
+set "L30_KEY=%USERPROFILE%\.l30cut\updater-v23.key"
+set "L30_PUBLIC_KEY=%USERPROFILE%\.l30cut\updater-v23.key.pub"
+set "L30_KEY_PASS=l30cut"
 if not exist "%L30_KEY_DIR%" mkdir "%L30_KEY_DIR%"
 if not exist "%L30_KEY%" (
   echo   Criando a chave na primeira compilacao...
-  call :tauri signer generate -w "%L30_KEY%" -p "" --force
+  call :tauri signer generate -w "%L30_KEY%" -p "%L30_KEY_PASS%" --force < nul
   if errorlevel 1 (
     echo   [ERRO] Nao foi possivel criar a chave de atualizacao.
     goto :falhou
@@ -153,8 +154,9 @@ if not exist "%L30_PUBLIC_KEY%" (
 call bun "%~dp0scripts\prepare-updater-key.mjs" "%L30_PUBLIC_KEY%"
 if errorlevel 1 goto :falhou
 set "TAURI_SIGNING_PRIVATE_KEY=%L30_KEY%"
-set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
+set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD=%L30_KEY_PASS%"
 echo   OK: assinatura preparada.
+
 echo.
 
 echo [6/7] Gerando instalador Windows ^(Tauri^)...
