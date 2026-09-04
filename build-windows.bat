@@ -126,6 +126,30 @@ call bun install --frozen-lockfile
 if errorlevel 1 goto :falhou
 echo.
 
+echo [5b/7] Preparando assinatura das atualizacoes...
+set "L30_KEY_DIR=%USERPROFILE%\.l30cut"
+set "L30_KEY=%USERPROFILE%\.l30cut\updater.key"
+set "L30_PUBLIC_KEY=%USERPROFILE%\.l30cut\updater.key.pub"
+if not exist "%L30_KEY_DIR%" mkdir "%L30_KEY_DIR%"
+if not exist "%L30_KEY%" (
+  echo   Criando a chave na primeira compilacao...
+  call "%~dp0node_modules\.bin\tauri.cmd" signer generate -w "%L30_KEY%" -p "" --force
+  if errorlevel 1 (
+    echo   [ERRO] Nao foi possivel criar a chave de atualizacao.
+    goto :falhou
+  )
+)
+if not exist "%L30_PUBLIC_KEY%" (
+  echo   [ERRO] A chave publica de atualizacao nao foi criada.
+  goto :falhou
+)
+call bun "%~dp0scripts\prepare-updater-key.mjs" "%L30_PUBLIC_KEY%"
+if errorlevel 1 goto :falhou
+set "TAURI_SIGNING_PRIVATE_KEY=%L30_KEY%"
+set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
+echo   OK: assinatura preparada.
+echo.
+
 echo [6/7] Gerando instalador Windows ^(Tauri^)...
 echo   Compilando... isso leva de 5 a 20 minutos na primeira vez.
 echo   Acompanhe o progresso abaixo (tambem salvo em build-log.txt):
