@@ -407,17 +407,17 @@ pub fn create_ai_video(
         let mut filter = String::new();
         match image.as_ref() {
             Some(path) => {
-                args.extend([
-                    "-loop".into(),
-                    "1".into(),
-                    "-t".into(),
-                    format!("{duration:.3}"),
-                    "-i".into(),
-                    path.to_string_lossy().to_string(),
-                ]);
+                // A single still frame feeds zoompan, which then GENERATES the
+                // whole movement (`d` frames at `fps`). Looping the input first
+                // made zoompan restart on every input frame, so the output only
+                // ever showed the first, motionless frame of the move.
+                args.extend(["-i".into(), path.to_string_lossy().to_string()]);
                 filter.push_str(&format!(
-                    "[0:v]scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},zoompan=z='min(zoom+0.0006,1.12)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s={width}x{height},fps=25,setsar=1",
-                    frames = (duration * 25.0).round().max(1.0) as i64
+                    "[0:v]scale={big_w}:{big_h}:force_original_aspect_ratio=increase,crop={big_w}:{big_h},zoompan=z='min(zoom+{step:.5},1.18)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:fps=25:s={width}x{height},setsar=1",
+                    big_w = width * 2,
+                    big_h = height * 2,
+                    frames = (duration * 25.0).round().max(2.0) as i64,
+                    step = (0.18f64 / (duration * 25.0).max(2.0)).clamp(0.0004, 0.01),
                 ));
             }
             None => {
