@@ -10,6 +10,8 @@ use std::path::PathBuf;
 
 use crate::media::{app_dir, missing_tool, run, sanitize_stem, tool, tool_exists};
 
+pub const SD_IMAGE_MODE: &str = "img_gen";
+
 /// Engines the creator can use, so the UI can be honest about what is missing.
 #[derive(Serialize)]
 pub struct CreatorEngines {
@@ -192,7 +194,7 @@ pub fn draw_still(
     let (w, h) = still_size(width, height);
     let args: Vec<String> = vec![
         "-M".into(),
-        "txt2img".into(),
+        SD_IMAGE_MODE.into(),
         "-m".into(),
         model.to_string_lossy().to_string(),
         "-p".into(),
@@ -705,6 +707,11 @@ mod tests {
             Some("erro: modelo invalido".to_string())
         );
         assert_eq!(last_meaningful_line("   \n"), None);
+    }
+
+    #[test]
+    fn installed_sd_cli_uses_the_supported_image_mode() {
+        assert_eq!(super::SD_IMAGE_MODE, "img_gen");
     }
 
     #[test]

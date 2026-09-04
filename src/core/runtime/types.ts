@@ -220,6 +220,8 @@ export interface RuntimeAdapter {
   webSearch?(query: string): Promise<SearchHit[]>;
   /** Per-engine honest status (picture, voice, transcription) with log tails. */
   aiReport?(): Promise<EngineReport[]>;
+  /** Executes a small real image render and returns the resulting engine report. */
+  testImageEngine?(): Promise<EngineReport>;
   /** Renders the scene list into a real MP4 with FFmpeg + local engines. */
   createVideo?(
     scenes: CreatorScene[],

@@ -135,7 +135,7 @@ function RootComponent() {
           <Outlet />
         </UiProvider>
       </EditorProvider>
-      <Toaster position="bottom-right" theme="dark" />
+      <Toaster position="top-center" theme="dark" richColors closeButton />
     </QueryClientProvider>
   );
 }

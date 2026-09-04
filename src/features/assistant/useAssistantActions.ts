@@ -19,6 +19,7 @@ import {
   totalDurationUs,
 } from "@/features/creator/script";
 import type { ChatIntent } from "./chatIntents";
+import { readableError } from "./errorMessage";
 
 /** Speech-to-text pieces, installed on demand when a transcription is asked for. */
 const SPEECH_GAPS = [
@@ -407,10 +408,14 @@ export function useAssistantActions(options: { endpoint: string; model: string }
         }
         return { text: "" };
       } catch (error) {
-        const message = (error as Error).message;
+        const message = readableError(error);
         if (aborter.current.signal.aborted || /cancel/i.test(message)) {
           return { text: "Pedido cancelado." };
         }
+        toast.error("A Cut não conseguiu concluir", {
+          description: message,
+          duration: 12_000,
+        });
         return {
           text: `Não consegui concluir: ${message}\nAbra “Diagnóstico” na barra de cima para ver o registro do que falhou.`,
         };
