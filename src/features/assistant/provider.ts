@@ -1,4 +1,5 @@
 import { parseAiEditPlan, type AiEditPlan } from "@/core/contracts/aiPlan";
+import { CUT_CORE_PROMPT, capabilityCatalogText } from "./cutCore";
 
 export type ProviderId = "deterministic" | "local-openai" | "ollama" | "llama.cpp" | "openai";
 
@@ -47,7 +48,12 @@ export const DEFAULT_PROVIDERS: ProviderConfig[] = [
   },
 ];
 
-export const PLAN_SYSTEM_PROMPT = `Você é o motor de planejamento de EDIÇÃO do L30 CUT AI.
+/** Treinamento (núcleo CUT + catálogo real) + regras de formato do plano. */
+export const PLAN_SYSTEM_PROMPT = `${CUT_CORE_PROMPT}
+
+${capabilityCatalogText()}
+
+Nesta chamada você atua como o motor de planejamento de EDIÇÃO do L30 CUT AI.
 Você NUNCA cria um vídeo novo do zero, nunca inventa roteiro, narração ou imagens.
 Você só edita o que já está no projeto do usuário (arquivos importados e clipes da timeline).
 O próprio programa cuida (fora de você) de: criar vídeo novo, criar áudio/narração com voz,

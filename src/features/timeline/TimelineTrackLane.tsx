@@ -2,6 +2,7 @@ import type { Clip, Project, Sequence, Track } from "@/core/contracts/domain";
 import type { PeakData } from "@/core/audio/waveform";
 import { useState } from "react";
 import { ASSET_DND_MIME } from "./dnd";
+import { dropZoneClass } from "@/features/dnd/dragChrome";
 import { pxToUs, usToPx } from "./geometry";
 import { TimelineClip, type ClipActions } from "./TimelineClip";
 import type { TimelineInteraction } from "./useTimelineInteraction";
@@ -34,14 +35,18 @@ export function TimelineTrackLane({
   peaks,
   onDropAsset,
 }: Props & { onDropAsset?: (trackId: string, assetId: string, startUs: number) => void }) {
-  const [dropActive, setDropActive] = useState(false);
+  // `dropX` é onde o clipe vai encostar: mostramos uma marca vertical pulsando
+  // ali, para o usuário mirar antes de soltar.
+  const [dropX, setDropX] = useState<number | null>(null);
+  const [landed, setLanded] = useState(false);
+  const dropActive = dropX !== null;
   const ghostMove = interaction.ghostMove;
   const ghostTrim = interaction.ghostTrim;
   const ghostShift = interaction.ghostShift;
 
   return (
     <div
-      className={`relative border-b border-border ${dropActive ? "bg-primary/10 ring-1 ring-inset ring-primary" : ""}`}
+      className={`relative border-b border-border ${dropZoneClass(dropActive)} ${landed ? "dnd-dropped" : ""}`}
       style={{ height }}
       data-track-id={track.id}
       onPointerDown={(event) => {
@@ -52,11 +57,12 @@ export function TimelineTrackLane({
         if (!event.dataTransfer.types.includes(ASSET_DND_MIME)) return;
         event.preventDefault();
         event.dataTransfer.dropEffect = "copy";
-        setDropActive(true);
+        const rect = event.currentTarget.getBoundingClientRect();
+        setDropX(Math.max(0, event.clientX - rect.left));
       }}
-      onDragLeave={() => setDropActive(false)}
+      onDragLeave={() => setDropX(null)}
       onDrop={(event) => {
-        setDropActive(false);
+        setDropX(null);
         if (!onDropAsset || track.locked) return;
         const assetId = event.dataTransfer.getData(ASSET_DND_MIME);
         if (!assetId) return;
@@ -64,8 +70,11 @@ export function TimelineTrackLane({
         const rect = event.currentTarget.getBoundingClientRect();
         const startUs = Math.max(0, pxToUs(event.clientX - rect.left, pxPerSecond));
         onDropAsset(track.id, assetId, startUs);
+        setLanded(true);
+        window.setTimeout(() => setLanded(false), 240);
       }}
     >
+      {dropX !== null ? <div className="dnd-caret" style={{ left: dropX }} /> : null}
       {track.kind === "caption"
         ? sequence.captions.map((cap) => (
             <div

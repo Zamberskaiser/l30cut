@@ -15,6 +15,7 @@ import { binTree, binWithDescendants, type Bin, type MediaAsset } from "@/core/c
 import { useEditor } from "@/core/store/editorStore";
 import { newId } from "@/core/store/timelineReducer";
 import { ASSET_DND_MIME, BIN_DND_MIME } from "@/features/timeline/dnd";
+import { dropZoneClass, setDragChip } from "@/features/dnd/dragChrome";
 
 export interface BinTreeProps {
   /** `null` = project root ("Todas as mídias"). */
@@ -127,7 +128,7 @@ export function BinTree({ selectedBinId, onSelect }: BinTreeProps) {
           onDrop={(e) => drop(e, null)}
           className={`flex w-full items-center gap-1.5 rounded-md px-2 py-1 text-left text-xs transition-colors ${
             selectedBinId === null ? "bg-panel-raised text-foreground" : "text-muted-foreground"
-          } ${dropTarget === null ? "ring-1 ring-accent" : ""}`}
+          } ${dropZoneClass(dropTarget === null)}`}
         >
           <FolderOpen className="size-3.5 text-accent" />
           <span className="flex-1 truncate">Todas as mídias</span>
@@ -145,6 +146,7 @@ export function BinTree({ selectedBinId, onSelect }: BinTreeProps) {
               onDragStart={(e) => {
                 e.dataTransfer.setData(BIN_DND_MIME, bin.id);
                 e.dataTransfer.effectAllowed = "move";
+                setDragChip(e, bin.name, "folder");
               }}
               onDragOver={(e) => {
                 if (!acceptsDrag(e)) return;
@@ -153,9 +155,9 @@ export function BinTree({ selectedBinId, onSelect }: BinTreeProps) {
               }}
               onDragLeave={() => setDropTarget(undefined)}
               onDrop={(e) => drop(e, bin.id)}
-              className={`group flex items-center gap-1 rounded-md px-1 py-1 text-xs transition-colors ${
+              className={`dnd-source group flex items-center gap-1 rounded-md px-1 py-1 text-xs transition-colors ${
                 active ? "bg-panel-raised text-foreground" : "text-muted-foreground"
-              } ${dropTarget === bin.id ? "ring-1 ring-accent" : ""}`}
+              } ${dropZoneClass(dropTarget === bin.id)}`}
               style={{ paddingLeft: 6 + depth * 12 }}
             >
               {hasChildren ? (

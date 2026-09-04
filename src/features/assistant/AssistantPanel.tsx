@@ -45,6 +45,9 @@ import {
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
 import { useDictation } from "./useDictation";
 import { detectChatIntent } from "./chatIntents";
+import { receiptText } from "./cutCore";
+import { hintsToPrompt, resolveReferences } from "./reference";
+import { parseQuickCommand } from "./voiceCommands";
 import { useAssistantActions } from "./useAssistantActions";
 import { useMediaTranscription } from "./useMediaTranscription";
 import { TRANSCRIBABLE_ACCEPT } from "./audioSources";
@@ -127,6 +130,26 @@ export function AssistantPanel() {
   async function submit(override?: string) {
     const text = (override ?? prompt).trim();
     if (!text || thinking) return;
+
+    // "cancele", "desfaça", "pare de falar": resposta imediata, sem IA no meio.
+    const quick = parseQuickCommand(text);
+    if (quick) {
+      setPrompt("");
+      if (quick === "cancel") cancelRequest();
+      if (quick === "stopSpeaking") {
+        dictation.stop?.();
+        toast.info("Silenciado");
+      }
+      if (quick === "undo") {
+        editor.undo();
+        toast.success("Desfeito");
+      }
+      if (quick === "redo") {
+        editor.redo();
+        toast.success("Refeito");
+      }
+      return;
+    }
     setPrompt("");
     editor.pushMessage({ id: newId("msg"), role: "user", text, at: Date.now() });
     setThinking(true);
@@ -178,8 +201,29 @@ export function AssistantPanel() {
             editor.profile,
             editor.selection,
           );
+          // "esse", "aqui", "o segundo": o programa resolve o alvo antes de
+          // falar com o modelo, para ele nunca mexer no pedaço errado.
+          const hints = resolveReferences(text, {
+            clips: sequence.clips
+              .slice()
+              .sort((a, b) => a.startUs - b.startUs)
+              .map((c) => ({
+                id: c.id,
+                assetId: c.assetId,
+                label: c.label,
+                startUs: c.startUs,
+              })),
+            assets: editor.project.assets.map((a) => ({
+              id: a.id,
+              name: a.name,
+              kind: a.kind,
+            })),
+            selection: editor.selection,
+            playheadUs: editor.playheadUs,
+          });
+          const hintText = hintsToPrompt(hints);
           const response = await requestPlanFromProvider(provider, {
-            prompt: text,
+            prompt: hintText ? `${text}\n\n${hintText}` : text,
             contextJson: JSON.stringify(context),
             signal: controller.signal,
           });
@@ -308,6 +352,14 @@ export function AssistantPanel() {
       return;
     }
     editor.updateMessage(messageId, { planState: "applied" });
+    // Recibo: só agora é verdade dizer que a mudança aconteceu.
+    editor.updateMessage(messageId, {
+      text: receiptText({
+        summary: plan.summary,
+        commands: compiled.transaction.commands.length,
+        operations: plan.operations.length,
+      }),
+    });
     editor.recordPlanApplied(plan, compiled.transaction.commands.length);
     editor.addFeedback({
       planId: plan.id,
