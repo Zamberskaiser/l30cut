@@ -218,12 +218,23 @@ export interface RuntimeAdapter {
    * something up. Sends the query text and nothing else.
    */
   webSearch?(query: string): Promise<SearchHit[]>;
+  /** Per-engine honest status (picture, voice, transcription) with log tails. */
+  aiReport?(): Promise<EngineReport[]>;
   /** Renders the scene list into a real MP4 with FFmpeg + local engines. */
   createVideo?(
     scenes: CreatorScene[],
     options: CreatorRenderOptions,
     onProgress: ProgressSink,
   ): Promise<CreatorResult>;
+}
+
+/** Status of one local AI engine, as shown on the Diagnóstico screen. */
+export interface EngineReport {
+  id: string;
+  label: string;
+  ready: boolean;
+  detail: string;
+  log?: string | null | undefined;
 }
 
 /** One result of an assistant web search. */
@@ -270,6 +281,8 @@ export interface CreatorResult {
   usedNarration: boolean;
   usedImageModel: boolean;
   sceneCount: number;
+  /** Plain-language reasons an engine did not contribute to this render. */
+  notes?: string[];
 }
 
 export interface UpdateInfo {

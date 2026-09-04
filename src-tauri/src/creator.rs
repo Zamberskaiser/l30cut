@@ -163,7 +163,118 @@ pub struct CreatorResult {
     pub used_image_model: bool,
     #[serde(rename = "sceneCount")]
     pub scene_count: usize,
+    /// Plain-language reasons an engine did not contribute to this render.
+    pub notes: Vec<String>,
 }
+
+/// Diffusion models work in multiples of 64 and choke on huge canvases on CPU,
+/// so a 1920x1080 sequence renders its stills at a safe size and the montage
+/// scales them back up.
+pub fn still_size(width: u32, height: u32) -> (u32, u32) {
+    let longest = width.max(height).max(1) as f64;
+    let scale = (768.0 / longest).min(1.0);
+    let fit = |value: u32| -> u32 {
+        let scaled = ((value as f64) * scale).round() as u32;
+        ((scaled.clamp(256, 1024) + 32) / 64 * 64).clamp(256, 1024)
+    };
+    (fit(width), fit(height))
+}
+
+/// Runs the diffusion model for one still and reports why it failed, if it did.
+pub fn draw_still(
+    sd: &std::path::Path,
+    model: &std::path::Path,
+    prompt: &str,
+    width: u32,
+    height: u32,
+    out: &std::path::Path,
+) -> Result<(), String> {
+    let (w, h) = still_size(width, height);
+    let args: Vec<String> = vec![
+        "-M".into(),
+        "txt2img".into(),
+        "-m".into(),
+        model.to_string_lossy().to_string(),
+        "-p".into(),
+        prompt.to_string(),
+        "-W".into(),
+        w.to_string(),
+        "-H".into(),
+        h.to_string(),
+        "--steps".into(),
+        "20".into(),
+        "-o".into(),
+        out.to_string_lossy().to_string(),
+    ];
+    let output = run(sd, &args)?;
+    let size = std::fs::metadata(out).map(|m| m.len()).unwrap_or(0);
+    if output.status.success() && size > 1_024 {
+        return Ok(());
+    }
+    let log = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    Err(last_meaningful_line(&log)
+        .unwrap_or_else(|| "o modelo terminou sem escrever a imagem".into()))
+}
+
+/// Speaks a text with Piper, checking the WAV really has sound in it — a Piper
+/// missing its `.onnx.json` config writes an empty file and exits with 0.
+pub fn speak_to_wav(
+    piper: &std::path::Path,
+    voice: &std::path::Path,
+    text: &str,
+    out: &std::path::Path,
+) -> Result<(), String> {
+    let config = std::path::PathBuf::from(format!("{}.json", voice.to_string_lossy()));
+    if !config.is_file() {
+        return Err(format!(
+            "falta o arquivo de configuração da voz ({}) — reinstale a narração",
+            config
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default()
+        ));
+    }
+    let args: Vec<String> = vec![
+        "--model".into(),
+        voice.to_string_lossy().to_string(),
+        "--output_file".into(),
+        out.to_string_lossy().to_string(),
+    ];
+    let mut child = crate::media::spawn_piped(piper, &args)?;
+    if let Some(stdin) = child.stdin.as_mut() {
+        use std::io::Write;
+        let _ = stdin.write_all(text.as_bytes());
+    }
+    drop(child.stdin.take());
+    let output = child.wait_with_output().map_err(|e| e.to_string())?;
+    let size = std::fs::metadata(out).map(|m| m.len()).unwrap_or(0);
+    // 44 bytes is a header with no samples: that is the "silent file" symptom.
+    if output.status.success() && size > 2_048 {
+        return Ok(());
+    }
+    let log = format!(
+        "{}{}",
+        String::from_utf8_lossy(&output.stderr),
+        String::from_utf8_lossy(&output.stdout)
+    );
+    Err(last_meaningful_line(&log).unwrap_or_else(|| {
+        format!("a voz escreveu um arquivo vazio ({size} bytes) — reinstale a narração")
+    }))
+}
+
+/// Last line of a tool log that actually says something, for error messages.
+pub fn last_meaningful_line(log: &str) -> Option<String> {
+    log.lines()
+        .map(|line| line.trim())
+        .filter(|line| line.len() > 3)
+        .next_back()
+        .map(|line| line.chars().take(200).collect())
+}
+
 
 fn hex_to_ffmpeg_color(raw: Option<&String>) -> String {
     let value = raw.map(|s| s.trim().to_string()).unwrap_or_default();
@@ -333,6 +444,11 @@ pub fn create_ai_video(
     let mut used_image_model = false;
     let mut parts: Vec<PathBuf> = Vec::new();
 
+    // Why a scene fell back to a card / to silence, so the chat can say it out
+    // loud instead of quietly shipping an empty-looking video.
+    let mut notes: Vec<String> = Vec::new();
+    let mut diary = String::new();
+
     for (index, scene) in scenes.iter().enumerate() {
         // 1. Narration (Piper) — decides the scene length when available.
         let mut narration_wav: Option<PathBuf> = None;
@@ -341,26 +457,30 @@ pub fn create_ai_video(
             .as_ref()
             .map(|t| t.trim().to_string())
             .unwrap_or_default();
-        if let (Some(piper), Some(voice), false) =
-            (piper.as_ref(), voice.as_ref(), narration_text.is_empty())
-        {
-            let wav = work.join(format!("voz_{index:03}.wav"));
-            let args: Vec<String> = vec![
-                "--model".into(),
-                voice.to_string_lossy().to_string(),
-                "--output_file".into(),
-                wav.to_string_lossy().to_string(),
-            ];
-            let mut child = crate::media::spawn_piped(piper, &args)?;
-            if let Some(stdin) = child.stdin.as_mut() {
-                use std::io::Write;
-                let _ = stdin.write_all(narration_text.as_bytes());
-            }
-            drop(child.stdin.take());
-            let done = child.wait().map_err(|e| e.to_string())?;
-            if done.success() && wav.exists() {
-                narration_wav = Some(wav);
-                used_narration = true;
+        if !narration_text.is_empty() {
+            match (piper.as_ref(), voice.as_ref()) {
+                (Some(piper), Some(voice)) => {
+                    let wav = work.join(format!("voz_{index:03}.wav"));
+                    match speak_to_wav(piper, voice, &narration_text, &wav) {
+                        Ok(()) => {
+                            narration_wav = Some(wav);
+                            used_narration = true;
+                        }
+                        Err(problem) => {
+                            diary.push_str(&format!("cena {}: voz falhou -> {problem}\n", index + 1));
+                            if notes.iter().all(|n| !n.starts_with("A voz local")) {
+                                notes.push(format!("A voz local não gerou som: {problem}"));
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    if options.narrate && notes.iter().all(|n| !n.starts_with("A voz local")) {
+                        notes.push(
+                            "A voz local não está instalada — instale a narração na tela de Configuração.".into(),
+                        );
+                    }
+                }
             }
         }
 
@@ -379,45 +499,50 @@ pub fn create_ai_video(
             .map(PathBuf::from)
             .filter(|p| p.exists());
         if image.is_none() {
-            if let (Some(sd), Some(model), Some(prompt)) =
-                (sd.as_ref(), sd_model.as_ref(), scene.image_prompt.as_ref())
-            {
-                let args: Vec<String> = vec![
-                    "-M".into(),
-                    "txt2img".into(),
-                    "-m".into(),
-                    model.to_string_lossy().to_string(),
-                    "-p".into(),
-                    prompt.clone(),
-                    "-W".into(),
-                    width.to_string(),
-                    "-H".into(),
-                    height.to_string(),
-                    "-o".into(),
-                    still.to_string_lossy().to_string(),
-                ];
-                if run(sd, &args).map(|o| o.status.success()).unwrap_or(false) && still.exists() {
-                    image = Some(still.clone());
-                    used_image_model = true;
+            match (sd.as_ref(), sd_model.as_ref(), scene.image_prompt.as_ref()) {
+                (Some(sd), Some(model), Some(prompt)) => {
+                    match draw_still(sd, model, prompt, width, height, &still) {
+                        Ok(()) => {
+                            image = Some(still.clone());
+                            used_image_model = true;
+                        }
+                        Err(problem) => {
+                            diary.push_str(&format!(
+                                "cena {}: imagem falhou -> {problem}\n",
+                                index + 1
+                            ));
+                            if notes.iter().all(|n| !n.starts_with("O gerador de imagens")) {
+                                notes.push(format!("O gerador de imagens falhou: {problem}"));
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    if notes.iter().all(|n| !n.starts_with("O gerador de imagens")) {
+                        notes.push(
+                            "O gerador de imagens não está instalado — instale-o na tela de Configuração.".into(),
+                        );
+                    }
                 }
             }
         }
+
 
         let mut args: Vec<String> = vec!["-y".into(), "-hide_banner".into()];
         let mut filter = String::new();
         match image.as_ref() {
             Some(path) => {
-                args.extend([
-                    "-loop".into(),
-                    "1".into(),
-                    "-t".into(),
-                    format!("{duration:.3}"),
-                    "-i".into(),
-                    path.to_string_lossy().to_string(),
-                ]);
+                // A single still frame feeds zoompan, which then GENERATES the
+                // whole movement (`d` frames at `fps`). Looping the input first
+                // made zoompan restart on every input frame, so the output only
+                // ever showed the first, motionless frame of the move.
+                args.extend(["-i".into(), path.to_string_lossy().to_string()]);
                 filter.push_str(&format!(
-                    "[0:v]scale={width}:{height}:force_original_aspect_ratio=increase,crop={width}:{height},zoompan=z='min(zoom+0.0006,1.12)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:s={width}x{height},fps=25,setsar=1",
-                    frames = (duration * 25.0).round().max(1.0) as i64
+                    "[0:v]scale={big_w}:{big_h}:force_original_aspect_ratio=increase,crop={big_w}:{big_h},zoompan=z='min(zoom+{step:.5},1.18)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={frames}:fps=25:s={width}x{height},setsar=1",
+                    big_w = width * 2,
+                    big_h = height * 2,
+                    frames = (duration * 25.0).round().max(2.0) as i64,
+                    step = (0.18f64 / (duration * 25.0).max(2.0)).clamp(0.0004, 0.01),
                 ));
             }
             None => {
@@ -541,12 +666,19 @@ pub fn create_ai_video(
         ));
     }
 
+    // A written trail of what each engine did, so the Diagnóstico screen can
+    // show why a render came out as plain cards or without voice.
+    if !diary.is_empty() {
+        let _ = std::fs::write(app_dir(&app, "logs")?.join("criacao.log"), &diary);
+    }
+
     Ok(CreatorResult {
         output_path: out_path.to_string_lossy().to_string(),
         bytes: std::fs::metadata(&out_path).map(|m| m.len()).unwrap_or(0),
         used_narration,
         used_image_model,
         scene_count: scenes.len(),
+        notes,
     })
 }
 
@@ -554,8 +686,26 @@ pub fn create_ai_video(
 mod tests {
     use super::{
         escape_drawtext, escape_filter_path, filter_path_is_safe, hex_to_ffmpeg_color,
-        is_local_endpoint,
+        is_local_endpoint, last_meaningful_line, still_size,
     };
+
+    #[test]
+    fn stills_are_multiples_of_64_and_never_huge() {
+        let (w, h) = still_size(1920, 1080);
+        assert_eq!(w % 64, 0);
+        assert_eq!(h % 64, 0);
+        assert!(w <= 1024 && h <= 1024);
+        assert_eq!(still_size(1080, 1920).0 % 64, 0);
+    }
+
+    #[test]
+    fn the_last_useful_log_line_is_reported() {
+        assert_eq!(
+            last_meaningful_line("carregando\nerro: modelo invalido\n\n"),
+            Some("erro: modelo invalido".to_string())
+        );
+        assert_eq!(last_meaningful_line("   \n"), None);
+    }
 
     #[test]
     fn escaped_paths_are_accepted_and_raw_ones_rejected() {
