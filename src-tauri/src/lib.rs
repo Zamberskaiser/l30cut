@@ -32,6 +32,31 @@ pub struct SystemDiagnostics {
     pub data_dir: String,
 }
 
+/// Free space (GB) of the volume that holds `path`. Picks the mount point with
+/// the longest matching prefix so `C:\Users\...` resolves to `C:\`.
+fn free_disk_gb_for(path: &str) -> f64 {
+    let lowered = path.to_lowercase().replace('/', "\\");
+    let disks = Disks::new_with_refreshed_list();
+    let mut best: Option<(usize, u64)> = None;
+    for disk in disks.list() {
+        let mount = disk.mount_point().to_string_lossy().to_lowercase().replace('/', "\\");
+        if mount.is_empty() {
+            continue;
+        }
+        if lowered.starts_with(&mount) {
+            let len = mount.len();
+            if best.map(|(best_len, _)| len > best_len).unwrap_or(true) {
+                best = Some((len, disk.available_space()));
+            }
+        }
+    }
+    let bytes = best
+        .map(|(_, bytes)| bytes)
+        .or_else(|| disks.list().first().map(|d| d.available_space()))
+        .unwrap_or(0);
+    ((bytes as f64) / 1_073_741_824.0 * 10.0).round() / 10.0
+}
+
 #[tauri::command]
 fn diagnose_system(app: tauri::AppHandle) -> Result<SystemDiagnostics, String> {
     let mut sys = System::new_all();
