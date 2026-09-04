@@ -1188,7 +1188,7 @@ pub fn export_sequence(
 
 #[cfg(test)]
 mod tests {
-    use super::{origin_allowed, parse_ratio, parse_silencedetect, sanitize_stem};
+    use super::{llm_model_for, origin_allowed, parse_ratio, parse_silencedetect, sanitize_stem};
 
     #[test]
     fn only_allowlisted_origins_download() {
@@ -1219,5 +1219,27 @@ mod tests {
     fn export_names_are_filesystem_safe() {
         assert_eq!(sanitize_stem("../../evil"), "______evil");
         assert_eq!(sanitize_stem("  "), "export");
+    }
+
+    #[test]
+    fn light_profile_uses_the_small_script_model() {
+        assert!(llm_model_for(Some("light")).1.contains("3B"));
+        assert!(llm_model_for(Some("recommended")).1.contains("7B"));
+        assert!(llm_model_for(None).1.contains("7B"));
+    }
+
+    #[test]
+    fn generative_downloads_stay_on_allowed_origins() {
+        for url in [
+            super::PIPER_ZIP,
+            super::SD_ZIP,
+            super::SD_MODEL_URL,
+            super::LLAMA_ZIP,
+            super::PIPER_VOICE_BASE,
+            super::QWEN_7B.0,
+            super::QWEN_3B.0,
+        ] {
+            assert!(origin_allowed(url), "origem não permitida: {url}");
+        }
     }
 }
