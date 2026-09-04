@@ -37,6 +37,8 @@ const PIPER_VOICE_BASE: &str =
 const PIPER_VOICE_NAME: &str = "pt_BR-faber-medium.onnx";
 const SD_ZIP: &str = "https://github.com/leejet/stable-diffusion.cpp/releases/download/master-841-6b3edaa/sd-master-6b3edaa-bin-win-cpu-x64.zip";
 const SD_MODEL_URL: &str = "https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive/resolve/main/v1-5-pruned-emaonly-fp16.safetensors";
+/// sd.cpp renamed its executable across releases: newer zips ship `sd-cli.exe`.
+pub const SD_BINARIES: &[&str] = &["sd", "sd-cli", "stable-diffusion"];
 const SD_MODEL_NAME: &str = "v1-5-pruned-emaonly-fp16.safetensors";
 const LLAMA_ZIP: &str =
     "https://github.com/ggml-org/llama.cpp/releases/download/b10793/llama-b10793-bin-win-cpu-x64.zip";
@@ -348,7 +350,7 @@ pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, St
             "stable-diffusion",
             "stable-diffusion.cpp",
             "Geração de imagens das cenas direto na sua máquina.",
-            bundled_binary(&app, &["sd", "stable-diffusion"]).is_some(),
+            bundled_binary(&app, SD_BINARIES).is_some(),
             "https://github.com/leejet/stable-diffusion.cpp/releases",
         )),
         optional(status(
