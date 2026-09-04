@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { Activity, Loader2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Activity, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -99,6 +100,14 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
                 </li>
               ))}
             </ul>
+
+            {components.some((c) => c.state !== "ready") ? (
+              <Button asChild size="sm" className="h-7 w-full gap-1.5 text-[11px]">
+                <Link to="/setup" onClick={() => setOpen(false)}>
+                  <Download className="size-3.5" /> Instalar o que falta
+                </Link>
+              </Button>
+            ) : null}
 
             {runtime.mode !== "tauri" ? (
               <p className="rounded-md border border-warning/40 bg-warning/10 px-2.5 py-2 text-[10px] leading-relaxed text-warning">

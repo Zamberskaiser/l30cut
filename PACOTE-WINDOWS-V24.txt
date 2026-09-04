@@ -1,0 +1,19 @@
+L30 CUT AI - PACOTE WINDOWS V24
+Data: 04/09/2026
+
+NOVIDADES
+
+1. Tela de Configuracao com o botao "Instalar o que falta": baixa e prepara
+   em sequencia todos os componentes ainda ausentes (whisper.cpp, modelo de
+   transcricao, llama.cpp + modelo de roteiro, Piper + voz PT-BR,
+   stable-diffusion.cpp + modelo de imagem).
+2. A janela de Diagnostico agora tem atalho direto para essa instalacao.
+3. O campo "Disco livre" mostra o espaco real da unidade onde ficam os dados
+   (antes aparecia sempre 0 GB).
+
+COMO USAR
+
+1. Apague completamente a pasta da versao anterior.
+2. Extraia L30-CUT-AI-source-v24.zip em uma pasta nova.
+3. Confirme que a janela mostra "Script versao 24".
+4. Execute build-windows.bat.

@@ -70,7 +70,33 @@ function SetupPage() {
     }
   }
 
+  async function installAll() {
+    const pending = components.filter((c) => c.state !== "ready");
+    if (pending.length === 0) {
+      toast.success("Tudo já está pronto");
+      return;
+    }
+    let done = 0;
+    for (const component of pending) {
+      await install(component);
+      done += 1;
+    }
+    const refreshed = await runtime.listComponents();
+    setComponents(refreshed);
+    const stillMissing = refreshed.filter((c) => c.state !== "ready");
+    if (stillMissing.length === 0) {
+      toast.success(`${done} item(ns) instalado(s)`, {
+        description: "Todos os recursos locais estão prontos para uso.",
+      });
+    } else {
+      toast.warning(`Faltam ${stillMissing.length} item(ns)`, {
+        description: stillMissing.map((c) => c.name).join(", "),
+      });
+    }
+  }
+
   const missing = components.filter((c) => c.state !== "ready" && !c.optional);
+  const pendingCount = components.filter((c) => c.state !== "ready").length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -119,9 +145,24 @@ function SetupPage() {
         </section>
 
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Componentes
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Componentes
+            </h2>
+            <Button
+              size="sm"
+              className="ml-auto h-7 gap-1.5 text-[11px]"
+              disabled={busy !== null || pendingCount === 0}
+              onClick={() => void installAll()}
+            >
+              {busy !== null ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Download className="size-3.5" />
+              )}
+              {pendingCount === 0 ? "Tudo instalado" : `Instalar o que falta (${pendingCount})`}
+            </Button>
+          </div>
           <ul className="mt-2 space-y-2">
             {components.map((component) => (
               <li key={component.id} className="rounded-md border border-border bg-panel p-3">
