@@ -281,6 +281,13 @@ export class TauriRuntime implements RuntimeAdapter {
       .parse(raw);
   }
 
+  mediaSrc(path: string) {
+    if (/^(blob:|data:|https?:|asset:)/.test(path)) return path;
+    // convertFileSrc, inlined so the runtime keeps no extra import cost.
+    const encoded = encodeURIComponent(path);
+    return `http://asset.localhost/${encoded}`;
+  }
+
   aspectResolution(aspect: Aspect) {
     return ASPECT_RESOLUTIONS[aspect];
   }

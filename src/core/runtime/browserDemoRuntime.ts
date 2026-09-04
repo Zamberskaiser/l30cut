@@ -250,6 +250,10 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     return { project: parseProjectFile(await file.text()), path: file.name };
   }
 
+  mediaSrc(path: string) {
+    return path;
+  }
+
   aspectResolution(aspect: Aspect) {
     return ASPECT_RESOLUTIONS[aspect];
   }
