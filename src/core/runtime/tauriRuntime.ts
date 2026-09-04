@@ -38,6 +38,7 @@ import type {
   UpdateInfo,
   UpdateSettings,
   GithubRepoRef,
+  SearchHit,
 } from "./types";
 
 /**

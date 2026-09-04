@@ -302,6 +302,10 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
     throw new Error("O roteirista local (LLM) só roda no aplicativo instalado.");
   }
 
+  async createImage(): Promise<string> {
+    throw new Error("O gerador de imagens roda no seu computador, no aplicativo instalado.");
+  }
+
   async createVideo(): Promise<CreatorResult> {
     throw new Error(
       "A renderização do vídeo usa FFmpeg local e só funciona no aplicativo instalado.",
