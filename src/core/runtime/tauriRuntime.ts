@@ -51,6 +51,7 @@ export const TAURI_COMMANDS = {
   makeProxy: "generate_proxy",
   detectSilence: "detect_silence",
   transcribe: "transcribe_asset",
+  transcribeSpeech: "transcribe_speech",
   export: "export_sequence",
   loadProject: "load_project",
   saveProject: "save_project",
@@ -206,6 +207,16 @@ export class TauriRuntime implements RuntimeAdapter {
       path: asset.path,
     });
     return z.array(TranscriptSegmentSchema).parse(raw);
+  }
+
+  async transcribeSpeech(audio: Uint8Array, extension: string): Promise<string> {
+    const invoke = await getInvoke();
+    // Tauri serializes args as JSON, so the bytes travel as a number array.
+    const spoken = await invoke<string>(TAURI_COMMANDS.transcribeSpeech, {
+      audio: Array.from(audio),
+      extension,
+    });
+    return z.string().parse(spoken).trim();
   }
 
   async exportSequence(request: ExportRequest, onProgress: ProgressSink): Promise<ExportResult> {

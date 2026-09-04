@@ -130,6 +130,11 @@ export interface RuntimeAdapter {
     onProgress: ProgressSink,
     signal: AbortSignal,
   ): Promise<TranscriptSegment[]>;
+  /**
+   * Transcribes a microphone recording locally (whisper.cpp) so the user can
+   * speak a command instead of typing it. Absent in the browser demo.
+   */
+  transcribeSpeech?(audio: Uint8Array, extension: string): Promise<string>;
   exportSequence(
     request: ExportRequest,
     onProgress: ProgressSink,
