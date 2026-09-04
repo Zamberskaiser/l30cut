@@ -101,6 +101,14 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
               ))}
             </ul>
 
+            {components.some((c) => c.state !== "ready") ? (
+              <Button asChild size="sm" className="h-7 w-full gap-1.5 text-[11px]">
+                <Link to="/setup" onClick={() => setOpen(false)}>
+                  <Download className="size-3.5" /> Instalar o que falta
+                </Link>
+              </Button>
+            ) : null}
+
             {runtime.mode !== "tauri" ? (
               <p className="rounded-md border border-warning/40 bg-warning/10 px-2.5 py-2 text-[10px] leading-relaxed text-warning">
                 Estes números são simulados no navegador. O diagnóstico real (CPU, GPU, disco,
