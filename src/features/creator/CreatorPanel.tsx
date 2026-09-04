@@ -10,7 +10,12 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ASPECT_RESOLUTIONS, SETUP_PROFILES } from "@/core/runtime/catalog";
-import type { ComponentStatus, CreatorEngines, CreatorScene, SetupProfile } from "@/core/runtime/types";
+import type {
+  ComponentStatus,
+  CreatorEngines,
+  CreatorScene,
+  SetupProfile,
+} from "@/core/runtime/types";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { insertAssetCommands, trackEndUs } from "@/features/media/insertAsset";
 import { describeGaps, missingCreatorModules } from "./modules";
