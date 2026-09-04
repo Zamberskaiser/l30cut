@@ -78,7 +78,6 @@ function SetupPage() {
     }
     let done = 0;
     for (const component of pending) {
-      // eslint-disable-next-line no-await-in-loop
       await install(component);
       done += 1;
     }
@@ -161,9 +160,7 @@ function SetupPage() {
               ) : (
                 <Download className="size-3.5" />
               )}
-              {pendingCount === 0
-                ? "Tudo instalado"
-                : `Instalar o que falta (${pendingCount})`}
+              {pendingCount === 0 ? "Tudo instalado" : `Instalar o que falta (${pendingCount})`}
             </Button>
           </div>
           <ul className="mt-2 space-y-2">
