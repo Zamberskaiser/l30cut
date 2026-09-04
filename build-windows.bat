@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 16 (2026-09-04)
+rem   Script versao 17 (2026-09-04)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem   v16: a janela nunca fecha sozinha e, sem permissao de
@@ -33,7 +33,7 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 16 (2026-09-04)
+echo   Script versao 17 (2026-09-04)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
@@ -45,8 +45,8 @@ call :addpath
 rem Impede compilar por engano um ZIP antigo que continha a API incorreta do updater.
 findstr /C:"tauri_plugin_updater::Builder::new().build()" "src-tauri\src\lib.rs" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
   goto :falhou
 )
 
@@ -54,20 +54,20 @@ rem Versao 14: a visualizacao de video local exige o protocolo de arquivos
 rem liberado na config E compilado no binario (feature protocol-asset).
 findstr /C:"assetProtocol" "src-tauri\tauri.conf.json" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
   goto :falhou
 )
 findstr /C:"api/public/update/windows" "src-tauri\tauri.conf.json" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
   goto :falhou
 )
 findstr /C:"protocol-asset" "src-tauri\Cargo.toml" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 16^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v16.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
   goto :falhou
 )
 
@@ -156,15 +156,15 @@ echo.
 
 
 echo [6/7] Gerando instalador Windows ^(Tauri^)...
-call bun run tauri --version >nul 2>&1
+call bun run tauri --version <nul >nul 2>&1
 if errorlevel 1 (
   echo   Preparando a CLI local do Tauri...
-  call bun add --dev --exact "@tauri-apps/cli@2.11.4"
+  call bun add --dev --exact "@tauri-apps/cli@2.11.4" <nul
   if errorlevel 1 (
     echo   [ERRO] Nao foi possivel instalar a CLI local do Tauri via Bun.
     goto :falhou
   )
-  call bun run tauri --version >nul 2>&1
+  call bun run tauri --version <nul >nul 2>&1
   if errorlevel 1 (
     echo   [ERRO] Nao foi possivel preparar a CLI local do Tauri via Bun.
     goto :falhou
