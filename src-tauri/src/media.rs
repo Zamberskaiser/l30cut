@@ -435,6 +435,38 @@ async fn download_to(
 
 /// Flat-extracts the wanted files out of a zip into `dest`.
 /// `wanted` matches on the file name; empty means "every file".
+/// Wipes a component's private folder so a new package never mixes with the
+/// DLLs of the previous one, and drops the flat copies an older version of the
+/// app left directly in `bin` (those stale DLLs are what broke sd-cli.exe).
+fn fresh_component_dir(app: &tauri::AppHandle, sub: &str, stale: &[&str]) -> Result<PathBuf, String> {
+    let bin = app_dir(app, "bin")?;
+    for name in stale {
+        let _ = std::fs::remove_file(bin.join(name));
+    }
+    let dir = bin.join(sub);
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+    Ok(dir)
+}
+
+/// Files an old flat install may have dropped in `bin`; they shadow the private
+/// folders and mismatch across packages.
+const STALE_SHARED: &[&str] = &[
+    "ggml.dll",
+    "ggml-base.dll",
+    "ggml-cpu.dll",
+    "ggml-rpc.dll",
+    "ggml-metal.dll",
+    "llama.dll",
+    "stable-diffusion.dll",
+    "whisper.dll",
+    "mtmd.dll",
+    "sd.exe",
+    "sd-cli.exe",
+    "whisper-cli.exe",
+    "llama-server.exe",
+];
+
 fn extract_zip(archive_path: &Path, dest: &Path, wanted: &[&str]) -> Result<Vec<String>, String> {
     let file = std::fs::File::open(archive_path).map_err(|e| e.to_string())?;
     let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
@@ -579,8 +611,9 @@ pub async fn install_component(
         "whisper.cpp" => {
             let zip_path = cache.join("whisper-bin.zip");
             download_to(&app, &component_id, WHISPER_ZIP, &zip_path).await?;
-            // Keep every file: whisper needs its companion DLLs next to the exe.
-            extract_zip(&zip_path, &bin, &[])?;
+            // Private folder: whisper needs its own DLLs next to the exe.
+            let dest = fresh_component_dir(&app, "whisper", STALE_SHARED)?;
+            extract_zip(&zip_path, &dest, &[])?;
             let _ = std::fs::remove_file(&zip_path);
         }
         "whisper-model" => {
@@ -592,8 +625,9 @@ pub async fn install_component(
         "llama-server" => {
             let zip_path = cache.join("llama-bin.zip");
             download_to(&app, &component_id, LLAMA_ZIP, &zip_path).await?;
-            // Flat layout: the server needs its DLLs next to the executable.
-            extract_zip(&zip_path, &bin, &[])?;
+            // Private folder: llama.cpp ships its own ggml/llama DLLs.
+            let dest = fresh_component_dir(&app, "llama", STALE_SHARED)?;
+            extract_zip(&zip_path, &dest, &[])?;
             let _ = std::fs::remove_file(&zip_path);
         }
         "llm-model" => {
@@ -605,7 +639,8 @@ pub async fn install_component(
             let zip_path = cache.join("piper-win64.zip");
             download_to(&app, &component_id, PIPER_ZIP, &zip_path).await?;
             // Tree extraction: piper resolves `espeak-ng-data/` next to the exe.
-            extract_zip_tree(&zip_path, &bin)?;
+            let dest = fresh_component_dir(&app, "piper", &["piper.exe"])?;
+            extract_zip_tree(&zip_path, &dest)?;
             let _ = std::fs::remove_file(&zip_path);
         }
         "piper-voice" => {
@@ -629,7 +664,9 @@ pub async fn install_component(
         "stable-diffusion" => {
             let zip_path = cache.join("stable-diffusion-win64.zip");
             download_to(&app, &component_id, SD_ZIP, &zip_path).await?;
-            extract_zip_tree(&zip_path, &bin)?;
+            // Private folder: sd.cpp DLLs must match its own exe exactly.
+            let dest = fresh_component_dir(&app, "sd", STALE_SHARED)?;
+            extract_zip_tree(&zip_path, &dest)?;
             let _ = std::fs::remove_file(&zip_path);
         }
         "sd-model" => {
