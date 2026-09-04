@@ -272,7 +272,8 @@ echo   Na primeira execucao o app abre a tela de setup
 echo   para baixar FFmpeg e whisper.cpp.
 echo   Para abrir de novo depois: run-windows.bat ou menu Iniciar.
 echo.
-timeout /t 20 >nul
+echo   Aperte qualquer tecla para fechar esta janela.
+pause >nul
 exit /b 0
 
 
