@@ -260,6 +260,55 @@ export function useAssistantActions(options: { endpoint: string; model: string }
     [runJob, importIntoBin, prepare, runtime, sequence],
   );
 
+  /** Narration audio with the local voice, imported into the bin. */
+  const createAudio = useCallback(
+    async (intent: ChatIntent): Promise<ActionOutcome> => {
+      if (!runtime.createAudio) {
+        return { text: "Criar áudio funciona no programa instalado no Windows, onde ficam as vozes." };
+      }
+      const topic = intent.subject.trim();
+      let words = (intent.spoken ?? "").trim();
+      if (words.length < 3 && topic.length < 3) {
+        return {
+          text: 'Diga o que a voz deve falar, por exemplo: “crie um áudio dizendo bem-vindo ao canal”.',
+        };
+      }
+      const ready = await prepare({ narrate: true, images: false });
+      if (!ready) return { text: "A voz local ainda não está pronta." };
+      if (words.length < 3 && runtime.generateScript) {
+        setBusy("Escrevendo o texto da narração");
+        try {
+          words = (
+            await runtime.generateScript(
+              options.endpoint,
+              options.model,
+              `Escreva uma narração curta em português do Brasil sobre: ${topic}. No máximo 70 palavras, texto corrido, sem títulos e sem marcações.`,
+            )
+          ).trim();
+        } catch {
+          words = "";
+        }
+      }
+      if (words.length < 3) words = topic;
+      setBusy("Gravando a narração");
+      const path = await runJob({
+        kind: "export",
+        label: "Criar áudio",
+        run: async ({ onProgress }) => {
+          onProgress(0.2, "Falando com a voz local");
+          const created = await runtime.createAudio!(words.slice(0, 2000), stamp("narracao"));
+          onProgress(1, "Áudio pronto");
+          return created;
+        },
+      });
+      const asset = await importIntoBin(path, true);
+      return {
+        text: `Áudio criado e já na sua timeline${asset ? ` como “${asset.name}”` : ""}. Texto falado: “${words.slice(0, 160)}”. Arquivo: ${path}.`,
+      };
+    },
+    [importIntoBin, options.endpoint, options.model, prepare, runJob, runtime],
+  );
+
   /** Public web search — the only outbound call, and only when asked. */
   const search = useCallback(
     async (intent: ChatIntent): Promise<ActionOutcome> => {
@@ -328,6 +377,7 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       try {
         if (intent.kind === "video") return await createVideo(intent);
         if (intent.kind === "image") return await createImage(intent);
+        if (intent.kind === "audio") return await createAudio(intent);
         if (intent.kind === "search") return await search(intent);
         if (intent.kind === "transcribe") {
           const target =
@@ -352,8 +402,16 @@ export function useAssistantActions(options: { endpoint: string; model: string }
         setBusy(null);
       }
     },
-    [createImage, createVideo, search, transcribable, transcribeAsset],
+    [createAudio, createImage, createVideo, search, transcribable, transcribeAsset],
   );
 
-  return { busy, cancel, engines, perform, importIntoBin, transcribable, transcribeAsset };
+  return {
+    busy,
+    cancel,
+    engines,
+    perform,
+    importIntoBin,
+    transcribable,
+    transcribeAsset,
+  };
 }
