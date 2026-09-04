@@ -26,6 +26,7 @@ import { newId } from "@/core/store/timelineReducer";
 import { EmptyState } from "@/features/editor/EmptyState";
 import { onAppEvent } from "@/core/commands/appEvents";
 import { ASSET_DND_MIME } from "@/features/timeline/dnd";
+import { setDragChip } from "@/features/dnd/dragChrome";
 import { BinTree } from "./BinTree";
 import { insertAssetCommands, trackEndUs } from "./insertAsset";
 
@@ -44,6 +45,7 @@ export function MediaPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [selectedBinId, setSelectedBinId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState("");
 
@@ -253,12 +255,20 @@ export function MediaPanel() {
               <div
                 key={asset.id}
                 draggable
+                data-dragging={draggingId === asset.id ? "true" : undefined}
                 onDragStart={(event) => {
                   event.dataTransfer.setData(ASSET_DND_MIME, asset.id);
                   event.dataTransfer.effectAllowed = "copy";
+                  setDragChip(
+                    event,
+                    asset.name,
+                    asset.kind === "audio" ? "audio" : asset.kind === "image" ? "image" : "video",
+                  );
+                  setDraggingId(asset.id);
                 }}
-                title="Arraste para a timeline"
-                className="group cursor-grab rounded-md border border-transparent bg-panel-raised/60 px-2 py-2 transition-colors hover:border-border-strong active:cursor-grabbing"
+                onDragEnd={() => setDraggingId(null)}
+                title="Arraste para a timeline ou para uma pasta"
+                className="dnd-source group rounded-md border border-transparent bg-panel-raised/60 px-2 py-2 hover:border-border-strong"
               >
                 <div className="flex items-center gap-2">
                   <Icon className="size-4 shrink-0 text-accent" />
