@@ -63,7 +63,7 @@ export function useAssistantActions(options: { endpoint: string; model: string }
 
   /** Queues a job and remembers it while it runs, so cancel can reach it. */
   const runJob = useCallback(
-    async <T,>(spec: Parameters<typeof enqueue<T>>[0]): Promise<T> => {
+    async <T>(spec: Parameters<typeof enqueue<T>>[0]): Promise<T> => {
       const { id, done } = enqueue(spec);
       activeJobs.current = [...activeJobs.current, id];
       try {
