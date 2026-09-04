@@ -24,13 +24,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { formatDuration, sequenceDuration } from "@/core/contracts/domain";
 import { buildAssistantContext } from "@/core/ai/contextBuilder";
 import { recordTrainingEvent } from "@/core/training/trainingEvents";
@@ -64,15 +57,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
-  { value: "project", label: "Projeto inteiro" },
-  { value: "sequence", label: "Sequência atual" },
-  { value: "selection", label: "Clips selecionados" },
-  { value: "range", label: "Intervalo in/out" },
-  { value: "transcript", label: "Transcrição" },
-];
-
 const SUGGESTIONS = [
+  "crie um áudio dizendo bem-vindo ao canal",
   "crie um vídeo com 4 cenas sobre pesca esportiva",
   "gere uma imagem de um barco ao amanhecer",
   "transcreva o áudio da entrevista",
