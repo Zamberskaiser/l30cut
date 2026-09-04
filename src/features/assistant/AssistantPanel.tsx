@@ -173,6 +173,12 @@ export function AssistantPanel() {
           return;
         }
         if (outcome.text.length > 0) {
+          if (!/^Não consegui|ainda não está pronto|funciona no programa instalado/i.test(outcome.text)) {
+            toast.success("Pedido concluído", {
+              description: outcome.text.split(/[.\n]/)[0],
+              duration: 8_000,
+            });
+          }
           editor.pushMessage({
             id: assistantId,
             role: "assistant",

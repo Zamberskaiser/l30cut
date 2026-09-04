@@ -80,3 +80,5 @@
 - [ ] Instalador Windows: validar build-windows.bat end-to-end em máquina Windows real / release CI
 - [x] Bootstrap Windows: instalar e ativar automaticamente MSVC/Visual C++ Build Tools quando `link.exe` não existir
 - [x] Build Tauri Windows restaurado ao método estável da v13: CLI local chamada diretamente pelo BAT, sem PowerShell intermediário nem cargo install
+- [x] Gerador local de imagens compatível com sd-cli atual (`img_gen`), erros legíveis e histórico em `imagens.log`
+- [x] Diagnóstico com teste real do gerador e relatório copiável; avisos do assistente exibidos no topo

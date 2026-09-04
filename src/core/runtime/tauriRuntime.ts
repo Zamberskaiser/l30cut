@@ -49,6 +49,7 @@ import type {
 export const TAURI_COMMANDS = {
   diagnose: "diagnose_system",
   aiReport: "ai_report",
+  testImageEngine: "test_image_engine",
   listComponents: "list_components",
   installComponent: "install_component",
   prepareDirs: "prepare_data_dirs",
@@ -467,6 +468,19 @@ export class TauriRuntime implements RuntimeAdapter {
         }),
       )
       .parse(await invoke(TAURI_COMMANDS.aiReport));
+  }
+
+  async testImageEngine(): Promise<EngineReport> {
+    const invoke = await getInvoke();
+    return z
+      .object({
+        id: z.string(),
+        label: z.string(),
+        ready: z.boolean(),
+        detail: z.string(),
+        log: z.string().nullish(),
+      })
+      .parse(await invoke(TAURI_COMMANDS.testImageEngine));
   }
 
   async webSearch(query: string): Promise<SearchHit[]> {
