@@ -193,6 +193,13 @@ pub fn escape_drawtext(text: &str) -> String {
         .collect()
 }
 
+/// FFmpeg filter arguments treat `:` and `\` as syntax, so a Windows font path
+/// like `C:/Windows/Fonts/segoeui.ttf` must be escaped before it reaches
+/// `drawtext=fontfile=...`, otherwise every scene fails to render.
+pub fn escape_filter_path(path: &str) -> String {
+    path.replace('\\', "/").replace(':', "\\:")
+}
+
 fn caption_font() -> Option<String> {
     for candidate in [
         "C:/Windows/Fonts/segoeui.ttf",
