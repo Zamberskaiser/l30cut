@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
+  ChevronDown,
   ChevronRight,
   Eye,
+  FileAudio,
+  FolderOpen,
   Loader2,
   Mic,
   Pencil,
@@ -48,6 +51,16 @@ import {
 } from "@/core/ai/llmSettings";
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
 import { useDictation } from "./useDictation";
+import { useMediaTranscription } from "./useMediaTranscription";
+import { TRANSCRIBABLE_ACCEPT } from "./audioSources";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
   { value: "project", label: "Projeto inteiro" },
@@ -85,6 +98,9 @@ export function AssistantPanel() {
     toast.success("Comando ouvido", { description: spoken });
     void submit(spoken);
   });
+
+  /** Same text box, but fed by an audio/video file already on the machine. */
+  const media = useMediaTranscription((text) => setPrompt(text));
 
   // Preferences live in localStorage; read after hydration only.
   useEffect(() => setLlm(loadLlmSettings()), []);
