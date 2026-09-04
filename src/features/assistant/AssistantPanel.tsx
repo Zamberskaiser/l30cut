@@ -24,13 +24,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { formatDuration, sequenceDuration } from "@/core/contracts/domain";
 import { buildAssistantContext } from "@/core/ai/contextBuilder";
 import { recordTrainingEvent } from "@/core/training/trainingEvents";
@@ -64,15 +57,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
-  { value: "project", label: "Projeto inteiro" },
-  { value: "sequence", label: "Sequência atual" },
-  { value: "selection", label: "Clips selecionados" },
-  { value: "range", label: "Intervalo in/out" },
-  { value: "transcript", label: "Transcrição" },
-];
-
 const SUGGESTIONS = [
+  "crie um áudio dizendo bem-vindo ao canal",
   "crie um vídeo com 4 cenas sobre pesca esportiva",
   "gere uma imagem de um barco ao amanhecer",
   "transcreva o áudio da entrevista",
@@ -85,7 +71,6 @@ export function AssistantPanel() {
   const editor = useEditor();
   const sequence = useActiveSequence();
   const [prompt, setPrompt] = useState("");
-  const [scopeKind, setScopeKind] = useState<PlanScope["kind"]>("sequence");
   const [llm, setLlm] = useState<LlmSettings>(DEFAULT_LLM_SETTINGS);
   const [llmOpen, setLlmOpen] = useState(false);
   const [thinking, setThinking] = useState(false);
@@ -127,10 +112,12 @@ export function AssistantPanel() {
 
   const generative = isGenerativeReady(llm);
 
+  // No scope picker: the assistant works on what the user is pointing at —
+  // the selected clips when there is a selection, the whole sequence otherwise.
   const scope: PlanScope = {
-    kind: scopeKind,
+    kind: editor.selection.length > 0 ? "selection" : "sequence",
     sequenceId: sequence.id,
-    clipIds: scopeKind === "selection" ? editor.selection : [],
+    clipIds: editor.selection,
     inUs: editor.inOutUs?.[0],
     outUs: editor.inOutUs?.[1],
   };
@@ -402,22 +389,7 @@ export function AssistantPanel() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 border-b border-border px-3 py-2">
-        <div>
-          <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Escopo</label>
-          <Select value={scopeKind} onValueChange={(v) => setScopeKind(v as PlanScope["kind"])}>
-            <SelectTrigger className="h-7 text-[11px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SCOPES.map((s) => (
-                <SelectItem key={s.value} value={s.value} className="text-xs">
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-1 gap-2 border-b border-border px-3 py-2">
         <div>
           <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Motor</label>
           <Button
@@ -433,7 +405,7 @@ export function AssistantPanel() {
             </span>
           </Button>
         </div>
-        <p className="col-span-2 text-[10px] leading-relaxed text-muted-foreground">
+        <p className="text-[10px] leading-relaxed text-muted-foreground">
           Contexto: {sequence.clips.length} clips · {editor.selection.length} selecionados ·{" "}
           {formatDuration(sequenceDuration(sequence))} · {editor.project.transcript.length}{" "}
           segmentos

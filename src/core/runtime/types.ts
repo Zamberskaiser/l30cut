@@ -204,6 +204,8 @@ export interface RuntimeAdapter {
   generateScript?(endpoint: string, model: string, prompt: string): Promise<string>;
   /** Renders one still with the local diffusion model. Returns its path. */
   createImage?(prompt: string, width: number, height: number, outputName: string): Promise<string>;
+  /** Speaks a text with the local voice and returns the WAV path. */
+  createAudio?(text: string, outputName: string): Promise<string>;
   /** Writes a transcript/script/note file next to the exports. Returns its path. */
   saveTextFile?(name: string, extension: string, text: string): Promise<string>;
   /**

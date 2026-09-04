@@ -10,7 +10,7 @@
  * with a one-character tolerance instead of a strict dictionary.
  */
 
-export type ChatIntentKind = "video" | "image" | "search" | "transcribe" | "edit";
+export type ChatIntentKind = "video" | "image" | "audio" | "search" | "transcribe" | "edit";
 
 export interface ChatIntent {
   kind: ChatIntentKind;
@@ -18,6 +18,8 @@ export interface ChatIntent {
   subject: string;
   /** Scene count asked for, when the user said one ("6 cenas"). */
   sceneCount?: number | undefined;
+  /** Exact words the user wants spoken, when they dictated them. */
+  spoken?: string | undefined;
 }
 
 const STRIP =
@@ -112,6 +114,16 @@ const MAKE_WORDS = [
   "desenhe",
   "desenhar",
 ];
+const AUDIO_WORDS = [
+  "audio",
+  "narracao",
+  "narração",
+  "voz",
+  "locucao",
+  "fala",
+  "podcast",
+  "vinheta",
+];
 const SEARCH_WORDS = [
   "pesquisa",
   "pesquise",
@@ -129,13 +141,21 @@ const SEARCH_WORDS = [
   "referencia",
   "referencias",
 ];
-const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcricao", "transcreve", "legendas"];
+// "legendas" stays out on purpose: generating captions from an existing
+// transcript is a timeline edit, not a new transcription job.
+const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcreve", "transcrita"];
+/** Caption work happens on the timeline, so it must not look like a new job. */
+const CAPTION_WORDS = ["legenda", "legendas", "subtitle", "subtitles"];
 
 /** Removes the leading command ("crie um vídeo sobre …" → "…"). */
 function subjectOf(text: string): string {
   const words = text.trim().split(/\s+/);
   const list = tokens(text);
-  const nounAt = Math.max(findWord(list, VIDEO_WORDS), findWord(list, IMAGE_WORDS));
+  const nounAt = Math.max(
+    findWord(list, VIDEO_WORDS),
+    findWord(list, IMAGE_WORDS),
+    findWord(list, AUDIO_WORDS),
+  );
   const rest = nounAt >= 0 ? words.slice(nounAt + 1).join(" ") : text;
   return clean((rest || text).replace(/^(sobre|de|com|para|falando sobre|do|da)\s+/i, ""));
 }
@@ -149,18 +169,34 @@ export function parseSceneCount(text: string): number | undefined {
   return Math.min(12, Math.max(1, value));
 }
 
+/** Pulls the literal sentence out of «dizendo …», «falando …» or quotes. */
+export function parseSpokenText(text: string): string | undefined {
+  const quoted = /["“'”]([^"“'”]{3,})["“'”]/.exec(text);
+  if (quoted?.[1]) return quoted[1].trim();
+  const said = /\b(?:dizendo|falando|fale|diga|leia|lendo|narre|narrando)\b[:,]?\s+(.{3,})$/i.exec(
+    text.trim(),
+  );
+  if (said?.[1]) return said[1].replace(/^que\s+/i, "").trim();
+  return undefined;
+}
+
 export function detectChatIntent(raw: string): ChatIntent {
   const text = raw.trim();
   const list = tokens(text);
   const subject = subjectOf(text);
   const make = has(list, MAKE_WORDS);
   const search = has(list, SEARCH_WORDS);
-  if (has(list, TRANSCRIBE_WORDS)) return { kind: "transcribe", subject };
+  if (has(list, TRANSCRIBE_WORDS) && !has(list, CAPTION_WORDS)) {
+    return { kind: "transcribe", subject };
+  }
   if (search && !make) return { kind: "search", subject: clean(text) };
   if (make && has(list, VIDEO_WORDS)) {
     return { kind: "video", subject, sceneCount: parseSceneCount(text) };
   }
   if (make && has(list, IMAGE_WORDS)) return { kind: "image", subject };
+  if (make && has(list, AUDIO_WORDS)) {
+    return { kind: "audio", subject, spoken: parseSpokenText(text) };
+  }
   if (search) return { kind: "search", subject: clean(text) };
   return { kind: "edit", subject };
 }

@@ -8,6 +8,7 @@ import {
   type Project,
 } from "@/core/contracts/domain";
 import { buildSilenceCutPlan } from "@/features/timeline/silence";
+import { detectChatIntent } from "./chatIntents";
 
 export interface PlannerInput {
   prompt: string;
@@ -41,6 +42,11 @@ function readMs(prompt: string, fallback: number): number {
 export function planDeterministically(input: PlannerInput): AiEditPlan | null {
   const p = norm(input.prompt);
   const seq = activeSequence(input.project);
+
+  // Creation and lookup requests ("crie um áudio…", "gere uma imagem…") are
+  // handled by the assistant's own paths. Never bend them into an edit plan —
+  // that is what used to turn "crie um áudio" into a trim.
+  if (detectChatIntent(input.prompt).kind !== "edit") return null;
 
   const matchAsset = () => {
     const candidates = input.project.assets

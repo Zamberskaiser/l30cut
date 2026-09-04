@@ -73,6 +73,7 @@ export const TAURI_COMMANDS = {
   llmGenerate: "llm_generate",
   createVideo: "create_ai_video",
   createImage: "create_ai_image",
+  createAudio: "create_ai_audio",
   saveTextFile: "save_text_file",
   webSearch: "web_search",
 } as const;
@@ -433,6 +434,11 @@ export class TauriRuntime implements RuntimeAdapter {
   ): Promise<string> {
     const invoke = await getInvoke();
     return invoke<string>(TAURI_COMMANDS.createImage, { prompt, width, height, outputName });
+  }
+
+  async createAudio(text: string, outputName: string): Promise<string> {
+    const invoke = await getInvoke();
+    return invoke<string>(TAURI_COMMANDS.createAudio, { text, outputName });
   }
 
   async saveTextFile(name: string, extension: string, text: string): Promise<string> {

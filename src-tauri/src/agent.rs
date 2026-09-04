@@ -68,6 +68,42 @@ pub fn create_ai_image(
     Ok(out.to_string_lossy().to_string())
 }
 
+/// Speaks a text with the local Piper voice and returns the WAV path, so the
+/// assistant can hand a real narration file to the project's media bin.
+#[tauri::command]
+pub fn create_ai_audio(
+    app: tauri::AppHandle,
+    text: String,
+    output_name: String,
+) -> Result<String, String> {
+    let text = text.trim().to_string();
+    if text.is_empty() {
+        return Err("diga o que a voz deve falar".into());
+    }
+    let piper = crate::creator::piper_binary(&app).ok_or_else(|| missing_tool("piper"))?;
+    let voice = crate::creator::first_file(&app, "voices", "onnx")
+        .ok_or_else(|| "nenhuma voz instalada — abra a configuração e instale a narração".to_string())?;
+    let out = app_dir(&app, "exports")?.join(format!("{}.wav", sanitize_stem(&output_name)));
+
+    let args: Vec<String> = vec![
+        "--model".into(),
+        voice.to_string_lossy().to_string(),
+        "--output_file".into(),
+        out.to_string_lossy().to_string(),
+    ];
+    let mut child = crate::media::spawn_piped(&piper, &args)?;
+    if let Some(stdin) = child.stdin.as_mut() {
+        use std::io::Write;
+        stdin.write_all(text.as_bytes()).map_err(|e| e.to_string())?;
+    }
+    drop(child.stdin.take());
+    let done = child.wait().map_err(|e| e.to_string())?;
+    if !done.success() || !out.exists() {
+        return Err("a narração falhou — reinstale a voz na tela de configuração".into());
+    }
+    Ok(out.to_string_lossy().to_string())
+}
+
 /// Writes a text file (transcript, script, notes) into the exports folder.
 #[tauri::command]
 pub fn save_text_file(
