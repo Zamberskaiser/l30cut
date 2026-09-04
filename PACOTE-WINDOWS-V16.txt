@@ -1,20 +1,20 @@
-L30 CUT AI - pacote Windows versao 16 (04/09/2026)
+L30 CUT AI - pacote Windows versao 19 (04/09/2026)
 ===================================================
 
 O que mudou nesta versao
 ------------------------
-1. A janela preta (cmd) nao fecha mais sozinha. Ela so fecha quando
-   voce apertar uma tecla, entao a mensagem de erro fica sempre visivel.
-2. Se voce clicar em "Nao" na permissao de administrador (ou nao tiver
-   permissao), a instalacao continua no modo "somente para o meu usuario"
-   em vez de fechar sem avisar.
-3. Se a instalacao com administrador for recusada, o script tenta
-   automaticamente o instalador por usuario.
-4. O script procura o programa em mais lugares antes de dizer que nao achou.
+1. O Tauri nao e mais instalado pelo Cargo. O pacote usa somente a versao
+   local 2.11.4, ja fixada no projeto e conferida antes da compilacao.
+2. O Rust e fixado no alvo Windows MSVC de 64 bits. Um Rust Linux/GNU ou
+   configurado incorretamente e recusado com uma mensagem clara.
+3. Visual C++, link.exe, Windows SDK e rc.exe sao validados antes do Tauri.
+4. A chave de atualizacao e a compilacao rodam no mesmo processo PowerShell,
+   sem atalhos de CMD capazes de fechar a janela principal.
+5. Os pacotes Bun e Rust usam os arquivos de versoes bloqueadas do projeto.
 
 Como usar
 ---------
-1. Extraia o ZIP numa pasta NOVA (ex.: C:\L30CUT-v16).
+1. Extraia o ZIP numa pasta NOVA (ex.: C:\L30CUT-v19).
 2. Clique duas vezes em build-windows.bat.
 3. Quando o Windows pedir permissao, clique em "Sim".
    - Ao clicar em "Sim", a instalacao continua em uma NOVA janela.
@@ -26,7 +26,8 @@ Como usar
 Se algo der errado
 ------------------
 - A janela vai ficar aberta mostrando o motivo.
-- Envie os arquivos build-log.txt e app-log.txt (na mesma pasta).
+- Envie build-log-setup.txt e build-log.txt. Se o app compilar mas nao abrir,
+  envie tambem app-log.txt.
 
 Atualizacao automatica
 ----------------------

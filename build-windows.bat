@@ -246,6 +246,12 @@ exit /b 0
 :preparemsvc
 rem O Rust para Windows usa o linker MSVC. VS Code sozinho nao fornece link.exe.
 set "VCVARS_FILE="
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+if exist "%VSWHERE%" (
+  for /f "usebackq delims=" %%I in (`"%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+    if exist "%%I\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=%%I\VC\Auxiliary\Build\vcvars64.bat"
+  )
+)
 if exist "C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=C:\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 if not defined VCVARS_FILE if exist "%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=%ProgramFiles%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 if not defined VCVARS_FILE if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" set "VCVARS_FILE=%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
@@ -280,6 +286,12 @@ call "%VCVARS_FILE%" >nul
 where link >nul 2>nul
 if errorlevel 1 (
   echo   [ERRO] link.exe continua indisponivel apos ativar o Visual C++.
+  exit /b 1
+)
+where rc >nul 2>nul
+if errorlevel 1 (
+  echo   [ERRO] Windows SDK ^(rc.exe^) nao foi encontrado.
+  echo   Rode instalar-cpp.bat novamente para adicionar o Windows SDK.
   exit /b 1
 )
 exit /b 0
