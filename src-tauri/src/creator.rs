@@ -48,6 +48,11 @@ fn first_file(app: &tauri::AppHandle, sub: &str, ext: &str) -> Option<PathBuf> {
     found.into_iter().next()
 }
 
+/// Diffusion checkpoint: sd.cpp reads safetensors, gguf and ckpt alike.
+fn sd_model(app: &tauri::AppHandle) -> Option<PathBuf> {
+    crate::media::first_asset(app, "diffusion", &["safetensors", "gguf", "ckpt"])
+}
+
 fn sd_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
     let bin = app_dir(app, "bin").ok()?;
     for name in ["sd", "stable-diffusion"] {
@@ -64,8 +69,8 @@ pub fn list_ai_engines(app: tauri::AppHandle) -> Result<CreatorEngines, String> 
     Ok(CreatorEngines {
         ffmpeg: tool_exists(&app, "ffmpeg"),
         narration: piper_binary(&app).is_some() && first_file(&app, "voices", "onnx").is_some(),
-        images: sd_binary(&app).is_some() && first_file(&app, "diffusion", "gguf").is_some(),
-        llm: false,
+        images: sd_binary(&app).is_some() && sd_model(&app).is_some(),
+        llm: crate::media::bundled_binary(&app, &["llama-server"]).is_some(),
     })
 }
 
@@ -242,7 +247,7 @@ pub fn create_ai_video(
     let piper = if options.narrate { piper_binary(&app) } else { None };
     let voice = first_file(&app, "voices", "onnx");
     let sd = sd_binary(&app);
-    let sd_model = first_file(&app, "diffusion", "gguf");
+    let sd_model = sd_model(&app);
     let font = caption_font();
 
     let mut used_narration = false;

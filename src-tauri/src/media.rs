@@ -29,6 +29,35 @@ const WHISPER_ZIP: &str =
     "https://github.com/ggml-org/whisper.cpp/releases/download/v1.7.4/whisper-bin-x64.zip";
 const MODEL_BASE: &str = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main";
 
+/// Local generative stack (all CPU-capable, pinned releases).
+const PIPER_ZIP: &str =
+    "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip";
+const PIPER_VOICE_BASE: &str =
+    "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium";
+const PIPER_VOICE_NAME: &str = "pt_BR-faber-medium.onnx";
+const SD_ZIP: &str = "https://github.com/leejet/stable-diffusion.cpp/releases/download/master-841-6b3edaa/sd-master-6b3edaa-bin-win-cpu-x64.zip";
+const SD_MODEL_URL: &str = "https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive/resolve/main/v1-5-pruned-emaonly-fp16.safetensors";
+const SD_MODEL_NAME: &str = "v1-5-pruned-emaonly-fp16.safetensors";
+const LLAMA_ZIP: &str =
+    "https://github.com/ggml-org/llama.cpp/releases/download/b10793/llama-b10793-bin-win-cpu-x64.zip";
+const QWEN_7B: (&str, &str) = (
+    "https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+    "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+);
+const QWEN_3B: (&str, &str) = (
+    "https://huggingface.co/bartowski/Qwen2.5-3B-Instruct-GGUF/resolve/main/Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+    "Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+);
+
+/// Picks the script model by install profile: the light profile keeps the 3B.
+pub fn llm_model_for(profile: Option<&str>) -> (&'static str, &'static str) {
+    match profile {
+        Some("light") => QWEN_3B,
+        _ => QWEN_7B,
+    }
+}
+
+
 pub fn origin_allowed(url: &str) -> bool {
     ALLOWED_ORIGINS.iter().any(|o| url.starts_with(o))
 }
@@ -215,9 +244,40 @@ fn any_model(app: &tauri::AppHandle) -> Option<PathBuf> {
     found.into_iter().next()
 }
 
+/// First file in `sub` whose extension is one of `exts` (case-insensitive).
+pub fn first_asset(app: &tauri::AppHandle, sub: &str, exts: &[&str]) -> Option<PathBuf> {
+    let dir = app_dir(app, sub).ok()?;
+    let mut found: Vec<PathBuf> = std::fs::read_dir(dir)
+        .ok()?
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| {
+            p.extension()
+                .and_then(|e| e.to_str())
+                .map(|e| exts.iter().any(|w| e.eq_ignore_ascii_case(w)))
+                .unwrap_or(false)
+        })
+        .collect();
+    found.sort();
+    found.into_iter().next()
+}
+
+/// First bundled binary among `names` that exists in the app `bin` dir.
+pub fn bundled_binary(app: &tauri::AppHandle, names: &[&str]) -> Option<PathBuf> {
+    let bin = app_dir(app, "bin").ok()?;
+    names
+        .iter()
+        .map(|n| bin.join(exe(n)))
+        .find(|path| path.exists())
+}
+
+fn optional(mut component: ComponentStatus) -> ComponentStatus {
+    component.optional = Some(true);
+    component
+}
+
 #[tauri::command]
 pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, String> {
-    let mut list = vec![
+    let list = vec![
         status(
             "ffmpeg",
             "FFmpeg",
@@ -246,18 +306,59 @@ pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, St
             any_model(&app).is_some(),
             "https://huggingface.co/ggerganov/whisper.cpp",
         ),
+        optional(status(
+            "llama-server",
+            "llama.cpp server",
+            "Servidor de LLM local para o roteirista do criador de vídeos.",
+            bundled_binary(&app, &["llama-server"]).is_some(),
+            "https://github.com/ggml-org/llama.cpp/releases",
+        )),
+        optional(status(
+            "llm-model",
+            "Modelo de roteiro (Qwen2.5)",
+            "Q4_K_M em GGUF: 3B no perfil Leve, 7B nos demais.",
+            first_asset(&app, "llm", &["gguf"]).is_some(),
+            "https://huggingface.co/bartowski",
+        )),
+        optional(status(
+            "piper",
+            "Piper TTS",
+            "Narração offline em português, rápida até em CPU.",
+            bundled_binary(&app, &["piper", "piper-cli"]).is_some(),
+            "https://github.com/rhasspy/piper/releases",
+        )),
+        optional(status(
+            "piper-voice",
+            "Voz PT-BR (faber medium)",
+            "Modelo de voz brasileira usado na narração.",
+            first_asset(&app, "voices", &["onnx"]).is_some(),
+            "https://huggingface.co/rhasspy/piper-voices",
+        )),
+        optional(status(
+            "stable-diffusion",
+            "stable-diffusion.cpp",
+            "Geração de imagens das cenas direto na sua máquina.",
+            bundled_binary(&app, &["sd", "stable-diffusion"]).is_some(),
+            "https://github.com/leejet/stable-diffusion.cpp/releases",
+        )),
+        optional(status(
+            "sd-model",
+            "Modelo de imagem (SD 1.5)",
+            "Checkpoint fp16 aberto, ~2 GB, roda em CPU.",
+            first_asset(&app, "diffusion", &["safetensors", "gguf", "ckpt"]).is_some(),
+            "https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive",
+        )),
+        optional(status(
+            "llm-provider",
+            "Provider de LLM externo",
+            "Alternativa ao llama.cpp: Ollama ou LM Studio no endpoint local.",
+            false,
+            "http://127.0.0.1:11434",
+        )),
     ];
-    let mut llm = status(
-        "llm-provider",
-        "Provider de LLM local",
-        "Endpoint compatível com OpenAI (Ollama / llama.cpp server).",
-        false,
-        "http://127.0.0.1:11434",
-    );
-    llm.optional = Some(true);
-    list.push(llm);
     Ok(list)
 }
+
 
 async fn download_to(
     app: &tauri::AppHandle,
@@ -332,6 +433,73 @@ fn extract_zip(archive_path: &Path, dest: &Path, wanted: &[&str]) -> Result<Vec<
     Ok(written)
 }
 
+/// Extracts a zip into `dest` preserving its folder tree, dropping a single
+/// shared root folder. Needed by Piper (it ships `espeak-ng-data/`) and sd.cpp.
+fn extract_zip_tree(archive_path: &Path, dest: &Path) -> Result<usize, String> {
+    let file = std::fs::File::open(archive_path).map_err(|e| e.to_string())?;
+    let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
+    // A shared first segment is only stripped when every entry agrees on it.
+    let mut root: Option<String> = None;
+    let mut shared = true;
+    for i in 0..zip.len() {
+        let entry = zip.by_index(i).map_err(|e| e.to_string())?;
+        let name = entry.name().replace('\\', "/");
+        let first = name.split('/').next().unwrap_or("").to_string();
+        if first.is_empty() || !name.contains('/') && !entry.is_dir() {
+            shared = false;
+            break;
+        }
+        match &root {
+            None => root = Some(first),
+            Some(current) if *current != first => {
+                shared = false;
+                break;
+            }
+            _ => {}
+        }
+    }
+    let strip = if shared { root } else { None };
+
+    let mut written = 0usize;
+    for i in 0..zip.len() {
+        let mut entry = zip.by_index(i).map_err(|e| e.to_string())?;
+        if entry.is_dir() {
+            continue;
+        }
+        let raw = entry.name().replace('\\', "/");
+        let relative = match &strip {
+            Some(prefix) => raw
+                .strip_prefix(&format!("{prefix}/"))
+                .unwrap_or(&raw)
+                .to_string(),
+            None => raw.clone(),
+        };
+        // Refuse traversal or absolute paths coming from the archive.
+        if relative.is_empty()
+            || relative.starts_with('/')
+            || relative.split('/').any(|part| part == "..")
+        {
+            continue;
+        }
+        let out = dest.join(&relative);
+        if let Some(parent) = out.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        let mut sink = std::fs::File::create(&out).map_err(|e| e.to_string())?;
+        std::io::copy(&mut entry, &mut sink).map_err(|e| e.to_string())?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&out, std::fs::Permissions::from_mode(0o755));
+        }
+        written += 1;
+    }
+    if written == 0 {
+        return Err("o pacote baixado não continha arquivos".into());
+    }
+    Ok(written)
+}
+
 /// Downloads and installs a local component. Real network access, restricted to
 /// the allowlisted origins; progress is emitted on `component-progress`.
 #[tauri::command]
@@ -339,6 +507,7 @@ pub async fn install_component(
     app: tauri::AppHandle,
     component_id: String,
     model: Option<String>,
+    profile_id: Option<String>,
     cancel: Option<bool>,
 ) -> Result<ComponentStatus, String> {
     if cancel.unwrap_or(false) {
@@ -372,14 +541,62 @@ pub async fn install_component(
             let url = format!("{MODEL_BASE}/{model}");
             download_to(&app, &component_id, &url, &dest).await?;
         }
+        "llama-server" => {
+            let zip_path = cache.join("llama-bin.zip");
+            download_to(&app, &component_id, LLAMA_ZIP, &zip_path).await?;
+            // Flat layout: the server needs its DLLs next to the executable.
+            extract_zip(&zip_path, &bin, &[])?;
+            let _ = std::fs::remove_file(&zip_path);
+        }
+        "llm-model" => {
+            let (url, name) = llm_model_for(profile_id.as_deref());
+            let dest = app_dir(&app, "llm")?.join(name);
+            download_to(&app, &component_id, url, &dest).await?;
+        }
+        "piper" => {
+            let zip_path = cache.join("piper-win64.zip");
+            download_to(&app, &component_id, PIPER_ZIP, &zip_path).await?;
+            // Tree extraction: piper resolves `espeak-ng-data/` next to the exe.
+            extract_zip_tree(&zip_path, &bin)?;
+            let _ = std::fs::remove_file(&zip_path);
+        }
+        "piper-voice" => {
+            let voices = app_dir(&app, "voices")?;
+            download_to(
+                &app,
+                &component_id,
+                &format!("{PIPER_VOICE_BASE}/{PIPER_VOICE_NAME}"),
+                &voices.join(PIPER_VOICE_NAME),
+            )
+            .await?;
+            // The companion json carries the phoneme config piper requires.
+            download_to(
+                &app,
+                &component_id,
+                &format!("{PIPER_VOICE_BASE}/{PIPER_VOICE_NAME}.json"),
+                &voices.join(format!("{PIPER_VOICE_NAME}.json")),
+            )
+            .await?;
+        }
+        "stable-diffusion" => {
+            let zip_path = cache.join("stable-diffusion-win64.zip");
+            download_to(&app, &component_id, SD_ZIP, &zip_path).await?;
+            extract_zip_tree(&zip_path, &bin)?;
+            let _ = std::fs::remove_file(&zip_path);
+        }
+        "sd-model" => {
+            let dest = app_dir(&app, "diffusion")?.join(SD_MODEL_NAME);
+            download_to(&app, &component_id, SD_MODEL_URL, &dest).await?;
+        }
         "llm-provider" => {
             return Err(
-                "O provider de LLM local é externo: instale o Ollama ou o llama.cpp server e aponte o endpoint."
+                "Este item é opcional e externo: instale o Ollama ou o LM Studio e aponte o endpoint local. Para instalação automática use o componente llama.cpp server."
                     .into(),
             );
         }
         other => return Err(format!("componente desconhecido: {other}")),
     }
+
 
     let list = list_components(app)?;
     list.into_iter()
@@ -971,7 +1188,7 @@ pub fn export_sequence(
 
 #[cfg(test)]
 mod tests {
-    use super::{origin_allowed, parse_ratio, parse_silencedetect, sanitize_stem};
+    use super::{llm_model_for, origin_allowed, parse_ratio, parse_silencedetect, sanitize_stem};
 
     #[test]
     fn only_allowlisted_origins_download() {
@@ -1002,5 +1219,27 @@ mod tests {
     fn export_names_are_filesystem_safe() {
         assert_eq!(sanitize_stem("../../evil"), "______evil");
         assert_eq!(sanitize_stem("  "), "export");
+    }
+
+    #[test]
+    fn light_profile_uses_the_small_script_model() {
+        assert!(llm_model_for(Some("light")).1.contains("3B"));
+        assert!(llm_model_for(Some("recommended")).1.contains("7B"));
+        assert!(llm_model_for(None).1.contains("7B"));
+    }
+
+    #[test]
+    fn generative_downloads_stay_on_allowed_origins() {
+        for url in [
+            super::PIPER_ZIP,
+            super::SD_ZIP,
+            super::SD_MODEL_URL,
+            super::LLAMA_ZIP,
+            super::PIPER_VOICE_BASE,
+            super::QWEN_7B.0,
+            super::QWEN_3B.0,
+        ] {
+            assert!(origin_allowed(url), "origem não permitida: {url}");
+        }
     }
 }
