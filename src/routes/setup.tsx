@@ -213,6 +213,9 @@ function SetupPage() {
                     <p className="mt-1 text-[10px] text-muted-foreground">{detail}</p>
                   </>
                 ) : null}
+                {failures[component.id] ? (
+                  <p className="mt-2 text-[10px] text-destructive">{failures[component.id]}</p>
+                ) : null}
                 <p className="tabular mt-2 text-[10px] text-muted-foreground">
                   origem: {component.source} {component.optional ? "· opcional" : "· obrigatório"}
                 </p>
