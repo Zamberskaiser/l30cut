@@ -234,7 +234,7 @@ export interface EngineReport {
   label: string;
   ready: boolean;
   detail: string;
-  log?: string | null;
+  log?: string | null | undefined;
 }
 
 /** One result of an assistant web search. */
