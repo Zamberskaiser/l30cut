@@ -35,37 +35,19 @@ pub fn create_ai_image(
     let model = crate::creator::sd_model(&app)
         .ok_or_else(|| "nenhum modelo de imagem instalado — abra a configuração e instale o gerador de imagens".to_string())?;
 
-    // The diffusion model works on multiples of 64; clamp to a sane canvas.
-    let width = (width.clamp(256, 1536) / 64) * 64;
-    let height = (height.clamp(256, 1536) / 64) * 64;
     let out = app_dir(&app, "exports")?.join(format!("{}.png", sanitize_stem(&output_name)));
-
-    let args: Vec<String> = vec![
-        "-M".into(),
-        "txt2img".into(),
-        "-m".into(),
-        model.to_string_lossy().to_string(),
-        "-p".into(),
-        prompt,
-        "-W".into(),
-        width.to_string(),
-        "-H".into(),
-        height.to_string(),
-        "--steps".into(),
-        "22".into(),
-        "-o".into(),
-        out.to_string_lossy().to_string(),
-    ];
-    let output = run(&binary, &args)?;
-    if !output.status.success() || !out.exists() {
-        let log = String::from_utf8_lossy(&output.stderr).to_string();
-        let _ = std::fs::write(app_dir(&app, "logs")?.join("imagens.log"), &log);
-        return Err(format!(
-            "o gerador de imagens falhou: {} (detalhes em logs/imagens.log)",
-            log.lines().last().unwrap_or("sem detalhes")
-        ));
+    match crate::creator::draw_still(&binary, &model, &prompt, width, height, &out) {
+        Ok(()) => Ok(out.to_string_lossy().to_string()),
+        Err(problem) => {
+            let _ = std::fs::write(
+                app_dir(&app, "logs")?.join("imagens.log"),
+                format!("modelo: {}\nprompt: {prompt}\nerro: {problem}\n", model.display()),
+            );
+            Err(format!(
+                "o gerador de imagens falhou: {problem} (detalhes em logs/imagens.log)"
+            ))
+        }
     }
-    Ok(out.to_string_lossy().to_string())
 }
 
 /// Speaks a text with the local Piper voice and returns the WAV path, so the
@@ -85,24 +67,143 @@ pub fn create_ai_audio(
         .ok_or_else(|| "nenhuma voz instalada — abra a configuração e instale a narração".to_string())?;
     let out = app_dir(&app, "exports")?.join(format!("{}.wav", sanitize_stem(&output_name)));
 
-    let args: Vec<String> = vec![
-        "--model".into(),
-        voice.to_string_lossy().to_string(),
-        "--output_file".into(),
-        out.to_string_lossy().to_string(),
-    ];
-    let mut child = crate::media::spawn_piped(&piper, &args)?;
-    if let Some(stdin) = child.stdin.as_mut() {
-        use std::io::Write;
-        stdin.write_all(text.as_bytes()).map_err(|e| e.to_string())?;
+    match crate::creator::speak_to_wav(&piper, &voice, &text, &out) {
+        Ok(()) => Ok(out.to_string_lossy().to_string()),
+        Err(problem) => {
+            let _ = std::fs::write(
+                app_dir(&app, "logs")?.join("narracao.log"),
+                format!("voz: {}\nerro: {problem}\n", voice.display()),
+            );
+            let _ = std::fs::remove_file(&out);
+            Err(format!(
+                "a narração falhou: {problem} (detalhes em logs/narracao.log)"
+            ))
+        }
     }
-    drop(child.stdin.take());
-    let done = child.wait().map_err(|e| e.to_string())?;
-    if !done.success() || !out.exists() {
-        return Err("a narração falhou — reinstale a voz na tela de configuração".into());
-    }
-    Ok(out.to_string_lossy().to_string())
 }
+
+/// Honest per-engine report: is the picture/voice/transcription engine really
+/// usable, and if not, what exactly is missing — plus the last lines the engine
+/// itself wrote. This is what the "Diagnóstico" screen shows.
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EngineReport {
+    pub id: String,
+    pub label: String,
+    pub ready: bool,
+    pub detail: String,
+    /// Tail of the engine's own log, when it wrote one.
+    pub log: Option<String>,
+}
+
+fn tail_log(app: &tauri::AppHandle, name: &str) -> Option<String> {
+    let path = app_dir(app, "logs").ok()?.join(name);
+    let body = std::fs::read_to_string(path).ok()?;
+    let lines: Vec<&str> = body.lines().filter(|l| !l.trim().is_empty()).collect();
+    let start = lines.len().saturating_sub(12);
+    let tail = lines[start..].join("\n");
+    if tail.trim().is_empty() { None } else { Some(tail) }
+}
+
+#[tauri::command]
+pub fn ai_report(app: tauri::AppHandle) -> Result<Vec<EngineReport>, String> {
+    let mut out: Vec<EngineReport> = Vec::new();
+
+    let ffmpeg = crate::media::tool_exists(&app, "ffmpeg");
+    out.push(EngineReport {
+        id: "ffmpeg".into(),
+        label: "Montador de vídeo (FFmpeg)".into(),
+        ready: ffmpeg,
+        detail: if ffmpeg {
+            "pronto".into()
+        } else {
+            "não encontrado — instale pela tela de Configuração".into()
+        },
+        log: tail_log(&app, "creator.log"),
+    });
+
+    let sd = crate::creator::sd_binary(&app);
+    let sd_model = crate::creator::sd_model(&app);
+    let detail = match (&sd, &sd_model) {
+        (Some(bin), Some(model)) => format!(
+            "programa: {} · modelo: {}",
+            bin.display(),
+            model
+                .file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default()
+        ),
+        (None, _) => "o programa de imagens não está instalado".into(),
+        (_, None) => "falta o modelo de imagem (arquivo .safetensors)".into(),
+    };
+    out.push(EngineReport {
+        id: "images".into(),
+        label: "Gerador de imagens".into(),
+        ready: sd.is_some() && sd_model.is_some(),
+        detail,
+        log: tail_log(&app, "imagens.log"),
+    });
+
+    let piper = crate::creator::piper_binary(&app);
+    let voice = crate::creator::first_file(&app, "voices", "onnx");
+    let voice_config = voice
+        .as_ref()
+        .map(|v| std::path::PathBuf::from(format!("{}.json", v.to_string_lossy())))
+        .filter(|p| p.is_file());
+    let detail = match (&piper, &voice, &voice_config) {
+        (Some(_), Some(v), Some(_)) => format!(
+            "voz: {}",
+            v.file_name()
+                .map(|n| n.to_string_lossy().to_string())
+                .unwrap_or_default()
+        ),
+        (None, _, _) => "o programa de voz (piper) não está instalado".into(),
+        (_, None, _) => "nenhuma voz instalada".into(),
+        (_, Some(_), None) => {
+            "a voz está sem o arquivo de configuração (.onnx.json) — reinstale a narração".into()
+        }
+    };
+    out.push(EngineReport {
+        id: "narration".into(),
+        label: "Voz / narração".into(),
+        ready: piper.is_some() && voice.is_some() && voice_config.is_some(),
+        detail,
+        log: tail_log(&app, "narracao.log"),
+    });
+
+    let whisper = crate::media::bundled_binary(&app, &["whisper-cli", "main", "whisper"]);
+    let whisper_model = crate::media::first_asset(&app, "models", &["bin", "gguf"]);
+    out.push(EngineReport {
+        id: "speech".into(),
+        label: "Transcritor de fala".into(),
+        ready: whisper.is_some() && whisper_model.is_some(),
+        detail: match (&whisper, &whisper_model) {
+            (Some(_), Some(m)) => format!(
+                "modelo: {}",
+                m.file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default()
+            ),
+            (None, _) => "o transcritor não está instalado".into(),
+            (_, None) => "falta o modelo de fala".into(),
+        },
+        log: tail_log(&app, "transcricao.log"),
+    });
+
+    out.push(EngineReport {
+        id: "creation".into(),
+        label: "Última criação de vídeo".into(),
+        ready: true,
+        detail: match tail_log(&app, "criacao.log") {
+            Some(_) => "houve avisos na última criação — veja abaixo".into(),
+            None => "sem avisos registrados".into(),
+        },
+        log: tail_log(&app, "criacao.log"),
+    });
+
+    Ok(out)
+}
+
 
 /// Writes a text file (transcript, script, notes) into the exports folder.
 #[tauri::command]
