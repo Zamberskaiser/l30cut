@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { ComponentStatus, SystemDiagnostics } from "@/core/runtime/types";
+import type { ComponentStatus, EngineReport, SystemDiagnostics } from "@/core/runtime/types";
 import { useEditor } from "@/core/store/editorStore";
 
 export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
@@ -20,6 +20,7 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [diagnostics, setDiagnostics] = useState<SystemDiagnostics | null>(null);
   const [components, setComponents] = useState<ComponentStatus[]>([]);
+  const [engines, setEngines] = useState<EngineReport[]>([]);
 
   async function load() {
     setLoading(true);
@@ -27,6 +28,8 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
       const [diag, comps] = await Promise.all([runtime.diagnose(), runtime.listComponents()]);
       setDiagnostics(diag);
       setComponents(comps);
+      // Why a picture/voice did not come out: read straight from the engines.
+      setEngines(runtime.aiReport ? await runtime.aiReport().catch(() => []) : []);
     } finally {
       setLoading(false);
     }
@@ -47,7 +50,7 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-sm">Diagnóstico do ambiente</DialogTitle>
           <DialogDescription className="text-xs">
@@ -100,6 +103,40 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
                 </li>
               ))}
             </ul>
+
+            {engines.length > 0 ? (
+              <div className="space-y-1">
+                <p className="text-[11px] font-medium">Criação de imagem, voz e vídeo</p>
+                {engines.map((engine) => (
+                  <div
+                    key={engine.id}
+                    className="rounded-md border border-border bg-panel px-2.5 py-1.5"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{engine.label}</span>
+                      <Badge
+                        variant="outline"
+                        className={`ml-auto text-[10px] ${
+                          engine.ready
+                            ? "border-success/50 text-success"
+                            : "border-destructive/50 text-destructive"
+                        }`}
+                      >
+                        {engine.ready ? "pronto" : "com problema"}
+                      </Badge>
+                    </div>
+                    <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
+                      {engine.detail}
+                    </p>
+                    {engine.log ? (
+                      <pre className="mt-1 max-h-24 overflow-auto rounded bg-background/60 p-1.5 text-[9px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                        {engine.log}
+                      </pre>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
             {components.some((c) => c.state !== "ready") ? (
               <Button asChild size="sm" className="h-7 w-full gap-1.5 text-[11px]">

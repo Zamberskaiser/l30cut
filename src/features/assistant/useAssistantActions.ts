@@ -217,6 +217,10 @@ export function useAssistantActions(options: { endpoint: string; model: string }
               ? "Cartelas animadas no lugar das imagens geradas."
               : "",
           `Arquivo: ${result.outputPath} · duração estimada ${(totalDurationUs(scenes) / 1_000_000).toFixed(1)}s.`,
+          ...(result.notes ?? []),
+          (result.notes ?? []).length > 0
+            ? "Abra “Diagnóstico” na barra de cima para ver o motivo detalhado."
+            : "",
         ]
           .filter(Boolean)
           .join(" "),
@@ -234,7 +238,11 @@ export function useAssistantActions(options: { endpoint: string; model: string }
       const prompt = intent.subject.trim();
       if (prompt.length < 3) return { text: "Descreva a imagem que você quer." };
       const ready = await prepare({ narrate: false, images: true });
-      if (!ready) return { text: "O gerador de imagens ainda não está pronto." };
+      if (!ready) {
+        return {
+          text: "O gerador de imagens ainda não está pronto. Abra “Diagnóstico” na barra de cima: ele mostra o que falta e o último erro do gerador.",
+        };
+      }
       const resolution = ASPECT_RESOLUTIONS[sequence.aspect] ?? { width: 1920, height: 1080 };
       setBusy("Gerando a imagem");
       const path = await runJob({
@@ -276,7 +284,11 @@ export function useAssistantActions(options: { endpoint: string; model: string }
         };
       }
       const ready = await prepare({ narrate: true, images: false });
-      if (!ready) return { text: "A voz local ainda não está pronta." };
+      if (!ready) {
+        return {
+          text: "A voz local ainda não está pronta. Abra “Diagnóstico” na barra de cima para ver o que falta na narração.",
+        };
+      }
       if (words.length < 3 && runtime.generateScript) {
         setBusy("Escrevendo o texto da narração");
         try {
@@ -399,7 +411,9 @@ export function useAssistantActions(options: { endpoint: string; model: string }
         if (aborter.current.signal.aborted || /cancel/i.test(message)) {
           return { text: "Pedido cancelado." };
         }
-        return { text: `Não consegui concluir: ${message}` };
+        return {
+          text: `Não consegui concluir: ${message}\nAbra “Diagnóstico” na barra de cima para ver o registro do que falhou.`,
+        };
       } finally {
         setBusy(null);
       }
