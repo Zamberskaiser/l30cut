@@ -10,7 +10,7 @@
  * with a one-character tolerance instead of a strict dictionary.
  */
 
-export type ChatIntentKind = "video" | "image" | "search" | "transcribe" | "edit";
+export type ChatIntentKind = "video" | "image" | "audio" | "search" | "transcribe" | "edit";
 
 export interface ChatIntent {
   kind: ChatIntentKind;
@@ -18,6 +18,8 @@ export interface ChatIntent {
   subject: string;
   /** Scene count asked for, when the user said one ("6 cenas"). */
   sceneCount?: number | undefined;
+  /** Exact words the user wants spoken, when they dictated them. */
+  spoken?: string | undefined;
 }
 
 const STRIP =
@@ -112,6 +114,16 @@ const MAKE_WORDS = [
   "desenhe",
   "desenhar",
 ];
+const AUDIO_WORDS = [
+  "audio",
+  "narracao",
+  "narração",
+  "voz",
+  "locucao",
+  "fala",
+  "podcast",
+  "vinheta",
+];
 const SEARCH_WORDS = [
   "pesquisa",
   "pesquise",
@@ -135,7 +147,11 @@ const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcricao", "transcrev
 function subjectOf(text: string): string {
   const words = text.trim().split(/\s+/);
   const list = tokens(text);
-  const nounAt = Math.max(findWord(list, VIDEO_WORDS), findWord(list, IMAGE_WORDS));
+  const nounAt = Math.max(
+    findWord(list, VIDEO_WORDS),
+    findWord(list, IMAGE_WORDS),
+    findWord(list, AUDIO_WORDS),
+  );
   const rest = nounAt >= 0 ? words.slice(nounAt + 1).join(" ") : text;
   return clean((rest || text).replace(/^(sobre|de|com|para|falando sobre|do|da)\s+/i, ""));
 }
@@ -147,6 +163,17 @@ export function parseSceneCount(text: string): number | undefined {
   const value = Number(match[1]);
   if (!Number.isFinite(value)) return undefined;
   return Math.min(12, Math.max(1, value));
+}
+
+/** Pulls the literal sentence out of «dizendo …», «falando …» or quotes. */
+export function parseSpokenText(text: string): string | undefined {
+  const quoted = /["“'”]([^"“'”]{3,})["“'”]/.exec(text);
+  if (quoted?.[1]) return quoted[1].trim();
+  const said = /\b(?:dizendo|falando|fale|diga|leia|lendo|narre|narrando)\b[:,]?\s+(.{3,})$/i.exec(
+    text.trim(),
+  );
+  if (said?.[1]) return said[1].replace(/^que\s+/i, "").trim();
+  return undefined;
 }
 
 export function detectChatIntent(raw: string): ChatIntent {
@@ -161,6 +188,9 @@ export function detectChatIntent(raw: string): ChatIntent {
     return { kind: "video", subject, sceneCount: parseSceneCount(text) };
   }
   if (make && has(list, IMAGE_WORDS)) return { kind: "image", subject };
+  if (make && has(list, AUDIO_WORDS)) {
+    return { kind: "audio", subject, spoken: parseSpokenText(text) };
+  }
   if (search) return { kind: "search", subject: clean(text) };
   return { kind: "edit", subject };
 }
