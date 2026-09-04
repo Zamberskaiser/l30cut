@@ -48,3 +48,19 @@ describe("typos", () => {
     expect(detectChatIntent("crie 6 cortes de 30 a 60 segundos").kind).toBe("edit");
   });
 });
+
+describe("audio", () => {
+  it("entende pedido de áudio com texto ditado", () => {
+    const intent = detectChatIntent("cria um áudio dizendo bem-vindo ao canal");
+    expect(intent.kind).toBe("audio");
+    expect(intent.spoken).toBe("bem-vindo ao canal");
+  });
+
+  it("entende narração por tema", () => {
+    expect(detectChatIntent("gere uma narração sobre pesca esportiva").kind).toBe("audio");
+  });
+
+  it("não confunde ajuste de volume com criação", () => {
+    expect(detectChatIntent("aumenta o áudio do entrevista.mp4").kind).toBe("edit");
+  });
+});
