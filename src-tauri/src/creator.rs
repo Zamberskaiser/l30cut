@@ -367,6 +367,7 @@ pub fn create_ai_video(
         if options.burn_titles {
             if let (Some(font), Some(title)) = (font.as_ref(), scene.title.as_ref()) {
                 let text = escape_drawtext(title);
+                let font = escape_filter_path(font);
                 if !text.is_empty() {
                     filter.push_str(&format!(
                         ",drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
