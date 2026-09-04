@@ -244,7 +244,19 @@ async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
 }
 
 pub fn run() {
+    // Voice commands need the microphone inside the embedded webview. WebView2
+    // otherwise blocks getUserMedia silently because there is no browser UI to
+    // show a permission prompt in; the audio still stays on this machine.
+    #[cfg(target_os = "windows")]
+    if std::env::var_os("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS").is_none() {
+        std::env::set_var(
+            "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS",
+            "--use-fake-ui-for-media-stream",
+        );
+    }
+
     tauri::Builder::default()
+
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
