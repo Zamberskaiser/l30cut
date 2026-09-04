@@ -360,9 +360,7 @@ export class TauriRuntime implements RuntimeAdapter {
 
   async connectGithub(token: string): Promise<UpdateSettings> {
     const invoke = await getInvoke();
-    return UpdateSettingsSchema.parse(
-      await invoke(TAURI_COMMANDS.githubConnect, { token }),
-    );
+    return UpdateSettingsSchema.parse(await invoke(TAURI_COMMANDS.githubConnect, { token }));
   }
 
   async listGithubRepos(): Promise<GithubRepoRef[]> {

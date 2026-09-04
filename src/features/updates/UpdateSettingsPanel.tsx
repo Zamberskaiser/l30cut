@@ -33,7 +33,10 @@ export function UpdateSettingsPanel() {
 
   useEffect(() => {
     if (!runtime.getUpdateSettings) return;
-    void runtime.getUpdateSettings().then(setSettings).catch(() => setSettings(EMPTY));
+    void runtime
+      .getUpdateSettings()
+      .then(setSettings)
+      .catch(() => setSettings(EMPTY));
   }, [runtime]);
 
   /** Loads the repository list and preselects the most likely one. */
