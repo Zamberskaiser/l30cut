@@ -123,6 +123,164 @@ pub fn save_text_file(
     Ok(path.to_string_lossy().to_string())
 }
 
+/// Saves a still as a PNG with embedded metadata and an automatic file name,
+/// preferring the user's Downloads folder so the file is easy to find.
+#[tauri::command]
+pub fn export_png(
+    app: tauri::AppHandle,
+    source: String,
+    title: String,
+    description: Option<String>,
+) -> Result<String, String> {
+    use tauri::Manager;
+
+    let src = std::path::PathBuf::from(&source);
+    if !src.exists() {
+        return Err("o arquivo da imagem não está mais no lugar".into());
+    }
+
+    // Anything that is not already a PNG goes through ffmpeg for one frame.
+    let png_path = if is_png(&src) {
+        src.clone()
+    } else {
+        let ffmpeg = crate::media::tool(&app, "ffmpeg")?;
+        let tmp = app_dir(&app, "exports")?.join(format!("{}-tmp.png", sanitize_stem(&title)));
+        let args: Vec<String> = vec![
+            "-y".into(),
+            "-i".into(),
+            src.to_string_lossy().to_string(),
+            "-frames:v".into(),
+            "1".into(),
+            tmp.to_string_lossy().to_string(),
+        ];
+        let output = run(&ffmpeg, &args)?;
+        if !output.status.success() || !tmp.exists() {
+            return Err("não consegui converter esta mídia em PNG".into());
+        }
+        tmp
+    };
+
+    let bytes = std::fs::read(&png_path).map_err(|e| e.to_string())?;
+    let stamp = timestamp_utc();
+    let entries = vec![
+        ("Title".to_string(), title.trim().to_string()),
+        (
+            "Description".to_string(),
+            description.unwrap_or_default().trim().to_string(),
+        ),
+        ("Software".to_string(), "L30 CUT AI".to_string()),
+        ("Source".to_string(), source.clone()),
+        ("Creation Time".to_string(), stamp.readable.clone()),
+    ];
+    let with_meta = png_with_text(&bytes, &entries)?;
+
+    let dir = app
+        .path()
+        .download_dir()
+        .ok()
+        .filter(|d| d.exists())
+        .unwrap_or(app_dir(&app, "exports")?);
+    let out = dir.join(format!("{}-{}.png", sanitize_stem(&title), stamp.compact));
+    std::fs::write(&out, with_meta).map_err(|e| e.to_string())?;
+    if png_path != src {
+        let _ = std::fs::remove_file(&png_path);
+    }
+    Ok(out.to_string_lossy().to_string())
+}
+
+fn is_png(path: &std::path::Path) -> bool {
+    let mut head = [0u8; 8];
+    match std::fs::File::open(path) {
+        Ok(mut file) => {
+            use std::io::Read;
+            file.read_exact(&mut head).is_ok() && head == PNG_SIGNATURE
+        }
+        Err(_) => false,
+    }
+}
+
+const PNG_SIGNATURE: [u8; 8] = [0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A];
+
+pub struct Stamp {
+    pub compact: String,
+    pub readable: String,
+}
+
+/// Formats "now" as UTC without pulling a date crate in.
+pub fn timestamp_utc() -> Stamp {
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    format_epoch(secs)
+}
+
+/// Civil date from a Unix timestamp (Howard Hinnant's algorithm).
+pub fn format_epoch(secs: i64) -> Stamp {
+    let days = secs.div_euclid(86_400);
+    let rem = secs.rem_euclid(86_400);
+    let (hour, minute, second) = (rem / 3600, (rem % 3600) / 60, rem % 60);
+
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = if mp < 10 { mp + 3 } else { mp - 9 };
+    let year = if month <= 2 { y + 1 } else { y };
+
+    Stamp {
+        compact: format!("{year:04}{month:02}{day:02}-{hour:02}{minute:02}{second:02}"),
+        readable: format!("{year:04}-{month:02}-{day:02} {hour:02}:{minute:02}:{second:02} UTC"),
+    }
+}
+
+/// Inserts tEXt chunks right after IHDR so viewers and tools can read the
+/// title, prompt and creation date straight from the file.
+pub fn png_with_text(bytes: &[u8], entries: &[(String, String)]) -> Result<Vec<u8>, String> {
+    if bytes.len() < 8 + 12 || bytes[..8] != PNG_SIGNATURE {
+        return Err("este arquivo não é um PNG válido".into());
+    }
+    let ihdr_len = u32::from_be_bytes([bytes[8], bytes[9], bytes[10], bytes[11]]) as usize;
+    let insert_at = 8 + 12 + ihdr_len;
+    if bytes.len() < insert_at {
+        return Err("este arquivo não é um PNG válido".into());
+    }
+
+    let mut out = Vec::with_capacity(bytes.len() + 256);
+    out.extend_from_slice(&bytes[..insert_at]);
+    for (key, value) in entries {
+        if key.is_empty() || value.is_empty() {
+            continue;
+        }
+        let mut data = Vec::new();
+        data.extend_from_slice(key.as_bytes());
+        data.push(0);
+        data.extend_from_slice(value.replace('\0', " ").as_bytes());
+        out.extend_from_slice(&(data.len() as u32).to_be_bytes());
+        let mut chunk = b"tEXt".to_vec();
+        chunk.extend_from_slice(&data);
+        out.extend_from_slice(&chunk);
+        out.extend_from_slice(&crc32(&chunk).to_be_bytes());
+    }
+    out.extend_from_slice(&bytes[insert_at..]);
+    Ok(out)
+}
+
+fn crc32(data: &[u8]) -> u32 {
+    let mut crc = 0xFFFF_FFFFu32;
+    for byte in data {
+        crc ^= *byte as u32;
+        for _ in 0..8 {
+            crc = if crc & 1 == 1 { (crc >> 1) ^ 0xEDB8_8320 } else { crc >> 1 };
+        }
+    }
+    !crc
+}
+
 /// Public web search, used only when the user asks the assistant to look
 /// something up. Query text only — no project data leaves the machine.
 #[tauri::command]
