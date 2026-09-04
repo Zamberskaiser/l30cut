@@ -53,7 +53,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export function EffectsPanel() {
-  const { project, selection, run } = useEditor();
+  const { project, selection, run, runtime } = useEditor();
   const sequence = useActiveSequence();
   const [progress, setProgress] = useState<number | null>(null);
   const abortRef = useRef<AbortController | null>(null);
