@@ -37,7 +37,10 @@ describe("dictation wav encoder", () => {
 
   it("merges chunks and reports the peak level", () => {
     const merged = concatChunks([new Float32Array([0.1, -0.2]), new Float32Array([0.9])]);
-    expect(Array.from(merged)).toEqual([0.1, -0.2, 0.9]);
+    expect(merged.length).toBe(3);
+    expect(merged[0]).toBeCloseTo(0.1, 5);
+    expect(merged[1]).toBeCloseTo(-0.2, 5);
+    expect(merged[2]).toBeCloseTo(0.9, 5);
     expect(peakLevel(merged)).toBeCloseTo(0.9, 5);
     expect(peakLevel(new Float32Array(10))).toBe(0);
   });

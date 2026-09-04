@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { useRuntime } from "@/core/runtime";
+import { useEditor } from "@/core/store/editorStore";
 import {
   DICTATION_SAMPLE_RATE,
   concatChunks,
@@ -33,7 +33,7 @@ interface Capture {
  * audio and no text leaves the machine.
  */
 export function useDictation(onText: (text: string) => void) {
-  const runtime = useRuntime();
+  const runtime = useEditor().runtime;
   const capture = useRef<Capture | null>(null);
   const [state, setState] = useState<DictationState>("idle");
   const supported =
