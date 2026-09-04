@@ -2,13 +2,14 @@ import { describe, expect, it } from "vitest";
 import { planDeterministically } from "./deterministicPlanner";
 import { compilePlan } from "./planExecutor";
 import { extractJson } from "./provider";
-import { applyCommand, newProject } from "@/core/store/timelineReducer";
+import { applyCommand } from "@/core/store/timelineReducer";
+import { createDemoProject } from "@/core/demo/demoProject";
 import { activeSequence, SECOND, type MediaAsset, type Project } from "@/core/contracts/domain";
 
 const runtime = { capabilities: { ffmpeg: true } } as never;
 
 function projectWithAsset(): { project: Project; asset: MediaAsset } {
-  const base = newProject("Teste");
+  const base = createDemoProject();
   const asset: MediaAsset = {
     id: "asset_ent",
     kind: "video",
