@@ -79,4 +79,4 @@
 - [ ] Persistência de atalhos e perfis via Tauri (arquivo em %APPDATA%)
 - [ ] Instalador Windows: validar build-windows.bat end-to-end em máquina Windows real / release CI
 - [x] Bootstrap Windows: instalar e ativar automaticamente MSVC/Visual C++ Build Tools quando `link.exe` não existir
-- [x] Build Tauri Windows isolado: CLI local fixa, alvo MSVC, SDK/linker e Cargo.lock validados antes da compilação
+- [x] Build Tauri Windows restaurado ao método estável da v13: CLI local chamada diretamente pelo BAT, sem PowerShell intermediário nem cargo install
