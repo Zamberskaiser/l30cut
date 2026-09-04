@@ -21,7 +21,18 @@ export interface SystemDiagnostics {
   dataDir: string;
 }
 
-export type ComponentId = "ffmpeg" | "ffprobe" | "whisper.cpp" | "whisper-model" | "llm-provider";
+export type ComponentId =
+  | "ffmpeg"
+  | "ffprobe"
+  | "whisper.cpp"
+  | "whisper-model"
+  | "llama-server"
+  | "llm-model"
+  | "piper"
+  | "piper-voice"
+  | "stable-diffusion"
+  | "sd-model"
+  | "llm-provider";
 export type ComponentState = "missing" | "downloading" | "verifying" | "ready" | "error";
 
 export interface ComponentStatus {
