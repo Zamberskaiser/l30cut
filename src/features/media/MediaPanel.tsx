@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Film, FileAudio, Image as ImageIcon, Pencil, Plus, Wand2, Waves } from "lucide-react";
+import {
+  Download,
+  Film,
+  FileAudio,
+  Image as ImageIcon,
+  Pencil,
+  Plus,
+  Wand2,
+  Waves,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -157,7 +166,7 @@ export function MediaPanel() {
     }
     try {
       const saved = await runtime.exportPng(
-        asset.kind === "image" ? asset.path : asset.path,
+        asset.path,
         asset.name,
         `Imagem de ${asset.name} — ${asset.width}×${asset.height} · L30 CUT AI`,
       );
