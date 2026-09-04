@@ -177,6 +177,10 @@ rem Copia os instaladores gerados para uma pasta simples de achar.
 if not exist "%~dp0instaladores" mkdir "%~dp0instaladores"
 if defined MSI_FILE copy /y "%MSI_FILE%" "%~dp0instaladores" >nul
 if defined NSIS_FILE copy /y "%NSIS_FILE%" "%~dp0instaladores" >nul
+rem Arquivos .sig das atualizacoes assinadas (enviar junto na release do GitHub).
+copy /y "src-tauri\target\release\bundle\nsis\*.sig" "%~dp0instaladores" >nul 2>&1
+copy /y "src-tauri\target\release\bundle\msi\*.sig" "%~dp0instaladores" >nul 2>&1
+
 if defined MSI_FILE echo   Instalador copiado para: %~dp0instaladores
 if not defined MSI_FILE if defined NSIS_FILE echo   Instalador copiado para: %~dp0instaladores
 if not defined MSI_FILE if not defined NSIS_FILE echo   [AVISO] Nenhum instalador foi gerado. Veja %~dp0build-log.txt
