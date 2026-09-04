@@ -15,7 +15,7 @@ tauri-build = { version = "2", features = [] }
 # SECURITY: no shell plugin. AI operations cross IPC only through the
 # allowlisted, typed validation in src/ai_ops.rs — never free-form strings.
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-updater = "2"
