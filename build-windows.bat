@@ -205,12 +205,12 @@ if defined MSI_FILE (
   msiexec /i "%MSI_FILE%" /qb /norestart
   if errorlevel 1 if defined NSIS_FILE (
     echo   MSI recusado; instalando somente para o seu usuario...
-    "%NSIS_FILE%" /S
+    start /wait "" "%NSIS_FILE%" /S
   )
 ) else (
   if defined NSIS_FILE (
     echo   Instalando via NSIS: %NSIS_FILE%
-    "%NSIS_FILE%" /S
+    start /wait "" "%NSIS_FILE%" /S
   ) else (
     echo   [AVISO] Nenhum instalador encontrado; usando o executavel gerado.
   )
