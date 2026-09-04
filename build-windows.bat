@@ -139,14 +139,14 @@ set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
 set "L30_TAURI_CLI=%~dp0node_modules\.bin\tauri.cmd"
 if not exist "%L30_TAURI_CLI%" (
   echo   Instalando a ferramenta do Tauri...
-  cmd /c "bun add --dev --exact @tauri-apps/cli@2.11.4 >> "%~dp0build-log.txt" 2>&1"
+  cmd /c "bun add --dev --exact @tauri-apps/cli@2.11.4 >> "%~dp0build-log-setup.txt" 2>&1"
 )
 if not exist "%L30_TAURI_CLI%" (
   echo   [AVISO] Ferramenta do Tauri nao encontrada; seguindo sem assinatura.
 ) else (
   if not exist "%L30_KEY%.pub" (
     echo   Criando chave de assinatura ^(uma vez apenas^)...
-    cmd /c ""%L30_TAURI_CLI%" signer generate -w "%L30_KEY%" -p "" --force >> "%~dp0build-log.txt" 2>&1" <nul
+    cmd /c ""%L30_TAURI_CLI%" signer generate -w "%L30_KEY%" -p "" --force >> "%~dp0build-log-setup.txt" 2>&1" <nul
   )
 )
 echo   Etapa da chave concluida.
@@ -164,25 +164,20 @@ echo.
 
 
 echo [6/7] Gerando instalador Windows ^(Tauri^)...
-call bun run tauri --version <nul >nul 2>&1
-if errorlevel 1 (
+if not exist "%L30_TAURI_CLI%" (
   echo   Preparando a CLI local do Tauri...
-  call bun add --dev --exact "@tauri-apps/cli@2.11.4" <nul
-  if errorlevel 1 (
-    echo   [ERRO] Nao foi possivel instalar a CLI local do Tauri via Bun.
-    goto :falhou
-  )
-  call bun run tauri --version <nul >nul 2>&1
-  if errorlevel 1 (
-    echo   [ERRO] Nao foi possivel preparar a CLI local do Tauri via Bun.
-    goto :falhou
-  )
+  cmd /c "bun add --dev --exact @tauri-apps/cli@2.11.4 >> "%~dp0build-log-setup.txt" 2>&1"
+)
+if not exist "%L30_TAURI_CLI%" (
+  echo   [ERRO] Nao foi possivel preparar a CLI local do Tauri via Bun.
+  echo   Detalhes em: %~dp0build-log-setup.txt
+  goto :falhou
 )
 echo   OK: CLI local do Tauri pronta.
 echo   Compilando... isso leva de 5 a 20 minutos na primeira vez.
 echo   Acompanhe o progresso abaixo (tambem salvo em build-log.txt):
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & bun run tauri build 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & cmd /c ''''%L30_TAURI_CLI%'''' build 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo   [ERRO] A geracao do instalador falhou. Log completo em: %~dp0build-log.txt
   powershell -NoProfile -Command "Get-Content -Tail 40 '%~dp0build-log.txt'"
