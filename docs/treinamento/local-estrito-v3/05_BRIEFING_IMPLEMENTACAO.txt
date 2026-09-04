@@ -1,0 +1,54 @@
+L30 CUT — BRIEFING PARA A IA PROGRAMADORA
+LOCAL ESTRITO + PERGUNTAS + ANEXOS NO CHAT | v3 | 04/09/2026
+
+BASE E LIMITE
+Integrar no aplicativo existente. Não reescrever o editor nem substituir o contrato AiEditPlan sem migração. A auditoria refere-se ao commit b60ad7d0bb861a4258ad46396e9527cffa34d39b. Leia a revisão atual antes de alterar; ela pode ter evoluído. Não assuma que nomes de ferramentas propostos já existem. Não declare pronto sem evidências. Este briefing não é uma ordem para conectar o runtime a serviços externos.
+
+PRIORIDADE 0 — ELIMINAR OS CAMINHOS EXTERNOS
+A) src-tauri/src/agent.rs: retirar ou recusar web_search sob política local estrita. Remover sua exposição no registro de comandos e RuntimeAdapter. Remover chamada e sugestão em useAssistantActions/AssistantPanel/chatIntents. Pesquisa passa a usar arquivos locais.
+B) src/features/assistant/provider.ts: retirar provedor remoto e sua configuração; bloquear quaisquer endpoints não autorizados. Remover instruções de “operação mais próxima” e de pesquisa web. “OpenAI-compatible” local é protocolo, não provedor remoto.
+C) src/core/ai/ollama.ts e todos os clientes nativos: host/porta permitidos por parsing e comparação exata; recusar credenciais, query, fragment, redirecionamentos, proxies e caminhos que não pertençam ao adaptador. Não basta startsWith. O backend fixa destinos; o LLM não fornece uma URL livre.
+D) Remover pullOllamaModel, instalação automática e atualização online da operação do chat. useAssistantActions::prepare deve apenas conferir disponibilidade. Não ativar runtime.installComponent por consequência de um pedido de criação. Oferecer importação de pacote offline na área administrativa, fora do orquestrador.
+E) Tauri: revisar tauri.conf.json, capabilities, Cargo/plugins e registro em Rust. Retirar conectividade externa do updater e das permissões. Substituir downloadBootstrapper por instalação offline/versão embarcada de WebView2 apropriada. Não usar “embeddedBootstrapper” como sinônimo de offline: conferir dependências efetivas. Não trocar a configuração inteira sem preservar parâmetros necessários.
+F) Configurar o processo real do Ollama com OLLAMA_NO_CLOUD=1 e bind de loopback; reiniciar e verificar o log. Essa variável sozinha não demonstra bloqueio de todos os downloads/atualizações. Verificar modelos/pesos locais e bloquear rede no sistema operacional para o processo e seus filhos. Remover acesso por túnel ou proxy local que encaminhe para fora.
+G) Fazer inventário de todos os caminhos de rede: reqwest, fetch, WebSocket, HTTP plugins, subprocessos, catálogos, telemetria, relatórios de falha, fontes/CDNs, modelos, embeddings, wrappers de geração e dependências. Oito arquivos auditados não são inventário completo. Não bloquear apenas OpenAI: qualquer destino externo deve ser negado.
+H) Gerar política efetiva imutável para o chat: networkAccess=loopback_allowlist, externalNetwork=false, cloudFallback=false, webSearch=false, autoDownload=false, autoUpdate=false, telemetry=false, remoteSync=false. Configurações antigas não devem ressuscitar permissões proibidas.
+
+PRIORIDADE 1 — CONVERSA QUE PERGUNTA
+Preservar AiEditPlan como contrato de edição. Criar AssistantTurn como envelope anterior às ações: needs_clarification, ready_for_tools, completed ou blocked. O schema fornecido é proposto; não está instalado. O provider/editor atual não recebe perguntas como se fossem planos.
+
+Pergunta contém ID/campo/texto/opções/contexto e resposta livre. No estado needs_clarification, nenhuma mutação ocorre. Guardar a pergunta na conversa e persistir. Respostas atualizam o briefing, com origem/estado. Antes de continuar, reler projeto e seleção. Remover fallback que transcreve a última mídia se há alvo ambíguo. Detectar dúvidas também em decisões criativas que mudam a entrega.
+
+Atualizar contextBuilder: trazer briefing confirmado, pergunta pendente, últimas mensagens pertinentes, anexos referenciados, capacidades locais e revisão de projeto. Recuperar trechos de knowledge do disco. Preservar os limites de contexto e dar prioridade ao alvo, não sempre aos primeiros 50 assets. Não misturar dados externos/importados com política.
+
+Não gerar um formulário de 40 perguntas. O banco fornecido é seleção adaptativa: uma por vez, até três correlatas quando necessário. Uma vez decidido, retomar o trabalho. Modo “você decide” não autoriza violações de segurança.
+
+PRIORIDADE 2 — DOCUMENTOS BAIXÁVEIS
+Evoluir save_text_file para serviço de artefatos por ID e versões. Não retornar apenas String de caminho. Não inferir sucesso por mensagem do modelo. Retornar metadados reais após verificação e persistência. Fechar a extensão em allowlist; inicialmente TXT UTF-8.
+
+Evoluir ActionOutcome de apenas text para partes tipadas e anexos verificados. Evoluir AssistantMessage para vínculos de documentos e perguntas. Criar componente ArtifactCard com Visualizar, Baixar TXT/Salvar como e Ver versões. O botão usa comando nativo por ID e diálogo local; nunca navega para URL externa.
+
+Conectar roteiro como intenção independente: criar TXT não deve gerar vídeo automaticamente. Se a solicitação envolver roteiro e vídeo, publicar primeiro a versão do roteiro e associar a mídia produzida à versão efetivamente usada. Transcrições entregam texto integral no arquivo, sem limitar aos 1.200 caracteres da prévia.
+
+Armazenar chat e anexos em banco local e disco durável não sincronizado. Persistir mudanças de mensagem e recuperar ao abrir projeto; os hooks de estado não bastam. Salvar/abrir .l30cut deve ter política clara de inclusão ou referência da conversa. Garantir isolamento por projeto/usuário e migração sem perda. DDL fornecido é modelo proposto, não migração para executar cegamente.
+
+Escrita com staging, nomes únicos, checksum e journal para recuperação. Não afirmar atomicidade distribuída entre SQLite e filesystem. Repetição idempotente não duplica versões. Antecessora permanece imutável.
+
+PRIORIDADE 3 — VOZ, GERAÇÃO E OPERAÇÃO
+Usar os motores já instalados: reconhecimento local, Piper/local voice, imagem e montagem conforme adaptadores existentes. Não implantar ComfyUI ou Diffusers por padrão se o Cut não precisa. Qualquer motor adicional vem de pacote local verificado, com licença, build, pesos e parâmetros fixados.
+
+Separar reconhecimento do comando, ditado, transcrição e narração. Validar a captura/turno final; diante de dúvida de número/negação, perguntar. “Pare de falar”, cancelar job e desfazer não são a mesma função. Proibir fallback de voz do navegador ou sistema que possa usar rede.
+
+Capacidade detectada não é capacidade ensaiada. Conferir modelo compatível, drivers, arquivos, memória e teste pequeno. Não prometer tempo de geração sem medição. Falha de geração não pode virar imagem de cartela apresentada como equivalente sem aceite prévio.
+
+BRIEFING E PERFIL
+Importar 06_PERFIL_TREINAMENTO.json apenas após validar TrainingProfileSchema da revisão em uso. São 20 regras curtas para o limite observado, mas o núcleo deve ser integrado também aos prompts reais de criação/conversa. A antiga instrução de sistema tem prioridade sobre rules dentro do contexto: trocar somente o perfil não resolve o comportamento de perguntas.
+
+PRESERVAÇÃO E TESTES
+Manter reducer, undo/redo, contratos tipados e escopo. Não conceder shell, destino livre ou instalação de módulos ao LLM. Testar caminhos nativos chamados diretamente, não só interface. Rodar regressões do editor e os casos de aceite deste pacote.
+
+EVIDÊNCIA PARA ENTREGA DA IMPLEMENTAÇÃO
+Relatório com commit, hash do instalador, inventário de modelos/binários, configuração efetiva e evidências de ausência de conexões e de tentativas externas nos cenários ensaiados. Resultados de primeira instalação sem internet, criação/voz/mídia/roteiro, resolução de dúvidas, persistência e exportação devem ser separados. Lacunas precisam aparecer como pendências, não como concluído.
+
+ORDEM RECOMENDADA
+Isolamento e remoção de downloads → contrato de dúvida e contexto → persistência e TXT → voz e criação → teste integrado da instalação. A interface simples depende dessas bases; não começar apenas pela animação do robô.

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 3,
+  "status": "blocked",
+  "message": "Este Cut funciona sem internet. A pesquisa pode usar somente documentos salvos no computador.",
+  "reason": "policy_local_only",
+  "localAlternatives": [
+    "Consultar a biblioteca local já cadastrada"
+  ]
+}

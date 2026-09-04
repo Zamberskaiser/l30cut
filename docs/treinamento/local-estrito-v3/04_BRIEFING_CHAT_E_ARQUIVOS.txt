@@ -1,0 +1,57 @@
+L30 CUT — BRIEFING DE ARQUIVOS BAIXÁVEIS E HISTÓRICO LOCAL
+Versão 3 | 04/09/2026
+
+ENTREGA ESPERADA
+Sempre que a IA concluir um roteiro ou documento textual reutilizável, o aplicativo deve gerar o TXT correspondente e exibi-lo como anexo na mensagem, com acesso posterior na mesma conversa. O usuário não precisa copiar o texto, criar arquivo manualmente ou pedir de novo para baixar.
+
+INTERFACE
+A mensagem mostra um resumo curto e um cartão de arquivo com nome, tipo, versão, tamanho e estado. Ações principais: Visualizar e Baixar TXT. Ações secundárias: Copiar texto, Usar no projeto e Ver versões. Usar retângulos de cantos retos; tipografia local da identidade L30. Não baixar fontes, ícones ou scripts de CDN.
+
+Exemplo de rótulos (wireframe textual, não arquivo já criado no Cut):
+Roteiro_L30_Apresentacao_v01.txt
+TXT · versão 1 · tamanho informado pelo arquivo real
+[Visualizar] [Baixar TXT] [Usar no projeto]
+
+“Baixar TXT” abre o diálogo local de Salvar como e copia os bytes. Cancelar o diálogo não é erro nem exclusão. O conteúdo continua no chat. A prévia pode abreviar o texto visualmente, mas a exportação deve conter o documento integral.
+
+ESCOPO INICIAL
+Obrigatórios: roteiro, briefing, transcrição e notas solicitadas como documento → TXT UTF-8. Legendas: SRT/VTT quando de fato temporizadas. Imagens/áudio/vídeo podem usar o mesmo registro com tipos próprios, mas o aceite inicial exige o TXT funcionando do começo ao fim. Respostas triviais e perguntas não criam anexos automaticamente. O pedido “só escreva no chat” desliga a criação daquele arquivo.
+
+ARQUIVO CANÔNICO E CÓPIA DE EXPORTAÇÃO
+Guardar a cópia canônica em diretório durável privado da aplicação, fora de Temp, cache de sessão e pastas sincronizadas. Proposta de estrutura relativa, resolvida pelo host:
+workspaces/<workspace_id>/projects/<project_id>/artifacts/<artifact_id>/content.txt
+O backend escolhe IDs e caminhos. O modelo não os inventa. Metadados ficam no banco local, associados à conversa e mensagem.
+
+Downloads é apenas um destino possível de cópia escolhido pelo usuário, não o armazenamento único do anexo. Verificar redirecionamento para OneDrive, pastas em rede, links simbólicos e pontos de montagem conforme a plataforma. Não prometer que nenhuma outra aplicação do computador fará backup: a garantia do Cut depende também de um diretório local não sincronizado e da política do sistema.
+
+METADADOS MÍNIMOS
+ID do anexo, ID da família do documento, workspace, projeto, conversa, mensagem de origem, nome para exibição, extensão, MIME, codificação, tamanho em bytes, SHA-256, versão, versão anterior, momento de criação e estado. Hash e tamanho são calculados pelo host, nunca pelo LLM. A referência que circula na UI contém ID, não caminho absoluto.
+
+FLUXO DE CRIAÇÃO
+1. O orquestrador conclui um conteúdo de documento e solicita a ferramenta create_text_artifact com a intenção e o conteúdo integral; este nome é proposto, ainda precisa ser implementado.
+2. O host valida projeto, conversa, mensagem, tipo, tamanho, texto e permissão. Não aceita extensão arbitrária nem traversal de diretório.
+3. Reserva identidade/chave de idempotência. Grava em staging no mesmo volume, finaliza a escrita, verifica conteúdo e publica arquivo com nome único. Não sobrescreve versão anterior.
+4. Registra anexo e vínculo na mesma transação de metadados. Só então publica artifact_ready para a UI. Banco e filesystem não formam magicamente uma única transação: journal e reconciliação precisam cobrir interrupções entre as etapas.
+5. A mensagem recebe o ID do anexo e o cartão fica disponível. Uma repetição com a mesma chave retorna o mesmo resultado, não uma segunda versão.
+
+FALHAS E RECUPERAÇÃO
+Sem espaço ou permissão: manter o texto da resposta, apresentar “Arquivo não salvo” e permitir tentar novamente. Não mostrar botão que aponta para caminho inexistente. Se cair depois de gravar e antes de registrar, reconciliar o staging sem expor arquivo órfão como concluído. Se registrar mas o arquivo faltar ou mudar, marcar missing/corrupt e retirar a ação normal de download. Nunca reconstruir silenciosamente um original com outra saída do modelo.
+
+PERSISTÊNCIA DE CONVERSA
+O histórico é salvo em disco: conversas, mensagens, partes de texto, perguntas, anexos, respostas e vínculos. Encerrar a janela e abrir novamente recupera tudo, inclusive uma pergunta que estava pendente. Migrar registros existentes sem apagar dados. Um projeto novo usa conversa nova; abrir outro projeto não mantém visíveis mensagens do anterior.
+
+Usar banco local do produto ou SQLite. Separar memória de projeto, histórico visível e dataset de aprendizado. Limpar “dados de treinamento” não deve eliminar conversas e anexos, e limpar uma conversa deve explicar o efeito nos documentos. Exclusão de documento compartilhado por várias mensagens exige checar todas as referências.
+
+VERSIONAMENTO
+Primeira entrega: v01. Pedido de ajuste gera v02, ligada à mesma família do documento e com novo ID/arquivo. A mensagem antiga continua apontando para v01. A atual indica a revisão. Baixar uma versão antiga deve devolver exatamente aquela versão, não a mais nova por engano.
+
+SEGURANÇA LOCAL
+A interface pede conteúdo/exportação por ID. O host confere dono, projeto e raiz permitida antes de abrir. O diálogo de destino é controlado pela aplicação. Validar o tipo real e impedir caminhos de rede, escapadas, redirecionamento por junction/symlink, colisão e gravação em arquivo executável. Prévia de TXT renderiza texto, nunca HTML. Abrir arquivo não pode executar scripts. Permissões Tauri e protocolo de assets devem ser restritos; esconder uma ação na UI não é controle de acesso.
+
+Não usar storage remoto, link público, URL pré-assinada, login externo ou upload. URL blob, quando usada apenas como transporte transitório da prévia, não é a identidade persistente; deve ser recriada a partir dos bytes salvos e liberada após uso. Preferir IPC e diálogo nativo no desktop. “sandbox:/mnt/data” pertence a esta conversa de ChatGPT, não é protocolo a copiar para o Cut.
+
+PORTE DE PROJETO
+Salvar um projeto para transporte deve oferecer uma opção explícita que inclua conversa e documentos necessários num pacote local. Isso é diferente de salvar somente o estado da timeline. Verificar integridade ao importar e não executar conteúdos do pacote. Não supor que copiar o arquivo do projeto copia todos os assets externos.
+
+ACEITE MÍNIMO
+Criar roteiro → cartão TXT → visualizar inteiro → salvar como → conferir igualdade de bytes → reiniciar → abrir a mesma conversa → baixar novamente → pedir revisão → v01 e v02 preservadas. Testar disco cheio, falta de permissão, nome com acentos, clique repetido, cancelamento do diálogo, arquivo removido, corrupção, troca de projeto e tentativa de acessar anexo de outro workspace. Tudo com internet bloqueada.

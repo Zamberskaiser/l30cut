@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 3,
+  "status": "completed",
+  "message": "Exemplo de resposta após recibo real do host: roteiro salvo e disponível no cartão da mensagem.",
+  "verifiedArtifactIds": [
+    "artifact_demo_001"
+  ],
+  "verificationReceiptIds": [
+    "receipt_demo_001"
+  ]
+}

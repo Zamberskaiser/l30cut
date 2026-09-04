@@ -1,0 +1,28 @@
+ROTEIRO DE DEMONSTRAÇÃO — L30 CUT LOCAL
+Versão: 01
+Natureza: exemplo escrito nesta conversa; não foi gerado nem instalado pelo L30 Cut.
+Objetivo: demonstrar estrutura simples de roteiro e um TXT completo para anexar ao chat.
+Duração-alvo: 30 segundos, ainda não medida com locução real.
+
+CENA 01 — O PEDIDO
+VISUAL: Tela do editor com um vídeo importado e o chat ao lado.
+LOCUÇÃO: “O trabalho começa com o que você precisa produzir.”
+TEXTO EM TELA: Entender o pedido.
+
+CENA 02 — A DECISÃO
+VISUAL: Usuário pede “deixa mais rápido”; o chat pergunta se deve acelerar a reprodução ou mudar o ritmo dos cortes.
+LOCUÇÃO: “Quando há dúvida, uma pergunta ajuda a escolher o caminho certo.”
+TEXTO EM TELA: Perguntar antes de adivinhar.
+
+CENA 03 — O DOCUMENTO
+VISUAL: Um roteiro aparece como arquivo TXT na conversa, com Visualizar e Baixar TXT.
+LOCUÇÃO: “Cada roteiro pode virar um arquivo, preservado na conversa.”
+TEXTO EM TELA: Criar, revisar e guardar.
+
+CENA 04 — A CONTINUIDADE
+VISUAL: O programa é reaberto e mostra a conversa, a primeira versão e sua revisão.
+LOCUÇÃO: “Tudo no computador, com as decisões e os arquivos no mesmo lugar.”
+TEXTO EM TELA: L30 Cut — especificação local estrita.
+
+OBSERVAÇÃO DE PRODUÇÃO
+As cenas representam o comportamento proposto no briefing v3. A demonstração de funcionamento depende da implementação e do teste do aplicativo. Não tratar este roteiro como gravação de funções já entregues.

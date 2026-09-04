@@ -1,0 +1,70 @@
+{
+  "date": "2026-09-04",
+  "role": "bibliography_not_runtime_dependency",
+  "sources": [
+    {
+      "id": "F01",
+      "title": "Ollama — FAQ e modelos cloud",
+      "url": "https://docs.ollama.com/faq",
+      "verified_summary": "A FAQ descreve OLLAMA_NO_CLOUD=1 ou disable_ollama_cloud e reinício para desabilitar recursos cloud. Loopback é o bind padrão. A origem local da requisição não substitui a conferência de onde a inferência ocorre.",
+      "proposed_use": "Aplicar no processo Ollama real e verificar log/modelos; complementar com bloqueio dos caminhos de download e da rede no sistema.",
+      "extra_url": "https://docs.ollama.com/cloud"
+    },
+    {
+      "id": "F02",
+      "title": "Tauri — Content Security Policy",
+      "url": "https://v2.tauri.app/security/csp/",
+      "verified_summary": "A CSP restringe o conteúdo da webview e deve ser ajustada às origens necessárias. A documentação alerta contra conteúdo remoto e recomenda restrições específicas.",
+      "proposed_use": "Retirar HTTPS genérico e fontes/CDNs remotos. Validar também Rust e processos auxiliares; CSP não é firewall do aplicativo inteiro.",
+      "extra_url": null
+    },
+    {
+      "id": "F03",
+      "title": "Tauri — Windows Installer",
+      "url": "https://v2.tauri.app/distribute/windows-installer/",
+      "verified_summary": "A documentação distingue bootstrapper baixado, bootstrapper embutido, instalador offline e versão fixa do WebView2.",
+      "proposed_use": "Selecionar empacotamento apropriado à instalação sem internet. Conferir em máquina limpa. Embutir apenas um bootstrapper não é o mesmo que trazer todo o runtime.",
+      "extra_url": null
+    },
+    {
+      "id": "F04",
+      "title": "Hugging Face Hub — Environment variables",
+      "url": "https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables",
+      "verified_summary": "HF_HUB_OFFLINE evita chamadas ao Hub e usa arquivos previamente disponíveis. HF_HUB_DISABLE_TELEMETRY controla telemetria das bibliotecas que respeitam essa configuração.",
+      "proposed_use": "Referência condicional para extensões que usem essas bibliotecas. Não é motivo para adicioná-las ao Cut. Carregar por caminho local; a política do sistema cobre outras conexões.",
+      "extra_url": null
+    },
+    {
+      "id": "F05",
+      "title": "whisper.cpp — projeto oficial",
+      "url": "https://github.com/ggml-org/whisper.cpp",
+      "verified_summary": "Implementação local de reconhecimento de fala com exemplos offline e detecção de atividade de voz.",
+      "proposed_use": "Usar modelo compatível com português já no disco e avaliar áudio real. Separar aquisição de pesos da inferência; não copiar exemplos de download para o runtime.",
+      "extra_url": null
+    },
+    {
+      "id": "F06",
+      "title": "Piper — projeto oficial mantido pela OHF",
+      "url": "https://github.com/OHF-Voice/piper1-gpl",
+      "verified_summary": "Motor de síntese de voz local. O repositório declara licença GPL-3.0.",
+      "proposed_use": "Conferir licença do motor e de cada voz distribuída. Usar arquivos de voz e configuração já instalados. Não há voz nem binário neste pacote.",
+      "extra_url": null
+    },
+    {
+      "id": "F07",
+      "title": "stable-diffusion.cpp — projeto oficial",
+      "url": "https://github.com/leejet/stable-diffusion.cpp",
+      "verified_summary": "Motor de inferência de difusão local com famílias e modos dependentes da build/modelo.",
+      "proposed_use": "Reutilizar o adaptador do Cut; a biblioteca ter recurso não prova que a interface o expõe. Validar pesos, argumentos e qualidade na máquina.",
+      "extra_url": null
+    },
+    {
+      "id": "F08",
+      "title": "Tauri — Dialog",
+      "url": "https://v2.tauri.app/plugin/dialog/",
+      "verified_summary": "Documentação para diálogos nativos de seleção e salvamento.",
+      "proposed_use": "O botão Baixar TXT pode usar Salvar como no computador, sem URL pública. O backend valida destino e copia os bytes. Ainda depende de implementação no Cut.",
+      "extra_url": null
+    }
+  ]
+}

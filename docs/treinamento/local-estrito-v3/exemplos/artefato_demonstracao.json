@@ -1,0 +1,23 @@
+{
+  "artifactId": "artifact_demo_001",
+  "documentId": "document_demo_001",
+  "workspaceId": "workspace_demo",
+  "projectId": "project_demo",
+  "conversationId": "conversation_demo",
+  "messageId": "message_demo_001",
+  "fileName": "Roteiro_Demonstracao_L30_v01.txt",
+  "mimeType": "text/plain",
+  "encoding": "utf-8",
+  "byteSize": 1499,
+  "sha256": "72e9cb1dc1dbeebd0b477b638938a2f3cf90157f635c34ea6129c7a599d5e150",
+  "version": 1,
+  "previousArtifactId": null,
+  "createdAt": "2026-09-04T00:00:00-03:00",
+  "status": "ready",
+  "actions": [
+    "preview",
+    "save_as",
+    "use_in_project",
+    "versions"
+  ]
+}

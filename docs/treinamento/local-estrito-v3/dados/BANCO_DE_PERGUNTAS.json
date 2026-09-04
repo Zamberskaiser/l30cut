@@ -1,0 +1,476 @@
+{
+  "version": 3,
+  "use": "adaptive_catalog_not_mandatory_form",
+  "synthetic": true,
+  "questions": [
+    {
+      "id": "q001",
+      "category": "entrada",
+      "field": "entrada.intent",
+      "question": "Editar material existente ou criar conteúdo novo?",
+      "ask_when": "Quando não há intenção inequívoca.",
+      "options": [
+        "Editar material",
+        "Criar conteúdo"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q002",
+      "category": "entrada",
+      "field": "entrada.objective",
+      "question": "O conteúdo precisa apresentar, explicar, vender ou registrar alguma coisa?",
+      "ask_when": "Quando o objetivo muda roteiro/edição e não foi informado.",
+      "options": [
+        "Apresentar",
+        "Explicar",
+        "Vender",
+        "Registrar"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q003",
+      "category": "entrada",
+      "field": "entrada.audience",
+      "question": "Para quem estamos falando?",
+      "ask_when": "Quando público não está no briefing e altera a linguagem.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q004",
+      "category": "entrada",
+      "field": "entrada.destination",
+      "question": "Onde o conteúdo será usado?",
+      "ask_when": "Somente se o destino não puder ser recuperado do projeto.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q005",
+      "category": "entrada",
+      "field": "entrada.duration",
+      "question": "Você tem uma duração em mente ou prefere que eu proponha?",
+      "ask_when": "Quando a duração é necessária e não foi confirmada.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q006",
+      "category": "entrada",
+      "field": "entrada.invariants",
+      "question": "O que precisa aparecer exatamente como está?",
+      "ask_when": "Antes de criação que pode modificar produto/texto/referência.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q007",
+      "category": "edicao",
+      "field": "edicao.speed_or_pacing",
+      "question": "Você quer acelerar a reprodução ou deixar os cortes mais dinâmicos?",
+      "ask_when": "Pedido como mais rápido sem contexto resolutivo.",
+      "options": [
+        "Acelerar reprodução",
+        "Mudar ritmo dos cortes"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q008",
+      "category": "edicao",
+      "field": "edicao.asset_target",
+      "question": "Vamos trabalhar na entrevista ou no vídeo de produto?",
+      "ask_when": "Exemplo: dois candidatos e nenhuma seleção.",
+      "options": [
+        "Entrevista",
+        "Vídeo de produto"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q009",
+      "category": "edicao",
+      "field": "edicao.audio_target",
+      "question": "É a música de fundo ou a voz?",
+      "ask_when": "Ambos são candidatos ao pedido abaixa o áudio.",
+      "options": [
+        "Música de fundo",
+        "Voz"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q010",
+      "category": "edicao",
+      "field": "edicao.split_or_remove",
+      "question": "Quer dividir o clipe neste ponto ou remover um trecho?",
+      "ask_when": "Quando cortar aqui não tem semântica inequívoca.",
+      "options": [
+        "Dividir",
+        "Remover trecho"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q011",
+      "category": "edicao",
+      "field": "edicao.gain_mode",
+      "question": "Quer reduzir em 6 dB ou deixar o ganho em -6 dB?",
+      "ask_when": "Número presente, mas ganho absoluto/relativo é incerto.",
+      "options": [
+        "Reduzir em 6 dB",
+        "Definir -6 dB"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q012",
+      "category": "edicao",
+      "field": "edicao.scope",
+      "question": "A mudança é só neste clipe ou em todos os usos desse arquivo?",
+      "ask_when": "Pedido sugere escopo diferente da seleção.",
+      "options": [
+        "Só o clipe",
+        "Todos os usos"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q013",
+      "category": "roteiro",
+      "field": "roteiro.topic",
+      "question": "Qual ideia ou produto o roteiro precisa apresentar?",
+      "ask_when": "Somente quando tema não foi informado.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q014",
+      "category": "roteiro",
+      "field": "roteiro.deliverable",
+      "question": "Vamos entregar só o roteiro agora ou também produzir o vídeo?",
+      "ask_when": "Quando pedido mistura texto e produção sem escopo claro.",
+      "options": [
+        "Só roteiro",
+        "Roteiro e vídeo"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q015",
+      "category": "roteiro",
+      "field": "roteiro.tone",
+      "question": "Prefere uma linguagem direta, institucional ou narrativa?",
+      "ask_when": "Tom relevante e ainda indefinido.",
+      "options": [
+        "Direta",
+        "Institucional",
+        "Narrativa"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q016",
+      "category": "roteiro",
+      "field": "roteiro.call_to_action",
+      "question": "O final deve convidar a pessoa a fazer o quê?",
+      "ask_when": "Chamada final não existe no briefing.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q017",
+      "category": "roteiro",
+      "field": "roteiro.claims",
+      "question": "Esse resultado está confirmado no material ou deve ficar fora do roteiro?",
+      "ask_when": "Fato essencial sem evidência local.",
+      "options": [
+        "Tenho uma fonte local",
+        "Retirar essa afirmação"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q018",
+      "category": "roteiro",
+      "field": "roteiro.structure",
+      "question": "Há uma ordem obrigatória para as informações?",
+      "ask_when": "Materiais indicam possíveis sequências conflitantes.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q019",
+      "category": "imagem",
+      "field": "imagem.creation_mode",
+      "question": "Vamos criar do zero ou editar uma imagem já importada?",
+      "ask_when": "Intenção visual ambígua.",
+      "options": [
+        "Criar",
+        "Editar imagem"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q020",
+      "category": "imagem",
+      "field": "imagem.reference",
+      "question": "Qual dos arquivos é a referência que deve ser preservada?",
+      "ask_when": "Mais de uma imagem candidata.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q021",
+      "category": "imagem",
+      "field": "imagem.fidelity",
+      "question": "O produto deve ficar exatamente igual ou é uma visualização conceitual?",
+      "ask_when": "Fidelidade não está definida.",
+      "options": [
+        "Fiel ao produto",
+        "Conceitual"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q022",
+      "category": "imagem",
+      "field": "imagem.background",
+      "question": "Posso mudar o ambiente, mantendo produto e logo intactos?",
+      "ask_when": "Alteração solicitada não especifica elementos protegidos.",
+      "options": [
+        "Sim, só ambiente",
+        "Vou indicar o que mudar"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q023",
+      "category": "imagem",
+      "field": "imagem.style",
+      "question": "Você imagina uma fotografia realista, ilustração ou peça gráfica?",
+      "ask_when": "Estilo altera significativamente o resultado.",
+      "options": [
+        "Fotografia",
+        "Ilustração",
+        "Peça gráfica"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q024",
+      "category": "imagem",
+      "field": "imagem.aspect",
+      "question": "Qual proporção precisamos entregar?",
+      "ask_when": "Destino e projeto não definem proporção.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q025",
+      "category": "video",
+      "field": "video.source_mode",
+      "question": "Quer montar os materiais existentes ou criar cenas novas?",
+      "ask_when": "Pedido novo sem esclarecer origem das cenas.",
+      "options": [
+        "Materiais existentes",
+        "Cenas novas"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q026",
+      "category": "video",
+      "field": "video.motion",
+      "question": "Precisa de movimento real nas cenas ou montagem de imagens com movimento de câmera resolve?",
+      "ask_when": "Diferenciar geração temporal e montagem.",
+      "options": [
+        "Movimento real",
+        "Montagem de imagens"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q027",
+      "category": "video",
+      "field": "video.voice_use",
+      "question": "Vamos usar narração ou apenas música e textos?",
+      "ask_when": "Som não foi definido e afeta o produto.",
+      "options": [
+        "Narração",
+        "Música e textos"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q028",
+      "category": "video",
+      "field": "video.fallback",
+      "question": "O gerador de movimento está ausente. Prefere montar imagens locais ou concluir só o roteiro?",
+      "ask_when": "Usar apenas se ambas as alternativas estiverem disponíveis.",
+      "options": [
+        "Montar imagens",
+        "Concluir roteiro"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q029",
+      "category": "voz",
+      "field": "voz.speech_target",
+      "question": "É para eu responder falando ou criar a locução do vídeo?",
+      "ask_when": "Pedido fala comigo/narração sem alvo.",
+      "options": [
+        "Resposta de voz",
+        "Locução do vídeo"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q030",
+      "category": "voz",
+      "field": "voz.voice_choice",
+      "question": "Qual das vozes instaladas vamos usar?",
+      "ask_when": "Sem voz aprovada; mostrar apenas catálogo local real.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q031",
+      "category": "voz",
+      "field": "voz.pronunciation",
+      "question": "Como essa marca deve ser pronunciada?",
+      "ask_when": "Grafia não resolve a pronúncia e não há glossário.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q032",
+      "category": "voz",
+      "field": "voz.number",
+      "question": "Você disse 15 ou 50 segundos?",
+      "ask_when": "STT final preserva dúvida material de número.",
+      "options": [
+        "15 segundos",
+        "50 segundos"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q033",
+      "category": "voz",
+      "field": "voz.transcript_type",
+      "question": "Quer transcrição literal ou um texto editado a partir da fala?",
+      "ask_when": "Usuário pede texto limpo sem definir fidelidade.",
+      "options": [
+        "Literal",
+        "Texto editado"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q034",
+      "category": "arquivos",
+      "field": "arquivos.version",
+      "question": "Qual das versões do roteiro vamos usar?",
+      "ask_when": "Duas versões referenciadas e nenhuma escolhida.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q035",
+      "category": "arquivos",
+      "field": "arquivos.missing",
+      "question": "O arquivo foi removido. Prefere localizar uma cópia ou criar uma nova versão do texto preservado?",
+      "ask_when": "Anexo missing, sem backup verificado.",
+      "options": [
+        "Localizar cópia",
+        "Nova versão"
+      ],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    },
+    {
+      "id": "q036",
+      "category": "arquivos",
+      "field": "arquivos.quality",
+      "question": "A alternativa local reduz a resolução. Essa versão atende ao uso pretendido?",
+      "ask_when": "Capacidade local verificada exige redução que altera a entrega.",
+      "options": [],
+      "allow_free_text": true,
+      "skip_when": "A resposta já estiver confirmada e aplicável no projeto.",
+      "mutate_before_answer": false
+    }
+  ]
+}

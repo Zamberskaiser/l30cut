@@ -1,0 +1,253 @@
+{
+  "package": "L30 CUT — Local estrito",
+  "version": "3",
+  "created_at": "2026-09-04T23:20:40.804797+00:00",
+  "status": "specification_not_installed",
+  "files": [
+    {
+      "path": "00_COMECE_AQUI.md",
+      "byte_size": 3091,
+      "sha256": "10f748120342bfdfde80f105e44be237012112f99993a6e3f91efe7b6fa8e15a"
+    },
+    {
+      "path": "01_AUDITORIA_LOCALIDADE.md",
+      "byte_size": 8837,
+      "sha256": "4794b996ca746cea89cd48566facd6a2adf5e72e251d05c2bc7e59ff974062be"
+    },
+    {
+      "path": "02_TREINAMENTO_MESTRE_LOCAL.md",
+      "byte_size": 10637,
+      "sha256": "8664b77600acb81efa48e277af77d4a6d6af51153764fdbbd04cc984045a369f"
+    },
+    {
+      "path": "02_TREINAMENTO_MESTRE_LOCAL.txt",
+      "byte_size": 10637,
+      "sha256": "8664b77600acb81efa48e277af77d4a6d6af51153764fdbbd04cc984045a369f"
+    },
+    {
+      "path": "03_BRIEFING_PERGUNTAS.txt",
+      "byte_size": 7685,
+      "sha256": "85fc0c8a50b4c0815470ce94f6a3083d3868446b74414e756929806033422736"
+    },
+    {
+      "path": "04_BRIEFING_CHAT_E_ARQUIVOS.txt",
+      "byte_size": 7047,
+      "sha256": "a1ee8c453d0f56f155f291402f3ffcd74f34d7c8ef1192d5c1f592bca542b647"
+    },
+    {
+      "path": "05_BRIEFING_IMPLEMENTACAO.txt",
+      "byte_size": 8427,
+      "sha256": "73f9bcb46069ede66017525c3b1467fba07fc210f33ca9dc80777677b38653c9"
+    },
+    {
+      "path": "06_PERFIL_TREINAMENTO.json",
+      "byte_size": 18413,
+      "sha256": "33939eee52540d67ef29fc114ac43cec7566e2202c4e443981fb9ce425f6178d"
+    },
+    {
+      "path": "NUCLEO_PARA_COLAR.txt",
+      "byte_size": 5133,
+      "sha256": "51c51bb717ae6894fdcae4a9b089f2ae2d3de390273e8787546d037c5e1095de"
+    },
+    {
+      "path": "avaliacao/ACEITE_NO_COMPUTADOR.txt",
+      "byte_size": 3739,
+      "sha256": "159466afcce034121407286cce415f6dfa8dab15250521c137896ff66b3fea7b"
+    },
+    {
+      "path": "avaliacao/LEIA_ME.md",
+      "byte_size": 790,
+      "sha256": "d0723d78110469a9250baaedc6d4af66b09fea0a05fd8fc655fac03984978857"
+    },
+    {
+      "path": "avaliacao/validar_pacote.py",
+      "byte_size": 9850,
+      "sha256": "a14305e8f6a70592815a6c7b0253bfa1182dfeb8fd6a41da8adf7d3da3a3e4d7"
+    },
+    {
+      "path": "conhecimento/01_INTERPRETACAO_E_BRIEFING.md",
+      "byte_size": 1791,
+      "sha256": "d62c1db6ce3f1b11e16173db3d6e2a59c2397dbe2f0696f925cfc9bd22f6791c"
+    },
+    {
+      "path": "conhecimento/02_VOZ_LOCAL_PTBR.md",
+      "byte_size": 1890,
+      "sha256": "f8b5b84f68cafa81da77a2e95e92c27f27eeda2bab9fb0facdb0ba22b8a02504"
+    },
+    {
+      "path": "conhecimento/03_EDICAO_E_TEMPO.md",
+      "byte_size": 1552,
+      "sha256": "00ded10f5996424896475f2c7f1e4fc80aa7890049b48b6b89f0b94ed8db46a5"
+    },
+    {
+      "path": "conhecimento/04_ROTEIRO_E_VIDEO_LOCAL.md",
+      "byte_size": 1519,
+      "sha256": "e22a2efff55a948d492053c4324c43e71d0ab46e35fae11e00cbcb37db0da837"
+    },
+    {
+      "path": "conhecimento/05_IMAGEM_E_IDENTIDADE.md",
+      "byte_size": 1628,
+      "sha256": "2c940fbf149c94d33aec2b27deae9add8f86abadb3d8689ecf49f73da3820e28"
+    },
+    {
+      "path": "conhecimento/06_EXECUCAO_E_ISOLAMENTO.md",
+      "byte_size": 1585,
+      "sha256": "6cb6b756bcb94e0c77bc5b366fbb347581b6b8fcded64f27a2c578fe3cb0a6bb"
+    },
+    {
+      "path": "conhecimento/07_ARQUIVOS_E_CONVERSA.md",
+      "byte_size": 1524,
+      "sha256": "1e0d20a8cdd2c8ce5f1fd7ae6d2d11f6ec30b702e0e2a396e44a641185f8e283"
+    },
+    {
+      "path": "conhecimento/08_CONHECIMENTO_E_RECURSOS_LOCAIS.md",
+      "byte_size": 1873,
+      "sha256": "6751992c9065ae684c9594a351c57db3b612dae17358534b6135650e9ba189d6"
+    },
+    {
+      "path": "contratos/LEIA_ANTES_DE_INTEGRAR.md",
+      "byte_size": 2169,
+      "sha256": "8306ad33e2ad812d4245f1dfa463691b5c04224f088c5678be98ef19958d3f6b"
+    },
+    {
+      "path": "contratos/artefato.schema.json",
+      "byte_size": 1692,
+      "sha256": "18ccf850d333d19c3955e506f170e4aa03a68d4c6ee1a91770a77de69b5e1009"
+    },
+    {
+      "path": "contratos/perfil_espelho_fornecido.schema.json",
+      "byte_size": 2024,
+      "sha256": "ef7dbe599e6b69473f57b07ab1fe2e8989d5740c08b45d865de18f4edc8236c3"
+    },
+    {
+      "path": "contratos/persistencia_proposta.sql",
+      "byte_size": 4512,
+      "sha256": "0d6e673e60cd5f7d5a0a2a73997b2a6a20d41ba70131c57bde76d0d3ca470fa3"
+    },
+    {
+      "path": "contratos/politica_local_proposta.json",
+      "byte_size": 1430,
+      "sha256": "7c63c2590bb524ea3f0149f4567abaf39c2a19d0ecc60ab4ce58f13f8b884562"
+    },
+    {
+      "path": "contratos/turno_assistente.schema.json",
+      "byte_size": 4605,
+      "sha256": "5923d90be2eae526b724f82afd3e4dd2293f19e1cf2927ec41b0fdeb76acef9a"
+    },
+    {
+      "path": "dados/BANCO_DE_PERGUNTAS.json",
+      "byte_size": 16390,
+      "sha256": "d2090c45ac4b51af9cf653d12c89faeb104ec435b51fd92a66e18aedadfef84b"
+    },
+    {
+      "path": "dados/COMO_USAR.md",
+      "byte_size": 1222,
+      "sha256": "a230ae211c7fa4ec8fc69c4895a9401109d9abc5d22ca896db17ca397e44f5ca"
+    },
+    {
+      "path": "dados/TESTE_RESERVADO.jsonl",
+      "byte_size": 3820,
+      "sha256": "de5d81eb7709da55c6fcc4f086aef4a37a305f5fb541f71703a78caaa8b4e16c"
+    },
+    {
+      "path": "dados/TREINO_CENARIOS.jsonl",
+      "byte_size": 9815,
+      "sha256": "4be313593a9ede7c62854c4e24ba46d4cce28cc13287330aed987ca1e8abe519"
+    },
+    {
+      "path": "exemplos/LEIA_ME.md",
+      "byte_size": 599,
+      "sha256": "4a389d2f850ec93787606613a02fc092c2cee7ea95818a673a0bbeb7c9fe1da2"
+    },
+    {
+      "path": "exemplos/Roteiro_Demonstracao_L30_v01.txt",
+      "byte_size": 1499,
+      "sha256": "72e9cb1dc1dbeebd0b477b638938a2f3cf90157f635c34ea6129c7a599d5e150"
+    },
+    {
+      "path": "exemplos/artefato_demonstracao.json",
+      "byte_size": 618,
+      "sha256": "06f2182a0976f9792388bdd0c8ecf11f26e4fa04ed74116552ac1c2825ad1e03"
+    },
+    {
+      "path": "exemplos/turno_bloqueado.json",
+      "byte_size": 271,
+      "sha256": "4e260f13c3c7ec9984c07a38058dbb053e1078d4b4c55d1939609f1da7d840e8"
+    },
+    {
+      "path": "exemplos/turno_documento_concluido.json",
+      "byte_size": 279,
+      "sha256": "b474dad869b48f082d546ff6022217c779569d64a50f4804a06c840fd80c7bac"
+    },
+    {
+      "path": "exemplos/turno_pergunta.json",
+      "byte_size": 450,
+      "sha256": "3250397f33a5fdace0259dbccc729e26639ad50e75b84b4549c9af71b5df24c4"
+    },
+    {
+      "path": "fontes/EVIDENCIAS_CODIGO.json",
+      "byte_size": 3270,
+      "sha256": "adb60d833481beb29913d4be805fe1398821dcdc8f6d41dcc43c129297150a9f"
+    },
+    {
+      "path": "fontes/FONTES_OFICIAIS.md",
+      "byte_size": 4288,
+      "sha256": "af33d9dbe19df32e95d9620a36d78e866321124f63c156e22b3ef0f1a1cb9656"
+    },
+    {
+      "path": "fontes/MANIFESTO_FONTES.json",
+      "byte_size": 4161,
+      "sha256": "830f9dc461428bfc536b29bb4a45c15e984b3a93357cc9f104e81dfe2daf9663"
+    },
+    {
+      "path": "fontes/ORIGEM_DOS_PACOTES.json",
+      "byte_size": 572,
+      "sha256": "627fac6620142a14b7ccf4ce3a179a00822991ae8cfffe29cad828ae7e0f1af5"
+    },
+    {
+      "path": "prompts/00_NUCLEO_COMUM.txt",
+      "byte_size": 5133,
+      "sha256": "51c51bb717ae6894fdcae4a9b089f2ae2d3de390273e8787546d037c5e1095de"
+    },
+    {
+      "path": "prompts/01_ORQUESTRADOR.txt",
+      "byte_size": 999,
+      "sha256": "883ac2b4641fbdf2c694cebb2e70672384945cab68f0c65792db15eef0c4f679"
+    },
+    {
+      "path": "prompts/02_VOZ_E_AUDIO.txt",
+      "byte_size": 906,
+      "sha256": "6c6583ab81f8a6e596c38b67f40c61f01ff0975896b03f61a61d05bfe1968cfe"
+    },
+    {
+      "path": "prompts/03_EDITOR_E_NARRATIVA.txt",
+      "byte_size": 792,
+      "sha256": "c63fb6d25f9f159ef0f29c61da5ae008ed3168a8c72a4c5c7828af747e66c963"
+    },
+    {
+      "path": "prompts/04_IMAGEM_E_DIRECAO.txt",
+      "byte_size": 844,
+      "sha256": "7966aa3a9bc4b550ef937949903856e72b3089fb6e575bd22f80d7ffdb5e7fe9"
+    },
+    {
+      "path": "prompts/05_ROTEIRO_E_VIDEO.txt",
+      "byte_size": 832,
+      "sha256": "fe63b448ea693a48a7a58d3a3730c97dc8dd25c6313f34385afadf1553062e95"
+    },
+    {
+      "path": "prompts/06_EXECUTOR.txt",
+      "byte_size": 879,
+      "sha256": "f3b1cf6068d3fcbfdd1123e0d88cfaed307b08b5656f9a28641de6b0068fdf5e"
+    },
+    {
+      "path": "prompts/07_REVISOR.txt",
+      "byte_size": 861,
+      "sha256": "d4030aa81d191199587c6b0a91b1d85024e0464978f7dbeca15aecde2616dfd0"
+    }
+  ],
+  "excluded_from_hashes": [
+    "MANIFESTO_PACOTE.json",
+    "avaliacao/RELATORIO_VALIDACAO.json"
+  ],
+  "note": "Hashes verificam integridade interna, não são assinatura digital nem prova de isolamento do aplicativo."
+}

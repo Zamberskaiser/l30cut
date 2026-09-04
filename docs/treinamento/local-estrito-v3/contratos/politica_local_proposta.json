@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 3,
+  "status": "proposed_not_installed",
+  "mode": "local_strict",
+  "externalNetwork": false,
+  "lanAccess": false,
+  "webSearch": false,
+  "cloudFallback": false,
+  "remoteProviders": [],
+  "autoDownload": false,
+  "autoUpdate": false,
+  "telemetry": false,
+  "remoteSync": false,
+  "onlineLoginRequired": false,
+  "loopback": {
+    "adapter": "ollama",
+    "allowedOrigins": [
+      "http://127.0.0.1:11434"
+    ],
+    "allowRedirects": false,
+    "allowProxy": false,
+    "hostControlsEndpoint": true,
+    "localModelVerificationRequired": true
+  },
+  "provisioning": {
+    "mode": "offline_package_only",
+    "checksumsRequired": true,
+    "licensesRequired": true,
+    "trustedPublisherSignatureRequired": true,
+    "modelCatalog": []
+  },
+  "artifacts": {
+    "storage": "durable_local_filesystem",
+    "metadata": "local_database",
+    "canonicalInTemp": false,
+    "canonicalInCloudSyncedFolder": false,
+    "defaultTextExtension": "txt",
+    "encoding": "utf-8",
+    "versioning": "immutable",
+    "readyAfterReadback": true
+  },
+  "conversation": {
+    "persistLocally": true,
+    "isolateByWorkspaceAndProject": true,
+    "persistPendingQuestions": true,
+    "maxQuestionsPerTurn": 3,
+    "askOnMaterialAmbiguity": true
+  },
+  "enforcement": {
+    "promptAloneIsInsufficient": true,
+    "nativeValidationRequired": true,
+    "osEgressControlRequired": true,
+    "runtimeTestsRequired": true
+  }
+}
