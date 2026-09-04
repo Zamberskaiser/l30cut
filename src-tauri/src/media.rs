@@ -296,6 +296,25 @@ pub fn bundled_binary(app: &tauri::AppHandle, names: &[&str]) -> Option<PathBuf>
     None
 }
 
+/// Resolves a binary only inside one component's private directory. Generative
+/// engines must never fall back to the old flat `bin` install because Windows
+/// resolves adjacent DLLs there and may load an incompatible ggml build.
+pub fn private_component_binary(
+    app: &tauri::AppHandle,
+    component: &str,
+    names: &[&str],
+) -> Option<PathBuf> {
+    let dir = app_dir(app, "bin").ok()?.join(component);
+    names.iter().map(|name| dir.join(exe(name))).find(|path| path.is_file())
+}
+
+fn binary_starts(program: &Path, args: &[&str]) -> bool {
+    let args = args.iter().map(|arg| (*arg).to_string()).collect::<Vec<_>>();
+    run(program, &args)
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
+
 fn optional(mut component: ComponentStatus) -> ComponentStatus {
     component.optional = Some(true);
     component
@@ -374,7 +393,9 @@ pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, St
             "stable-diffusion",
             "stable-diffusion.cpp",
             "Geração de imagens das cenas direto na sua máquina.",
-            bundled_binary(&app, SD_BINARIES).is_some(),
+            private_component_binary(&app, "sd", SD_BINARIES)
+                .map(|binary| binary_starts(&binary, &["--help"]))
+                .unwrap_or(false),
             "https://github.com/leejet/stable-diffusion.cpp/releases",
         )),
         optional(status(
@@ -668,6 +689,16 @@ pub async fn install_component(
             let dest = fresh_component_dir(&app, "sd", STALE_SHARED)?;
             extract_zip_tree(&zip_path, &dest)?;
             let _ = std::fs::remove_file(&zip_path);
+            let binary = private_component_binary(&app, "sd", SD_BINARIES)
+                .ok_or_else(|| "o pacote não trouxe o executável sd-cli.exe".to_string())?;
+            if !binary_starts(&binary, &["--help"]) {
+                let _ = std::fs::remove_dir_all(&dest);
+                log_setup(&app, &component_id, "invalid-binary");
+                return Err(
+                    "o sd-cli.exe baixado não iniciou com as DLLs do próprio pacote. A instalação foi limpa; tente instalar novamente."
+                        .into(),
+                );
+            }
         }
         "sd-model" => {
             let dest = app_dir(&app, "diffusion")?.join(SD_MODEL_NAME);
