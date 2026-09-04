@@ -106,8 +106,7 @@ export function PreviewMonitor() {
           description: error instanceof Error ? error.message : "tente clicar em play novamente",
         });
       });
-    }
-    else el.pause();
+    } else el.pause();
   }, [playing, activeClip, ui.playRate, setPlaying]);
 
   useEffect(() => {
