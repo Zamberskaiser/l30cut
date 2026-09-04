@@ -95,6 +95,8 @@ export interface PlanRequest {
   prompt: string;
   contextJson: string;
   apiKey?: string;
+  /** Lets the user call the request off while the local model is thinking. */
+  signal?: AbortSignal;
 }
 
 export interface PlanResponse {
@@ -124,6 +126,7 @@ export async function requestPlanFromProvider(
     const response = await fetchImpl(config.endpoint, {
       method: "POST",
       headers,
+      ...(request.signal ? { signal: request.signal } : {}),
       body: JSON.stringify({
         model: config.model,
         temperature: 0.1,

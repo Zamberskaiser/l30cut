@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
@@ -89,6 +89,8 @@ export function AssistantPanel() {
   const [llm, setLlm] = useState<LlmSettings>(DEFAULT_LLM_SETTINGS);
   const [llmOpen, setLlmOpen] = useState(false);
   const [thinking, setThinking] = useState(false);
+  /** Aborts the request in flight when the user presses "Cancelar". */
+  const requestAbort = useRef<AbortController | null>(null);
   const [confirming, setConfirming] = useState<{ plan: AiEditPlan; messageId: string } | null>(
     null,
   );
@@ -141,13 +143,25 @@ export function AssistantPanel() {
     setPrompt("");
     editor.pushMessage({ id: newId("msg"), role: "user", text, at: Date.now() });
     setThinking(true);
+    const controller = new AbortController();
+    requestAbort.current = controller;
     const assistantId = newId("msg");
+    const canceled = () => controller.signal.aborted;
     try {
       // Creation, transcription and research never become edit plans — the
       // assistant performs them and files the result in the media bin.
       const intent = detectChatIntent(text);
       if (intent.kind !== "edit") {
         const outcome = await actions.perform(intent);
+        if (canceled()) {
+          editor.pushMessage({
+            id: assistantId,
+            role: "assistant",
+            text: "Pedido cancelado.",
+            at: Date.now(),
+          });
+          return;
+        }
         if (outcome.text.length > 0) {
           editor.pushMessage({
             id: assistantId,
@@ -180,12 +194,22 @@ export function AssistantPanel() {
           const response = await requestPlanFromProvider(provider, {
             prompt: text,
             contextJson: JSON.stringify(context),
+            signal: controller.signal,
           });
           plan = {
             ...response.plan,
             modelInfo: { ...response.plan.modelInfo, latencyMs: response.latencyMs },
           };
         } catch (error) {
+          if (canceled()) {
+            editor.pushMessage({
+              id: assistantId,
+              role: "assistant",
+              text: "Pedido cancelado.",
+              at: Date.now(),
+            });
+            return;
+          }
           if (!llm.fallbackToDeterministic) {
             editor.pushMessage({
               id: assistantId,
@@ -239,8 +263,16 @@ export function AssistantPanel() {
         at: Date.now(),
       });
     } finally {
+      requestAbort.current = null;
       setThinking(false);
     }
+  }
+
+  /** Stops the assistant: aborts the model call and any running job. */
+  function cancelRequest() {
+    requestAbort.current?.abort();
+    actions.cancel();
+    toast.info("Pedido cancelado");
   }
 
   async function applyPlan(plan: AiEditPlan, messageId: string, confirmed: boolean) {
@@ -440,9 +472,18 @@ export function AssistantPanel() {
             />
           ))}
           {thinking ? (
-            <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" /> {actions.busy ?? "Montando plano"}…
-            </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto h-6 gap-1 px-2 text-[10px]"
+                onClick={cancelRequest}
+                title="Cancelar este pedido"
+              >
+                <X className="size-3" /> Cancelar
+              </Button>
+            </div>
           ) : null}
         </div>
       </ScrollArea>

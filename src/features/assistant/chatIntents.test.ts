@@ -36,3 +36,15 @@ describe("detectChatIntent", () => {
     expect(parseSceneCount("99 cenas")).toBe(12);
   });
 });
+
+describe("typos", () => {
+  it("understands a misspelled picture request", () => {
+    const intent = detectChatIntent("cria uma iagem para mim de uma pessoa no celular");
+    expect(intent.kind).toBe("image");
+    expect(intent.subject).toContain("pessoa no celular");
+  });
+
+  it("keeps edit requests out of the image path", () => {
+    expect(detectChatIntent("crie 6 cortes de 30 a 60 segundos").kind).toBe("edit");
+  });
+});

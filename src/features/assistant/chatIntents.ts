@@ -5,6 +5,9 @@
  *
  * It is deliberately deterministic (and testable) so the choice never depends on
  * the model being installed; the local LLM is still used *inside* each path.
+ *
+ * People type fast and misspell ("cria uma iagem"), so the words are matched
+ * with a one-character tolerance instead of a strict dictionary.
  */
 
 export type ChatIntentKind = "video" | "image" | "search" | "transcribe" | "edit";
@@ -24,22 +27,118 @@ function clean(text: string): string {
   return text.replace(STRIP, " ").replace(/\s+/g, " ").trim();
 }
 
-/** Removes the leading command ("crie um vídeo sobre …" → "…"). */
-function subjectOf(text: string): string {
-  const cut = text.replace(
-    /^.*?\b(v[íi]deo|filme|imagem|foto|ilustra[çc][ãa]o|arte|thumbnail|capa)\b\s*/i,
-    "",
-  );
-  return clean((cut || text).replace(/^(sobre|de|com|para|falando sobre|do|da)\s+/i, ""));
+/** Drops accents so "vídeo" and "video" are the same word. */
+function fold(word: string): string {
+  return word
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
-const VIDEO = /\b(v[íi]deo|reels?|short|filme|clipe)\b/i;
-const IMAGE = /\b(imagem|imagens|foto|fotos|ilustra[çc][ãa]o|arte|thumbnail|capa|cartaz)\b/i;
-const MAKE = /\b(cri(a|e|ar)|gera?(r|e)?|fa[çz]a?|monta(r|e)?|produza?|desenh(a|e|ar))\b/i;
-const SEARCH =
-  /\b(pesquis(a|e|ar|ue)|busca|buscar|procur(a|e|ar)|na internet|na web|no google|not[íi]cias|refer[êe]ncias?)\b/i;
-const TRANSCRIBE =
-  /\b(transcrev(a|er|e)|transcri[çc][ãa]o|legendas? do|o que (ele|ela) (diz|fala))\b/i;
+function tokens(text: string): string[] {
+  return fold(text)
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter(Boolean);
+}
+
+/** True when the two words differ by at most one typo (insert/remove/swap). */
+function nearlyEqual(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  let j = 0;
+  let slips = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) {
+      i += 1;
+      j += 1;
+      continue;
+    }
+    slips += 1;
+    if (slips > 1) return false;
+    if (a.length === b.length) {
+      i += 1;
+      j += 1;
+    } else if (a.length > b.length) i += 1;
+    else j += 1;
+  }
+  return slips + (a.length - i) + (b.length - j) <= 1;
+}
+
+/** Index of the first token that matches one of the words (typos allowed). */
+function findWord(list: string[], words: string[]): number {
+  return list.findIndex((token) =>
+    // Only longer words are matched loosely; short ones must be exact so a
+    // typo tolerance never turns "partes" into "arte".
+    words.some((word) => (word.length >= 6 ? nearlyEqual(token, word) : token === word)),
+  );
+}
+
+function has(list: string[], words: string[]): boolean {
+  return findWord(list, words) >= 0;
+}
+
+const VIDEO_WORDS = ["video", "videos", "reel", "reels", "short", "shorts", "filme", "clipe"];
+const IMAGE_WORDS = [
+  "imagem",
+  "imagens",
+  "foto",
+  "fotos",
+  "ilustracao",
+  "arte",
+  "thumbnail",
+  "capa",
+  "cartaz",
+  "desenho",
+];
+const MAKE_WORDS = [
+  "cria",
+  "crie",
+  "criar",
+  "gera",
+  "gere",
+  "gerar",
+  "faca",
+  "faz",
+  "fazer",
+  "monta",
+  "monte",
+  "montar",
+  "produza",
+  "produzir",
+  "desenha",
+  "desenhe",
+  "desenhar",
+];
+const SEARCH_WORDS = [
+  "pesquisa",
+  "pesquise",
+  "pesquisar",
+  "busca",
+  "buscar",
+  "busque",
+  "procura",
+  "procure",
+  "procurar",
+  "internet",
+  "web",
+  "google",
+  "noticias",
+  "referencia",
+  "referencias",
+];
+const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcricao", "transcreve", "legendas"];
+
+/** Removes the leading command ("crie um vídeo sobre …" → "…"). */
+function subjectOf(text: string): string {
+  const words = text.trim().split(/\s+/);
+  const list = tokens(text);
+  const nounAt = Math.max(findWord(list, VIDEO_WORDS), findWord(list, IMAGE_WORDS));
+  const rest = nounAt >= 0 ? words.slice(nounAt + 1).join(" ") : text;
+  return clean((rest || text).replace(/^(sobre|de|com|para|falando sobre|do|da)\s+/i, ""));
+}
 
 /** Reads "6 cenas" / "com 5 partes" out of the request. */
 export function parseSceneCount(text: string): number | undefined {
@@ -52,13 +151,16 @@ export function parseSceneCount(text: string): number | undefined {
 
 export function detectChatIntent(raw: string): ChatIntent {
   const text = raw.trim();
+  const list = tokens(text);
   const subject = subjectOf(text);
-  if (TRANSCRIBE.test(text)) return { kind: "transcribe", subject };
-  if (SEARCH.test(text) && !MAKE.test(text)) return { kind: "search", subject: clean(text) };
-  if (MAKE.test(text) && VIDEO.test(text)) {
+  const make = has(list, MAKE_WORDS);
+  const search = has(list, SEARCH_WORDS);
+  if (has(list, TRANSCRIBE_WORDS)) return { kind: "transcribe", subject };
+  if (search && !make) return { kind: "search", subject: clean(text) };
+  if (make && has(list, VIDEO_WORDS)) {
     return { kind: "video", subject, sceneCount: parseSceneCount(text) };
   }
-  if (MAKE.test(text) && IMAGE.test(text)) return { kind: "image", subject };
-  if (SEARCH.test(text)) return { kind: "search", subject: clean(text) };
+  if (make && has(list, IMAGE_WORDS)) return { kind: "image", subject };
+  if (search) return { kind: "search", subject: clean(text) };
   return { kind: "edit", subject };
 }
