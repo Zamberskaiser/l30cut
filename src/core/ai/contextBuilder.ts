@@ -32,6 +32,8 @@ export interface AssistantContext {
     clips: Array<{
       id: string;
       trackId: string;
+      assetId: string;
+      assetName: string;
       startUs: number;
       sourceInUs: number;
       sourceOutUs: number;
@@ -41,7 +43,14 @@ export interface AssistantContext {
     }>;
     clipsTruncated: boolean;
   };
-  assets: Array<{ id: string; durationUs: number; audioChannels: number }>;
+  assets: Array<{
+    id: string;
+    name: string;
+    kind: string;
+    durationUs: number;
+    audioChannels: number;
+    usedByClipIds: string[];
+  }>;
   transcript: Array<{ assetId: string; startUs: number; endUs: number; text: string }>;
   transcriptTruncated: boolean;
   silences: number;
@@ -75,6 +84,8 @@ export function buildAssistantContext(
     .map((c) => ({
       id: c.id,
       trackId: c.trackId,
+      assetId: c.assetId,
+      assetName: (project.assets.find((a) => a.id === c.assetId)?.name ?? "").slice(0, 80),
       startUs: c.startUs,
       sourceInUs: c.sourceInUs,
       sourceOutUs: c.sourceOutUs,
@@ -109,8 +120,12 @@ export function buildAssistantContext(
     },
     assets: project.assets.slice(0, CONTEXT_LIMITS.maxAssets).map((a) => ({
       id: a.id,
+      // File NAME only — the filesystem path is never exposed to a model.
+      name: a.name.slice(0, 120),
+      kind: a.kind,
       durationUs: a.durationUs,
       audioChannels: a.audioChannels,
+      usedByClipIds: seq.clips.filter((c) => c.assetId === a.id).map((c) => c.id),
     })),
     transcript,
     transcriptTruncated: transcript.length < transcriptPool.length,
