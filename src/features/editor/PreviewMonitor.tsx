@@ -46,6 +46,8 @@ export function PreviewMonitor() {
   );
 
   const asset = activeClip ? project.assets.find((a) => a.id === activeClip.assetId) : undefined;
+  // Desktop paths need the asset protocol before the webview can load them.
+  const assetSrc = asset ? runtime.mediaSrc(asset.path) : undefined;
   const caption = sequence.captions.find((c) => playheadUs >= c.startUs && playheadUs < c.endUs);
 
   const clipOffsetUs = activeClip ? playheadUs - activeClip.startUs : 0;
@@ -147,16 +149,16 @@ export function PreviewMonitor() {
         >
           {asset && asset.kind !== "audio" ? (
             asset.kind === "image" ? (
-              <img src={asset.path} alt={asset.name} className="size-full object-cover" />
+              <img src={assetSrc} alt={asset.name} className="size-full object-cover" />
             ) : (
               <>
                 <video
                   ref={videoRef}
-                  src={asset.path}
+                  src={assetSrc}
                   muted={sequence.tracks.some((t) => t.kind === "audio" && t.muted)}
                   playsInline
                   className={`size-full object-cover ${chroma ? "invisible" : ""}`}
-                  crossOrigin="anonymous"
+                  crossOrigin={chroma ? "anonymous" : undefined}
                   style={{ opacity }}
                 />
                 {chroma ? (

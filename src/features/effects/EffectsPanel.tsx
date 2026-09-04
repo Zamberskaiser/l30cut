@@ -118,7 +118,7 @@ export function EffectsPanel() {
     try {
       const previous = clip.tracker?.points[0];
       const points = await runTracking({
-        src: asset.path,
+        src: runtime.mediaSrc(asset.path),
         sourceInUs: clip.sourceInUs,
         sourceOutUs: clip.sourceOutUs,
         clipDurationUs: clipDuration(clip),
