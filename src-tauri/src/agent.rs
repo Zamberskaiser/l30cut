@@ -158,8 +158,23 @@ pub fn ai_report(app: tauri::AppHandle) -> Result<Vec<EngineReport>, String> {
 
     let sd = crate::creator::sd_binary(&app);
     let sd_model = crate::creator::sd_model(&app);
-    let detail = match (&sd, &sd_model) {
-        (Some(bin), Some(model)) => format!(
+    let image_log = tail_log(&app, "imagens.log");
+    let last_failure = image_log
+        .as_deref()
+        .and_then(|log| [log.rfind("FALHA"), log.rfind("erro:")].into_iter().flatten().max());
+    let last_success = image_log.as_deref().and_then(|log| {
+        [log.rfind("SUCESSO"), log.rfind("TESTE REAL OK")]
+            .into_iter()
+            .flatten()
+            .max()
+    });
+    let last_run_failed = last_failure.is_some() && last_failure > last_success;
+    let installed = sd.is_some() && sd_model.is_some();
+    let detail = match (&sd, &sd_model, last_run_failed) {
+        (Some(_), Some(_), true) => {
+            "instalado, mas a última execução falhou — faça o teste real abaixo".into()
+        }
+        (Some(bin), Some(model), false) => format!(
             "programa: {} · modelo: {}",
             bin.display(),
             model
@@ -167,15 +182,15 @@ pub fn ai_report(app: tauri::AppHandle) -> Result<Vec<EngineReport>, String> {
                 .map(|n| n.to_string_lossy().to_string())
                 .unwrap_or_default()
         ),
-        (None, _) => "o programa de imagens não está instalado".into(),
-        (_, None) => "falta o modelo de imagem (arquivo .safetensors)".into(),
+        (None, _, _) => "o programa de imagens não está instalado".into(),
+        (_, None, _) => "falta o modelo de imagem (arquivo .safetensors)".into(),
     };
     out.push(EngineReport {
         id: "images".into(),
         label: "Gerador de imagens".into(),
-        ready: sd.is_some() && sd_model.is_some(),
+        ready: installed && !last_run_failed,
         detail,
-        log: tail_log(&app, "imagens.log"),
+        log: image_log,
     });
 
     let piper = crate::creator::piper_binary(&app);
