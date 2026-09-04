@@ -177,7 +177,9 @@ echo   OK: CLI local do Tauri pronta.
 echo   Compilando... isso leva de 5 a 20 minutos na primeira vez.
 echo   Acompanhe o progresso abaixo (tambem salvo em build-log.txt):
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & cmd /c ''''%L30_TAURI_CLI%'''' build 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
+> "%TEMP%\l30cut-build.cmd" echo @echo off
+>> "%TEMP%\l30cut-build.cmd" echo call "%L30_TAURI_CLI%" build
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & cmd /c '\"%TEMP%\l30cut-build.cmd\"' 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo   [ERRO] A geracao do instalador falhou. Log completo em: %~dp0build-log.txt
   powershell -NoProfile -Command "Get-Content -Tail 40 '%~dp0build-log.txt'"
