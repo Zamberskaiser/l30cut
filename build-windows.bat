@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 17 (2026-09-04)
+rem   Script versao 18 (2026-09-04)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem   v16: a janela nunca fecha sozinha e, sem permissao de
@@ -33,7 +33,7 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 17 (2026-09-04)
+echo   Script versao 18 (2026-09-04)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
@@ -45,8 +45,8 @@ call :addpath
 rem Impede compilar por engano um ZIP antigo que continha a API incorreta do updater.
 findstr /C:"tauri_plugin_updater::Builder::new().build()" "src-tauri\src\lib.rs" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 18^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v18.zip.
   goto :falhou
 )
 
@@ -54,20 +54,20 @@ rem Versao 14: a visualizacao de video local exige o protocolo de arquivos
 rem liberado na config E compilado no binario (feature protocol-asset).
 findstr /C:"assetProtocol" "src-tauri\tauri.conf.json" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 18^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v18.zip.
   goto :falhou
 )
 findstr /C:"api/public/update/windows" "src-tauri\tauri.conf.json" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 18^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v18.zip.
   goto :falhou
 )
 findstr /C:"protocol-asset" "src-tauri\Cargo.toml" >nul 2>&1
 if errorlevel 1 (
-  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 17^).
-  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v17.zip.
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 18^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v18.zip.
   goto :falhou
 )
 
@@ -136,12 +136,20 @@ set "L30_KEY=%L30_KEYDIR%\updater.key"
 if not exist "%L30_KEYDIR%" mkdir "%L30_KEYDIR%"
 echo [5b/7] Preparando a chave das atualizacoes automaticas...
 set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
-call bun run tauri --version <nul >nul 2>&1
-if errorlevel 1 call bun add --dev --exact "@tauri-apps/cli@2.11.4" <nul >nul 2>&1
-if not exist "%L30_KEY%.pub" (
-  echo   Criando chave de assinatura ^(uma vez apenas^)...
-  call bun run tauri signer generate -w "%L30_KEY%" -p "" --force <nul
+set "L30_TAURI_CLI=%~dp0node_modules\.bin\tauri.cmd"
+if not exist "%L30_TAURI_CLI%" (
+  echo   Instalando a ferramenta do Tauri...
+  cmd /c "bun add --dev --exact @tauri-apps/cli@2.11.4 >> "%~dp0build-log-setup.txt" 2>&1"
 )
+if not exist "%L30_TAURI_CLI%" (
+  echo   [AVISO] Ferramenta do Tauri nao encontrada; seguindo sem assinatura.
+) else (
+  if not exist "%L30_KEY%.pub" (
+    echo   Criando chave de assinatura ^(uma vez apenas^)...
+    cmd /c ""%L30_TAURI_CLI%" signer generate -w "%L30_KEY%" -p "" --force >> "%~dp0build-log-setup.txt" 2>&1" <nul
+  )
+)
+echo   Etapa da chave concluida.
 if exist "%L30_KEY%.pub" (
   for /f "usebackq delims=" %%K in ("%L30_KEY%.pub") do set "L30_PUBKEY=%%K"
   for /f "usebackq delims=" %%K in ("%L30_KEY%") do set "L30_PRIVKEY=%%K"
@@ -156,25 +164,22 @@ echo.
 
 
 echo [6/7] Gerando instalador Windows ^(Tauri^)...
-call bun run tauri --version <nul >nul 2>&1
-if errorlevel 1 (
+if not exist "%L30_TAURI_CLI%" (
   echo   Preparando a CLI local do Tauri...
-  call bun add --dev --exact "@tauri-apps/cli@2.11.4" <nul
-  if errorlevel 1 (
-    echo   [ERRO] Nao foi possivel instalar a CLI local do Tauri via Bun.
-    goto :falhou
-  )
-  call bun run tauri --version <nul >nul 2>&1
-  if errorlevel 1 (
-    echo   [ERRO] Nao foi possivel preparar a CLI local do Tauri via Bun.
-    goto :falhou
-  )
+  cmd /c "bun add --dev --exact @tauri-apps/cli@2.11.4 >> "%~dp0build-log-setup.txt" 2>&1"
+)
+if not exist "%L30_TAURI_CLI%" (
+  echo   [ERRO] Nao foi possivel preparar a CLI local do Tauri via Bun.
+  echo   Detalhes em: %~dp0build-log-setup.txt
+  goto :falhou
 )
 echo   OK: CLI local do Tauri pronta.
 echo   Compilando... isso leva de 5 a 20 minutos na primeira vez.
 echo   Acompanhe o progresso abaixo (tambem salvo em build-log.txt):
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & bun run tauri build 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
+> "%TEMP%\l30cut-build.cmd" echo @echo off
+>> "%TEMP%\l30cut-build.cmd" echo call "%L30_TAURI_CLI%" build
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Continue'; & cmd /c '\"%TEMP%\l30cut-build.cmd\"' 2>&1 | Tee-Object -FilePath '%~dp0build-log.txt'; exit $LASTEXITCODE"
 if errorlevel 1 (
   echo   [ERRO] A geracao do instalador falhou. Log completo em: %~dp0build-log.txt
   powershell -NoProfile -Command "Get-Content -Tail 40 '%~dp0build-log.txt'"
