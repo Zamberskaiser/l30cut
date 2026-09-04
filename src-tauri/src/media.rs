@@ -430,8 +430,15 @@ fn extract_zip(archive_path: &Path, dest: &Path, wanted: &[&str]) -> Result<Vec<
             continue;
         }
         let out = dest.join(&name);
-        let mut sink = std::fs::File::create(&out).map_err(|e| e.to_string())?;
-        std::io::copy(&mut entry, &mut sink).map_err(|e| e.to_string())?;
+        // A file already in use (antivirus lock, running exe) must not abort the
+        // whole install: skip it and keep going.
+        let mut sink = match std::fs::File::create(&out) {
+            Ok(sink) => sink,
+            Err(_) => continue,
+        };
+        if std::io::copy(&mut entry, &mut sink).is_err() {
+            continue;
+        }
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -497,8 +504,13 @@ fn extract_zip_tree(archive_path: &Path, dest: &Path) -> Result<usize, String> {
         if let Some(parent) = out.parent() {
             std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
         }
-        let mut sink = std::fs::File::create(&out).map_err(|e| e.to_string())?;
-        std::io::copy(&mut entry, &mut sink).map_err(|e| e.to_string())?;
+        let mut sink = match std::fs::File::create(&out) {
+            Ok(sink) => sink,
+            Err(_) => continue,
+        };
+        if std::io::copy(&mut entry, &mut sink).is_err() {
+            continue;
+        }
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -614,10 +626,37 @@ pub async fn install_component(
     }
 
 
-    let list = list_components(app)?;
-    list.into_iter()
+    let list = list_components(app.clone())?;
+    let found = list
+        .into_iter()
         .find(|c| c.id == component_id)
-        .ok_or_else(|| "componente não encontrado após a instalação".to_string())
+        .ok_or_else(|| "componente não encontrado após a instalação".to_string())?;
+    log_setup(&app, &component_id, &found.state);
+    if found.state != "ready" {
+        return Err(format!(
+            "{} baixou, mas o programa não apareceu em {}. Feche o antivírus/o app que possa estar usando o arquivo e tente de novo.",
+            found.name,
+            app_dir(&app, "bin")
+                .map(|d| d.to_string_lossy().to_string())
+                .unwrap_or_else(|_| "pasta de dados".into())
+        ));
+    }
+    Ok(found)
+}
+
+/// Appends one line per install attempt to `logs/setup.log` so a failing
+/// component can be diagnosed after the fact.
+fn log_setup(app: &tauri::AppHandle, component: &str, state: &str) {
+    use std::io::Write;
+    if let Ok(dir) = app_dir(app, "logs") {
+        if let Ok(mut file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(dir.join("setup.log"))
+        {
+            let _ = writeln!(file, "{component} -> {state}");
+        }
+    }
 }
 
 /* ------------------------------ probing ------------------------------ */
