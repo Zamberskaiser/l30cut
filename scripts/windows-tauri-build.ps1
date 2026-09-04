@@ -53,7 +53,11 @@ try {
   Write-Stage "Fixando o alvo Rust $Target..."
   $targetExit = Invoke-Captured "rustup.exe" @("target", "add", $Target) $SetupLog
   if ($targetExit -ne 0) { throw "Nao foi possivel preparar o alvo Rust $Target." }
-  $env:CARGO_BUILD_TARGET = $Target
+  $rustDetails = (& rustc.exe -vV 2>&1 | Out-String)
+  Add-Content -Path $SetupLog -Value $rustDetails
+  if ($rustDetails -notmatch "host: $([regex]::Escape($Target))") {
+    throw "O Rust ativo nao e o compilador Windows MSVC de 64 bits. Reinstale o Rust pelo build-windows.bat."
+  }
 
   if (-not (Test-Path $TauriCli)) {
     throw "A CLI local do Tauri nao existe. Execute bun install --frozen-lockfile."
@@ -93,13 +97,14 @@ try {
   }
   $config = Get-Content -Raw $ConfigPath | ConvertFrom-Json
   $config.plugins.updater.pubkey = $publicKeyValue
-  $config | ConvertTo-Json -Depth 100 | Set-Content -Encoding UTF8 $ConfigPath
+  $configJson = $config | ConvertTo-Json -Depth 100
+  [IO.File]::WriteAllText($ConfigPath, $configJson, [Text.UTF8Encoding]::new($false))
   $env:TAURI_SIGNING_PRIVATE_KEY = $privateKeyValue
   $env:TAURI_SIGNING_PRIVATE_KEY_PASSWORD = ""
 
   Write-Stage "Iniciando Tauri $TauriVersion com Rust/MSVC..."
   Set-Content -Path $BuildLog -Value "L30 CUT AI - build Tauri para Windows ($Target)"
-  & $TauriCli build --target $Target 2>&1 | Tee-Object -FilePath $BuildLog -Append
+  & $TauriCli build 2>&1 | Tee-Object -FilePath $BuildLog -Append
   $buildExit = $LASTEXITCODE
   if ($null -eq $buildExit) { $buildExit = 0 }
   if ($buildExit -ne 0) { throw "O Tauri terminou com codigo $buildExit. Consulte build-log.txt." }
