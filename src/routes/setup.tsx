@@ -146,9 +146,26 @@ function SetupPage() {
         </section>
 
         <section>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Componentes
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Componentes
+            </h2>
+            <Button
+              size="sm"
+              className="ml-auto h-7 gap-1.5 text-[11px]"
+              disabled={busy !== null || pendingCount === 0}
+              onClick={() => void installAll()}
+            >
+              {busy !== null ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <Download className="size-3.5" />
+              )}
+              {pendingCount === 0
+                ? "Tudo instalado"
+                : `Instalar o que falta (${pendingCount})`}
+            </Button>
+          </div>
           <ul className="mt-2 space-y-2">
             {components.map((component) => (
               <li key={component.id} className="rounded-md border border-border bg-panel p-3">
