@@ -54,14 +54,7 @@ pub fn sd_model(app: &tauri::AppHandle) -> Option<PathBuf> {
 }
 
 pub fn sd_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
-    let bin = app_dir(app, "bin").ok()?;
-    for name in crate::media::SD_BINARIES.iter().copied() {
-        let path = bin.join(crate::media::exe_name(name));
-        if path.exists() {
-            return Some(path);
-        }
-    }
-    None
+    crate::media::private_component_binary(app, "sd", crate::media::SD_BINARIES)
 }
 
 #[tauri::command]
