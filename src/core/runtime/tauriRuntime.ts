@@ -36,6 +36,8 @@ import type {
   SetupProfile,
   SystemDiagnostics,
   UpdateInfo,
+  UpdateSettings,
+  GithubRepoRef,
 } from "./types";
 
 /**
