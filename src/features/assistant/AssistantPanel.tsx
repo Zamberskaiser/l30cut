@@ -472,9 +472,18 @@ export function AssistantPanel() {
             />
           ))}
           {thinking ? (
-            <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
               <Loader2 className="size-3.5 animate-spin" /> {actions.busy ?? "Montando plano"}…
-            </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-auto h-6 gap-1 px-2 text-[10px]"
+                onClick={cancelRequest}
+                title="Cancelar este pedido"
+              >
+                <X className="size-3" /> Cancelar
+              </Button>
+            </div>
           ) : null}
         </div>
       </ScrollArea>
