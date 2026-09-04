@@ -75,6 +75,7 @@ export const TAURI_COMMANDS = {
   createImage: "create_ai_image",
   createAudio: "create_ai_audio",
   saveTextFile: "save_text_file",
+  exportPng: "export_png",
   webSearch: "web_search",
 } as const;
 
