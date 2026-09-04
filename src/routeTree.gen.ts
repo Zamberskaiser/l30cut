@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DownloadRouteImport } from './routes/download'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as TrainingRouteImport } from './routes/training'
+import { Route as ApiPublicUpdateWindowsRouteImport } from './routes/api/public/update/windows'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const TrainingRoute = TrainingRouteImport.update({
   path: '/training',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicUpdateWindowsRoute = ApiPublicUpdateWindowsRouteImport.update({
+  id: '/api/public/update/windows',
+  path: '/api/public/update/windows',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/download': typeof DownloadRoute
   '/setup': typeof SetupRoute
   '/training': typeof TrainingRoute
+  '/api/public/update/windows': typeof ApiPublicUpdateWindowsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/download': typeof DownloadRoute
   '/setup': typeof SetupRoute
   '/training': typeof TrainingRoute
+  '/api/public/update/windows': typeof ApiPublicUpdateWindowsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,21 @@ export interface FileRoutesById {
   '/download': typeof DownloadRoute
   '/setup': typeof SetupRoute
   '/training': typeof TrainingRoute
+  '/api/public/update/windows': typeof ApiPublicUpdateWindowsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/download' | '/setup' | '/training'
+  fullPaths:
+    '/' | '/download' | '/setup' | '/training' | '/api/public/update/windows'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/download' | '/setup' | '/training'
-  id: '__root__' | '/' | '/download' | '/setup' | '/training'
+  to: '/' | '/download' | '/setup' | '/training' | '/api/public/update/windows'
+  id:
+    | '__root__'
+    | '/'
+    | '/download'
+    | '/setup'
+    | '/training'
+    | '/api/public/update/windows'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +83,7 @@ export interface RootRouteChildren {
   DownloadRoute: typeof DownloadRoute
   SetupRoute: typeof SetupRoute
   TrainingRoute: typeof TrainingRoute
+  ApiPublicUpdateWindowsRoute: typeof ApiPublicUpdateWindowsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrainingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/update/windows': {
+      id: '/api/public/update/windows'
+      path: '/api/public/update/windows'
+      fullPath: '/api/public/update/windows'
+      preLoaderRoute: typeof ApiPublicUpdateWindowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +131,7 @@ const rootRouteChildren: RootRouteChildren = {
   DownloadRoute: DownloadRoute,
   SetupRoute: SetupRoute,
   TrainingRoute: TrainingRoute,
+  ApiPublicUpdateWindowsRoute: ApiPublicUpdateWindowsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,0 +1,45 @@
+L30 CUT AI - atualizacao automatica no Windows (versao 15)
+==========================================================
+
+O QUE JA ESTA PRONTO
+--------------------
+1. O app consulta este endereco ao clicar em "Atualizar sistema":
+   https://l30cut.lovable.app/api/public/update/windows
+   Ele le a ultima release publicada no seu repositorio do GitHub e,
+   se houver versao mais nova, baixa o instalador, instala e reinicia.
+
+2. O build-windows.bat cria sozinho a sua chave de assinatura em
+   %USERPROFILE%\.l30cut\updater.key (e o .pub), coloca a chave publica
+   no tauri.conf.json e assina o instalador.
+   NUNCA apague essa pasta: se a chave mudar, os apps ja instalados
+   deixam de aceitar as atualizacoes.
+
+3. Cada build gera, em "instaladores\":
+   - L30 CUT AI_<versao>_x64-setup.exe  (instalador)
+   - L30 CUT AI_<versao>_x64-setup.exe.sig  (assinatura)
+
+O QUE VOCE PRECISA FAZER UMA VEZ SO
+-----------------------------------
+1. Crie uma conta no github.com (gratis) e um repositorio publico
+   chamado "l30-cut-ai".
+2. Me diga o nome de usuario; se for diferente de "l30cut/l30-cut-ai",
+   eu ajusto o endereco de atualizacao.
+
+PARA CADA NOVA VERSAO
+---------------------
+1. Aumente a versao em src-tauri/tauri.conf.json (ex.: 0.1.0 -> 0.1.1).
+2. Rode build-windows.bat.
+3. No GitHub: Releases -> Draft a new release
+   - Tag: v0.1.1 (igual a versao, com "v" na frente)
+   - Anexe os DOIS arquivos da pasta "instaladores":
+     o -setup.exe e o -setup.exe.sig
+   - Publish release.
+4. Nos computadores com o app instalado: clique no logo L30 CUT AI ->
+   "Atualizar sistema". O app baixa e instala a nova versao sozinho.
+
+OBSERVACOES
+-----------
+- A release precisa ser publica e ter o arquivo .sig, senao o servidor
+  responde "nenhuma atualizacao disponivel" (por seguranca).
+- Enquanto nao existir nenhuma release, o botao apenas informa que o
+  sistema esta atualizado.

@@ -35,14 +35,14 @@
     "updater": {
       "active": true,
       "dialog": false,
-      "endpoints": ["https://github.com/OWNER/REPO/releases/latest/download/latest.json"],
+      "endpoints": ["https://l30cut.lovable.app/api/public/update/windows?current={{current_version}}"],
       "pubkey": "dW50aWxsZWRfcHVibGljX2tleV9wbGFjZWhvbGRlcg==",
       "windows": { "installMode": "basicUi" }
     }
   },
   "bundle": {
     "active": true,
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "targets": ["msi", "nsis"],
     "icon": [
       "icons/32x32.png",
