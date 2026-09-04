@@ -141,7 +141,9 @@ const SEARCH_WORDS = [
   "referencia",
   "referencias",
 ];
-const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcricao", "transcreve", "legendas"];
+// "legendas" stays out on purpose: generating captions from an existing
+// transcript is a timeline edit, not a new transcription job.
+const TRANSCRIBE_WORDS = ["transcreva", "transcrever", "transcricao", "transcreve"];
 
 /** Removes the leading command ("crie um vídeo sobre …" → "…"). */
 function subjectOf(text: string): string {
