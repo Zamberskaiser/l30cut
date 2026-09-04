@@ -85,7 +85,6 @@ export function AssistantPanel() {
   const editor = useEditor();
   const sequence = useActiveSequence();
   const [prompt, setPrompt] = useState("");
-  const [scopeKind, setScopeKind] = useState<PlanScope["kind"]>("sequence");
   const [llm, setLlm] = useState<LlmSettings>(DEFAULT_LLM_SETTINGS);
   const [llmOpen, setLlmOpen] = useState(false);
   const [thinking, setThinking] = useState(false);
@@ -127,10 +126,12 @@ export function AssistantPanel() {
 
   const generative = isGenerativeReady(llm);
 
+  // No scope picker: the assistant works on what the user is pointing at —
+  // the selected clips when there is a selection, the whole sequence otherwise.
   const scope: PlanScope = {
-    kind: scopeKind,
+    kind: editor.selection.length > 0 ? "selection" : "sequence",
     sequenceId: sequence.id,
-    clipIds: scopeKind === "selection" ? editor.selection : [],
+    clipIds: editor.selection,
     inUs: editor.inOutUs?.[0],
     outUs: editor.inOutUs?.[1],
   };
@@ -402,22 +403,7 @@ export function AssistantPanel() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 border-b border-border px-3 py-2">
-        <div>
-          <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Escopo</label>
-          <Select value={scopeKind} onValueChange={(v) => setScopeKind(v as PlanScope["kind"])}>
-            <SelectTrigger className="h-7 text-[11px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SCOPES.map((s) => (
-                <SelectItem key={s.value} value={s.value} className="text-xs">
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="grid grid-cols-1 gap-2 border-b border-border px-3 py-2">
         <div>
           <label className="mb-1 block text-[10px] uppercase text-muted-foreground">Motor</label>
           <Button
@@ -433,7 +419,7 @@ export function AssistantPanel() {
             </span>
           </Button>
         </div>
-        <p className="col-span-2 text-[10px] leading-relaxed text-muted-foreground">
+        <p className="text-[10px] leading-relaxed text-muted-foreground">
           Contexto: {sequence.clips.length} clips · {editor.selection.length} selecionados ·{" "}
           {formatDuration(sequenceDuration(sequence))} · {editor.project.transcript.length}{" "}
           segmentos
