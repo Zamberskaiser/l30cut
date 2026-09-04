@@ -126,7 +126,7 @@ export async function requestPlanFromProvider(
     const response = await fetchImpl(config.endpoint, {
       method: "POST",
       headers,
-      signal: request.signal,
+      ...(request.signal ? { signal: request.signal } : {}),
       body: JSON.stringify({
         model: config.model,
         temperature: 0.1,
