@@ -269,8 +269,9 @@ pub fn preflight_render(
     if options.burn_titles {
         match caption_font() {
             Some(font) => {
-                let escaped = escape_filter_path(&font);
-                if escaped.contains(":\\") || escaped.contains('\\') && !escaped.contains("\\:") {
+                if !std::path::Path::new(&font).is_file() {
+                    problems.push(format!("fonte de títulos ilegível: {font}"));
+                } else if !filter_path_is_safe(&escape_filter_path(&font)) {
                     problems.push(format!("caminho da fonte inválido para o FFmpeg: {font}"));
                 }
             }
