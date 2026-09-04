@@ -26,7 +26,7 @@ pub const ALLOWED_ORIGINS: [&str; 3] = [
 const FFMPEG_ZIP: &str =
     "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
 const WHISPER_ZIP: &str =
-    "https://github.com/ggml-org/whisper.cpp/releases/download/v1.7.4/whisper-bin-x64.zip";
+    "https://github.com/ggml-org/whisper.cpp/releases/download/b4938/whisper-bin-x64.zip";
 const MODEL_BASE: &str = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main";
 
 /// Local generative stack (all CPU-capable, pinned releases).
@@ -275,6 +275,16 @@ fn optional(mut component: ComponentStatus) -> ComponentStatus {
     component
 }
 
+/// Quick TCP probe for a local LLM provider (Ollama / LM Studio default port).
+fn llm_provider_ready() -> bool {
+    use std::net::{TcpStream, ToSocketAddrs};
+    let addr = match ("127.0.0.1", 11434u16).to_socket_addrs().ok().and_then(|mut it| it.next()) {
+        Some(addr) => addr,
+        None => return false,
+    };
+    TcpStream::connect_timeout(&addr, std::time::Duration::from_millis(400)).is_ok()
+}
+
 #[tauri::command]
 pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, String> {
     let list = vec![
@@ -352,7 +362,7 @@ pub fn list_components(app: tauri::AppHandle) -> Result<Vec<ComponentStatus>, St
             "llm-provider",
             "Provider de LLM externo",
             "Alternativa ao llama.cpp: Ollama ou LM Studio no endpoint local.",
-            false,
+            llm_provider_ready(),
             "http://127.0.0.1:11434",
         )),
     ];
@@ -589,10 +599,14 @@ pub async fn install_component(
             download_to(&app, &component_id, SD_MODEL_URL, &dest).await?;
         }
         "llm-provider" => {
-            return Err(
-                "Este item é opcional e externo: instale o Ollama ou o LM Studio e aponte o endpoint local. Para instalação automática use o componente llama.cpp server."
-                    .into(),
-            );
+            // Nothing to download: this item only verifies that a local provider
+            // (Ollama / LM Studio) is answering on the default port.
+            if !llm_provider_ready() {
+                return Err(
+                    "Nenhum provider respondeu em 127.0.0.1:11434. Abra o Ollama ou o LM Studio e tente de novo — ou instale o componente llama.cpp server, que é automático."
+                        .into(),
+                );
+            }
         }
         other => return Err(format!("componente desconhecido: {other}")),
     }
