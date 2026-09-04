@@ -1,3 +1,4 @@
+import { webMediaSrc } from "@/core/runtime/mediaSrc";
 import type { MediaAsset } from "@/core/contracts/domain";
 
 /**
@@ -102,13 +103,13 @@ export async function loadAssetPeaks(
   const decodable =
     typeof window !== "undefined" &&
     !asset.demo &&
-    /^(blob:|https?:|data:|\/)/.test(asset.path) &&
+    /^(blob:|https?:|data:|\/)/.test(webMediaSrc(asset.path)) &&
     asset.audioChannels > 0;
 
   const task = (async (): Promise<PeakData> => {
     if (decodable) {
       try {
-        return { peaks: await decodePeaks(asset.path, buckets), simulated: false };
+        return { peaks: await decodePeaks(webMediaSrc(asset.path), buckets), simulated: false };
       } catch {
         /* undecodable media — fall through to the synthesized envelope */
       }

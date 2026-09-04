@@ -12,6 +12,7 @@ import {
   TranscriptSegmentSchema,
 } from "@/core/contracts/domain";
 import { z } from "zod";
+import { toWebMediaSrc } from "./mediaSrc";
 import {
   parseProjectFile,
   projectFileName,
@@ -282,10 +283,7 @@ export class TauriRuntime implements RuntimeAdapter {
   }
 
   mediaSrc(path: string) {
-    if (/^(blob:|data:|https?:|asset:)/.test(path)) return path;
-    // convertFileSrc, inlined so the runtime keeps no extra import cost.
-    const encoded = encodeURIComponent(path);
-    return `http://asset.localhost/${encoded}`;
+    return toWebMediaSrc(path, true);
   }
 
   aspectResolution(aspect: Aspect) {
