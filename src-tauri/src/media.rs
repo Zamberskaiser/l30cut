@@ -29,6 +29,35 @@ const WHISPER_ZIP: &str =
     "https://github.com/ggml-org/whisper.cpp/releases/download/v1.7.4/whisper-bin-x64.zip";
 const MODEL_BASE: &str = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main";
 
+/// Local generative stack (all CPU-capable, pinned releases).
+const PIPER_ZIP: &str =
+    "https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_windows_amd64.zip";
+const PIPER_VOICE_BASE: &str =
+    "https://huggingface.co/rhasspy/piper-voices/resolve/main/pt/pt_BR/faber/medium";
+const PIPER_VOICE_NAME: &str = "pt_BR-faber-medium.onnx";
+const SD_ZIP: &str = "https://github.com/leejet/stable-diffusion.cpp/releases/download/master-841-6b3edaa/sd-master-6b3edaa-bin-win-cpu-x64.zip";
+const SD_MODEL_URL: &str = "https://huggingface.co/Comfy-Org/stable-diffusion-v1-5-archive/resolve/main/v1-5-pruned-emaonly-fp16.safetensors";
+const SD_MODEL_NAME: &str = "v1-5-pruned-emaonly-fp16.safetensors";
+const LLAMA_ZIP: &str =
+    "https://github.com/ggml-org/llama.cpp/releases/download/b10793/llama-b10793-bin-win-cpu-x64.zip";
+const QWEN_7B: (&str, &str) = (
+    "https://huggingface.co/bartowski/Qwen2.5-7B-Instruct-GGUF/resolve/main/Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+    "Qwen2.5-7B-Instruct-Q4_K_M.gguf",
+);
+const QWEN_3B: (&str, &str) = (
+    "https://huggingface.co/bartowski/Qwen2.5-3B-Instruct-GGUF/resolve/main/Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+    "Qwen2.5-3B-Instruct-Q4_K_M.gguf",
+);
+
+/// Picks the script model by install profile: the light profile keeps the 3B.
+pub fn llm_model_for(profile: Option<&str>) -> (&'static str, &'static str) {
+    match profile {
+        Some("light") => QWEN_3B,
+        _ => QWEN_7B,
+    }
+}
+
+
 pub fn origin_allowed(url: &str) -> bool {
     ALLOWED_ORIGINS.iter().any(|o| url.starts_with(o))
 }
