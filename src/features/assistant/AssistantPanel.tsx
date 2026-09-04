@@ -5,9 +5,11 @@ import {
   ChevronRight,
   Eye,
   Loader2,
+  Mic,
   Pencil,
   Send,
   Settings2,
+  Square,
   Sparkles,
   ThumbsDown,
   X,
@@ -45,6 +47,7 @@ import {
   type LlmSettings,
 } from "@/core/ai/llmSettings";
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
+import { useDictation } from "./useDictation";
 
 const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
   { value: "project", label: "Projeto inteiro" },
@@ -72,6 +75,16 @@ export function AssistantPanel() {
   const [confirming, setConfirming] = useState<{ plan: AiEditPlan; messageId: string } | null>(
     null,
   );
+
+  /**
+   * Voice command: the recording is transcribed locally and sent straight to the
+   * assistant, so the user only has to say what should happen.
+   */
+  const dictation = useDictation((spoken) => {
+    setPrompt(spoken);
+    toast.success("Comando ouvido", { description: spoken });
+    void submit(spoken);
+  });
 
   // Preferences live in localStorage; read after hydration only.
   useEffect(() => setLlm(loadLlmSettings()), []);
@@ -403,18 +416,46 @@ export function AssistantPanel() {
           placeholder="Ex.: remova pausas maiores que 700 ms e gere legendas"
           className="resize-none text-xs"
         />
-        <div className="mt-2 flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground">
-            Enter envia · Shift+Enter quebra linha
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-[10px] leading-tight text-muted-foreground">
+            {dictation.state === "recording"
+              ? "Gravando… fale o comando e clique para parar"
+              : dictation.state === "transcribing"
+                ? "Transcrevendo sua voz aqui no computador…"
+                : "Enter envia · Shift+Enter quebra linha"}
           </span>
-          <Button
-            size="sm"
-            className="h-7 gap-1.5"
-            onClick={() => void submit()}
-            disabled={thinking}
-          >
-            <Send className="size-3.5" /> Enviar
-          </Button>
+          <div className="flex items-center gap-1.5">
+            <Button
+              size="sm"
+              variant={dictation.state === "recording" ? "destructive" : "outline"}
+              className="h-7 gap-1.5"
+              onClick={dictation.toggle}
+              disabled={thinking || dictation.state === "transcribing"}
+              aria-label={dictation.state === "recording" ? "Parar gravação" : "Falar o comando"}
+              title={
+                dictation.supported
+                  ? "Fale o comando em vez de digitar"
+                  : "Disponível no programa instalado, com microfone liberado"
+              }
+            >
+              {dictation.state === "transcribing" ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : dictation.state === "recording" ? (
+                <Square className="size-3.5" />
+              ) : (
+                <Mic className="size-3.5" />
+              )}
+              {dictation.state === "recording" ? "Parar" : "Falar"}
+            </Button>
+            <Button
+              size="sm"
+              className="h-7 gap-1.5"
+              onClick={() => void submit()}
+              disabled={thinking || dictation.state !== "idle"}
+            >
+              <Send className="size-3.5" /> Enviar
+            </Button>
+          </div>
         </div>
       </div>
 

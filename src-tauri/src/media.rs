@@ -984,6 +984,114 @@ pub fn transcribe_asset(
     Ok(segments)
 }
 
+/// Transcribes a short microphone recording made in the app (voice commands for
+/// the assistant). The audio never leaves the machine: FFmpeg normalizes it to
+/// 16 kHz mono and whisper.cpp reads it from the local cache folder.
+#[tauri::command]
+pub fn transcribe_speech(
+    app: tauri::AppHandle,
+    audio: Vec<u8>,
+    extension: String,
+) -> Result<String, String> {
+    if audio.len() < 1_024 {
+        return Err("a gravação ficou vazia; fale por alguns segundos e tente de novo".into());
+    }
+    if audio.len() > 40 * 1_024 * 1_024 {
+        return Err("a gravação é longa demais; grave um comando mais curto".into());
+    }
+    let ffmpeg = tool(&app, "ffmpeg")?;
+    let whisper = whisper_binary(&app).ok_or_else(|| missing_tool("whisper.cpp"))?;
+    let model = any_model(&app).ok_or_else(|| missing_tool("o modelo de transcrição"))?;
+    let cache = app_dir(&app, "cache")?;
+
+    // A fresh stem per recording keeps concurrent dictations from overwriting
+    // each other's wav/json files.
+    let stem = sanitize_stem(&format!(
+        "dictation-{}",
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or(0)
+    ));
+    let ext = sanitize_stem(&extension);
+    let ext = if ext.is_empty() { "wav".to_string() } else { ext };
+    let raw = cache.join(format!("{stem}-in.{ext}"));
+    let wav = cache.join(format!("{stem}.wav"));
+    std::fs::write(&raw, &audio).map_err(|e| format!("não foi possível salvar a gravação: {e}"))?;
+
+    let convert = run(
+        &ffmpeg,
+        &[
+            "-y".into(),
+            "-i".into(),
+            raw.to_string_lossy().to_string(),
+            "-vn".into(),
+            "-ac".into(),
+            "1".into(),
+            "-ar".into(),
+            "16000".into(),
+            "-f".into(),
+            "wav".into(),
+            wav.to_string_lossy().to_string(),
+        ],
+    )
+    .map_err(|_| missing_tool("FFmpeg"))?;
+    let _ = std::fs::remove_file(&raw);
+    if !convert.status.success() {
+        return Err("não foi possível preparar o áudio da gravação".into());
+    }
+
+    let out_prefix = cache.join(&stem);
+    let result = run(
+        &whisper,
+        &[
+            "-m".into(),
+            model.to_string_lossy().to_string(),
+            "-f".into(),
+            wav.to_string_lossy().to_string(),
+            "-l".into(),
+            "pt".into(),
+            "-oj".into(),
+            "-of".into(),
+            out_prefix.to_string_lossy().to_string(),
+        ],
+    )?;
+    let _ = std::fs::remove_file(&wav);
+    if !result.status.success() {
+        return Err(format!(
+            "whisper.cpp falhou: {}",
+            String::from_utf8_lossy(&result.stderr)
+                .lines()
+                .last()
+                .unwrap_or("")
+        ));
+    }
+
+    let json_path = cache.join(format!("{stem}.json"));
+    let text = std::fs::read_to_string(&json_path)
+        .map_err(|_| "whisper.cpp não gerou o arquivo de transcrição".to_string())?;
+    let _ = std::fs::remove_file(&json_path);
+    let parsed: serde_json::Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+    let spoken = parsed
+        .get("transcription")
+        .and_then(|t| t.as_array())
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|item| item.get("text").and_then(|v| v.as_str()))
+                .map(str::trim)
+                .filter(|part| !part.is_empty())
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
+        .unwrap_or_default();
+    let spoken = spoken.split_whitespace().collect::<Vec<_>>().join(" ");
+    if spoken.is_empty() {
+        return Err("não entendi o que foi falado; grave novamente mais perto do microfone".into());
+    }
+    Ok(spoken)
+}
+
 /* --------------------------------- export --------------------------------- */
 
 #[derive(Deserialize)]
