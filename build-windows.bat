@@ -136,12 +136,20 @@ set "L30_KEY=%L30_KEYDIR%\updater.key"
 if not exist "%L30_KEYDIR%" mkdir "%L30_KEYDIR%"
 echo [5b/7] Preparando a chave das atualizacoes automaticas...
 set "TAURI_SIGNING_PRIVATE_KEY_PASSWORD="
-call bun run tauri --version <nul >nul 2>&1
-if errorlevel 1 call bun add --dev --exact "@tauri-apps/cli@2.11.4" <nul >nul 2>&1
-if not exist "%L30_KEY%.pub" (
-  echo   Criando chave de assinatura ^(uma vez apenas^)...
-  call bun run tauri signer generate -w "%L30_KEY%" -p "" --force <nul
+set "L30_TAURI_CLI=%~dp0node_modules\.bin\tauri.cmd"
+if not exist "%L30_TAURI_CLI%" (
+  echo   Instalando a ferramenta do Tauri...
+  cmd /c "bun add --dev --exact @tauri-apps/cli@2.11.4 >> "%~dp0build-log.txt" 2>&1"
 )
+if not exist "%L30_TAURI_CLI%" (
+  echo   [AVISO] Ferramenta do Tauri nao encontrada; seguindo sem assinatura.
+) else (
+  if not exist "%L30_KEY%.pub" (
+    echo   Criando chave de assinatura ^(uma vez apenas^)...
+    cmd /c ""%L30_TAURI_CLI%" signer generate -w "%L30_KEY%" -p "" --force >> "%~dp0build-log.txt" 2>&1" <nul
+  )
+)
+echo   Etapa da chave concluida.
 if exist "%L30_KEY%.pub" (
   for /f "usebackq delims=" %%K in ("%L30_KEY%.pub") do set "L30_PUBKEY=%%K"
   for /f "usebackq delims=" %%K in ("%L30_KEY%") do set "L30_PRIVKEY=%%K"
