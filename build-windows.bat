@@ -5,25 +5,39 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 15 (2026-09-04)
+rem   Script versao 16 (2026-09-04)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
+rem   v16: a janela nunca fecha sozinha e, sem permissao de
+rem   administrador, a instalacao segue no modo "por usuario".
 rem ============================================================
 
-rem --- Eleva para administrador (necessario para instalar o MSI) ---
+set "L30_NOADMIN="
 net session >nul 2>&1
 if errorlevel 1 (
-  echo Solicitando permissao de administrador...
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
-  exit /b 0
+  if /I "%~1"=="--elevated" (
+    set "L30_NOADMIN=1"
+  ) else (
+    echo Pedindo permissao de administrador ^(clique em Sim^)...
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Start-Process -FilePath '%~f0' -ArgumentList '--elevated' -Verb RunAs -ErrorAction Stop; exit 0 } catch { exit 1 }"
+    if not errorlevel 1 (
+      echo A instalacao continua na outra janela ^(a de administrador^).
+      timeout /t 8 /nobreak >nul
+      exit /b 0
+    )
+    echo   [AVISO] Sem permissao de administrador.
+    echo   Vou continuar instalando somente para o seu usuario.
+    set "L30_NOADMIN=1"
+  )
 )
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 15 (2026-09-04)
+echo   Script versao 16 (2026-09-04)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
+echo   Esta janela so fecha quando voce apertar uma tecla.
 echo.
 
 call :addpath
