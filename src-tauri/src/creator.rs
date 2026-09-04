@@ -200,6 +200,27 @@ pub fn escape_filter_path(path: &str) -> String {
     path.replace('\\', "/").replace(':', "\\:")
 }
 
+/// True when an already-escaped path is safe inside an FFmpeg filter argument:
+/// every `:` must be escaped and no raw backslash separators may remain.
+pub fn filter_path_is_safe(escaped: &str) -> bool {
+    if escaped.is_empty() {
+        return false;
+    }
+    let bytes: Vec<char> = escaped.chars().collect();
+    for (index, ch) in bytes.iter().enumerate() {
+        if *ch == ':' && (index == 0 || bytes[index - 1] != '\\') {
+            return false;
+        }
+        if *ch == '\\' && bytes.get(index + 1) != Some(&':') {
+            return false;
+        }
+        if *ch == '\'' {
+            return false;
+        }
+    }
+    true
+}
+
 fn caption_font() -> Option<String> {
     for candidate in [
         "C:/Windows/Fonts/segoeui.ttf",
@@ -536,7 +557,18 @@ pub fn create_ai_video(
 
 #[cfg(test)]
 mod tests {
-    use super::{escape_drawtext, escape_filter_path, hex_to_ffmpeg_color, is_local_endpoint};
+    use super::{
+        escape_drawtext, escape_filter_path, filter_path_is_safe, hex_to_ffmpeg_color,
+        is_local_endpoint,
+    };
+
+    #[test]
+    fn escaped_paths_are_accepted_and_raw_ones_rejected() {
+        assert!(filter_path_is_safe(&escape_filter_path("C:/Windows/Fonts/arial.ttf")));
+        assert!(!filter_path_is_safe("C:/Windows/Fonts/arial.ttf"));
+        assert!(!filter_path_is_safe("C:\\Windows\\Fonts\\arial.ttf"));
+        assert!(!filter_path_is_safe(""));
+    }
 
     #[test]
     fn windows_font_path_is_escaped_for_ffmpeg() {
