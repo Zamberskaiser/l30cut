@@ -291,6 +291,7 @@ pub fn run() {
             agent::create_ai_image,
             agent::create_ai_audio,
             agent::save_text_file,
+            agent::export_png,
             agent::web_search,
             validate_ai_transaction,
             save_project,
