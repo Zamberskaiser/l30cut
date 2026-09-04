@@ -20,7 +20,7 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 11 (2026-09-04)
+echo   Script versao 12 (2026-09-04)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
