@@ -20,6 +20,12 @@ import {
 } from "@/features/creator/script";
 import type { ChatIntent } from "./chatIntents";
 
+/** Speech-to-text pieces, installed on demand when a transcription is asked for. */
+const SPEECH_GAPS = [
+  { id: "whisper.cpp" as const, label: "Transcritor de fala" },
+  { id: "whisper-model" as const, label: "Modelo de fala" },
+];
+
 /** Everything the assistant produces lands in the bin under a dated name. */
 function stamp(prefix: string): string {
   return `${prefix}-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}`;
@@ -58,8 +64,15 @@ export function useAssistantActions(options: { endpoint: string; model: string }
 
   /** Downloads only the modules this particular request needs. */
   const prepare = useCallback(
-    async (needs: { narrate: boolean; images: boolean }): Promise<boolean> => {
+    async (needs: { narrate: boolean; images: boolean; speech?: boolean }): Promise<boolean> => {
       const gaps = missingCreatorModules(engines, needs, components);
+      if (needs.speech) {
+        // Speech-to-text needs whisper.cpp plus its model.
+        for (const gap of SPEECH_GAPS) {
+          const ready = components.find((item) => item.id === gap.id)?.state === "ready";
+          if (!ready && !gaps.some((existing) => existing.id === gap.id)) gaps.push(gap);
+        }
+      }
       if (gaps.length === 0) return true;
       if (!runtime.capabilities.componentDownloads) {
         toast.error("Faltam módulos locais", { description: describeGaps(gaps) });
@@ -253,6 +266,8 @@ export function useAssistantActions(options: { endpoint: string; model: string }
   /** Transcribes a project media and files the text next to the exports. */
   const transcribeAsset = useCallback(
     async (asset: MediaAsset): Promise<ActionOutcome> => {
+      const ready = await prepare({ narrate: false, images: false, speech: true });
+      if (!ready) return { text: "O transcritor de fala ainda não está pronto." };
       setBusy(`Ouvindo ${asset.name}`);
       const segments = await runtime.transcribe(
         asset,
@@ -283,7 +298,7 @@ export function useAssistantActions(options: { endpoint: string; model: string }
           .join("\n"),
       };
     },
-    [runtime],
+    [prepare, runtime],
   );
 
   /** Media the assistant can transcribe (audio and video already imported). */
