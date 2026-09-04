@@ -37,6 +37,8 @@ function SetupPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [detail, setDetail] = useState("");
+  // Kept on screen (toasts vanish): why a given component could not be prepared.
+  const [failures, setFailures] = useState<Record<string, string>>({});
 
   useEffect(() => {
     void runtime.listComponents().then(setComponents);
@@ -57,6 +59,11 @@ function SetupPage() {
         controller.signal,
       );
       setComponents((prev) => prev.map((c) => (c.id === result.id ? result : c)));
+      setFailures((prev) => {
+        const next = { ...prev };
+        delete next[component.id];
+        return next;
+      });
       toast.success(`${component.name} pronto`, {
         description:
           runtime.mode === "tauri"
@@ -64,7 +71,9 @@ function SetupPage() {
             : "Instalação simulada no navegador: nenhum binário foi baixado ou gravado.",
       });
     } catch (error) {
-      toast.error(`Falha ao preparar ${component.name}`, { description: (error as Error).message });
+      const message = (error as Error).message;
+      setFailures((prev) => ({ ...prev, [component.id]: message }));
+      toast.error(`Falha ao preparar ${component.name}`, { description: message });
     } finally {
       setBusy(null);
       setDetail("");
@@ -140,6 +149,9 @@ function SetupPage() {
                 <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
                   {item.description}
                 </p>
+                {failures[component.id] ? (
+                  <p className="mt-2 text-[10px] text-destructive">{failures[component.id]}</p>
+                ) : null}
                 <p className="tabular mt-2 text-[10px] text-muted-foreground">
                   ~{Math.round(item.downloadBytes / 1_000_000)} MB · modelo {item.whisperModel}
                 </p>
