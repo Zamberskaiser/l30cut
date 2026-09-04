@@ -14,8 +14,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 const DEFAULT_REPO = "Zamberskaiser/l30cut";
 
-function repoSlug(): string {
-  const raw = process.env["UPDATE_GITHUB_REPO"] ?? DEFAULT_REPO;
+function repoSlug(requested: string | null): string {
+  const raw = requested?.trim() || process.env["UPDATE_GITHUB_REPO"] || DEFAULT_REPO;
   return raw
     .trim()
     .replace(/^https?:\/\/github\.com\//i, "")
@@ -53,12 +53,16 @@ export const Route = createFileRoute("/api/public/update/windows")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const slug = repoSlug();
+        const url = new URL(request.url);
+        // The desktop app appends the repository chosen in its settings screen.
+        const requested = url.searchParams.get("repo");
+        const safe = requested && /^[\w.-]+\/[\w.-]+$/.test(requested.trim()) ? requested : null;
+        const slug = repoSlug(safe);
         if (!slug || slug.includes("OWNER") || !slug.includes("/")) {
           return new Response(null, { status: 204 });
         }
 
-        const current = new URL(request.url).searchParams.get("current") ?? "0.0.0";
+        const current = url.searchParams.get("current") ?? "0.0.0";
 
         const headers: Record<string, string> = {
           accept: "application/vnd.github+json",

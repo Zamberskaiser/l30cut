@@ -36,6 +36,8 @@ import type {
   SetupProfile,
   SystemDiagnostics,
   UpdateInfo,
+  UpdateSettings,
+  GithubRepoRef,
 } from "./types";
 
 /**
@@ -59,6 +61,12 @@ export const TAURI_COMMANDS = {
   readProjectFile: "read_project_file",
   validateAiTransaction: "validate_ai_transaction",
   checkForUpdate: "check_for_update",
+  updateSettings: "update_settings",
+  githubConnect: "github_connect",
+  githubRepos: "github_repos",
+  githubRepoHasRelease: "github_repo_has_release",
+  setUpdateRepo: "set_update_repo",
+  githubDisconnect: "github_disconnect",
   installUpdate: "install_update",
   listAiEngines: "list_ai_engines",
   llmGenerate: "llm_generate",
@@ -77,6 +85,31 @@ async function getInvoke(): Promise<Invoke> {
   if (!internals?.invoke) throw new Error("Tauri IPC indisponível");
   return internals.invoke;
 }
+
+const UpdateSettingsSchema = z
+  .object({
+    connected: z.boolean(),
+    repo: z.string().nullable().optional(),
+    account: z
+      .object({
+        login: z.string(),
+        name: z.string().nullable().optional(),
+        avatarUrl: z.string().nullable().optional(),
+      })
+      .nullable()
+      .optional(),
+  })
+  .transform((raw) => ({
+    connected: raw.connected,
+    repo: raw.repo ?? null,
+    account: raw.account
+      ? {
+          login: raw.account.login,
+          name: raw.account.name ?? null,
+          avatarUrl: raw.account.avatarUrl ?? null,
+        }
+      : null,
+  }));
 
 const DiagnosticsSchema = z.object({
   os: z.string(),
@@ -318,6 +351,45 @@ export class TauriRuntime implements RuntimeAdapter {
   async installUpdate(): Promise<void> {
     const invoke = await getInvoke();
     await invoke(TAURI_COMMANDS.installUpdate);
+  }
+
+  async getUpdateSettings(): Promise<UpdateSettings> {
+    const invoke = await getInvoke();
+    return UpdateSettingsSchema.parse(await invoke(TAURI_COMMANDS.updateSettings));
+  }
+
+  async connectGithub(token: string): Promise<UpdateSettings> {
+    const invoke = await getInvoke();
+    return UpdateSettingsSchema.parse(await invoke(TAURI_COMMANDS.githubConnect, { token }));
+  }
+
+  async listGithubRepos(): Promise<GithubRepoRef[]> {
+    const invoke = await getInvoke();
+    return z
+      .array(
+        z.object({
+          fullName: z.string(),
+          private: z.boolean(),
+          pushedAt: z.string().nullable().optional(),
+        }),
+      )
+      .parse(await invoke(TAURI_COMMANDS.githubRepos))
+      .map((r) => ({ fullName: r.fullName, private: r.private, pushedAt: r.pushedAt ?? null }));
+  }
+
+  async repoHasRelease(repo: string): Promise<boolean> {
+    const invoke = await getInvoke();
+    return z.boolean().parse(await invoke(TAURI_COMMANDS.githubRepoHasRelease, { repo }));
+  }
+
+  async setUpdateRepo(repo: string): Promise<UpdateSettings> {
+    const invoke = await getInvoke();
+    return UpdateSettingsSchema.parse(await invoke(TAURI_COMMANDS.setUpdateRepo, { repo }));
+  }
+
+  async disconnectGithub(): Promise<UpdateSettings> {
+    const invoke = await getInvoke();
+    return UpdateSettingsSchema.parse(await invoke(TAURI_COMMANDS.githubDisconnect));
   }
 
   async listAiEngines(): Promise<CreatorEngines> {

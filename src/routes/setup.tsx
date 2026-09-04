@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { COMPONENT_CATALOG, SETUP_PROFILES } from "@/core/runtime/catalog";
 import type { ComponentStatus, SetupProfile } from "@/core/runtime/types";
 import { useEditor } from "@/core/store/editorStore";
+import { UpdateSettingsPanel } from "@/features/updates/UpdateSettingsPanel";
 
 export const Route = createFileRoute("/setup")({
   head: () => ({
@@ -207,6 +208,8 @@ function SetupPage() {
             ))}
           </ul>
         </section>
+
+        <UpdateSettingsPanel />
 
         <section className="rounded-md border border-border bg-panel p-3 text-[11px] leading-relaxed text-muted-foreground">
           <p>

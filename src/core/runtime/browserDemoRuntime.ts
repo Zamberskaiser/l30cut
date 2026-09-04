@@ -27,6 +27,8 @@ import type {
   SetupProfile,
   SystemDiagnostics,
   UpdateInfo,
+  UpdateSettings,
+  GithubRepoRef,
 } from "./types";
 
 class Canceled extends Error {
@@ -264,6 +266,32 @@ export class BrowserDemoRuntime implements RuntimeAdapter {
 
   async installUpdate(): Promise<void> {
     throw new Error("Atualizações só funcionam no aplicativo instalado.");
+  }
+
+  async getUpdateSettings(): Promise<UpdateSettings> {
+    return { connected: false, repo: null, account: null };
+  }
+
+  async connectGithub(): Promise<UpdateSettings> {
+    throw new Error(
+      "Conectar a conta do GitHub só funciona no aplicativo instalado, onde o token fica salvo no seu computador.",
+    );
+  }
+
+  async listGithubRepos(): Promise<GithubRepoRef[]> {
+    return [];
+  }
+
+  async repoHasRelease(): Promise<boolean> {
+    return false;
+  }
+
+  async setUpdateRepo(): Promise<UpdateSettings> {
+    throw new Error("Escolher o repositório só funciona no aplicativo instalado.");
+  }
+
+  async disconnectGithub(): Promise<UpdateSettings> {
+    return { connected: false, repo: null, account: null };
   }
 
   async listAiEngines(): Promise<CreatorEngines> {

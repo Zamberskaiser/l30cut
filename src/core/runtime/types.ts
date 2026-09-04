@@ -88,6 +88,25 @@ export interface ImportRequest {
  * Single boundary between UI and the machine. BrowserDemoRuntime simulates,
  * TauriRuntime invokes allowlisted, typed Rust commands.
  */
+/** GitHub account connected inside the app for the updater. */
+export interface GithubAccount {
+  login: string;
+  name: string | null;
+  avatarUrl: string | null;
+}
+
+export interface GithubRepoRef {
+  fullName: string;
+  private: boolean;
+  pushedAt: string | null;
+}
+
+export interface UpdateSettings {
+  connected: boolean;
+  repo: string | null;
+  account: GithubAccount | null;
+}
+
 export interface RuntimeAdapter {
   readonly mode: RuntimeMode;
   readonly capabilities: {
@@ -167,6 +186,18 @@ export interface RuntimeAdapter {
   checkForUpdate?(): Promise<UpdateInfo | null>;
   /** Downloads, installs and restarts the app. */
   installUpdate?(): Promise<void>;
+  /** Saved GitHub account + repository used by the updater (token never leaves the machine). */
+  getUpdateSettings?(): Promise<UpdateSettings>;
+  /** Validates a GitHub token and stores it locally. */
+  connectGithub?(token: string): Promise<UpdateSettings>;
+  /** Repositories the connected account can see, newest activity first. */
+  listGithubRepos?(): Promise<GithubRepoRef[]>;
+  /** True when the repository publishes a Windows installer release. */
+  repoHasRelease?(repo: string): Promise<boolean>;
+  /** Stores the repository the updater should watch. */
+  setUpdateRepo?(repo: string): Promise<UpdateSettings>;
+  /** Forgets the token, account and repository on this machine. */
+  disconnectGithub?(): Promise<UpdateSettings>;
   /** Which local creator engines are installed (FFmpeg, Piper, diffusion, LLM). */
   listAiEngines?(): Promise<CreatorEngines>;
   /** Asks a LOCAL OpenAI-compatible endpoint for a scene script. */
