@@ -1,0 +1,21 @@
+L30 CUT AI - PACOTE WINDOWS V22
+Data: 04/09/2026
+
+CORRECAO PRINCIPAL
+
+O build-windows.bat nao possui mais nenhuma rota alternativa para instalar
+ou executar a ferramenta Tauri pelo gerenciador do Rust. Ele executa exclusivamente:
+
+  bun node_modules\@tauri-apps\cli\tauri.js
+
+A CLI vem da dependencia @tauri-apps/cli fixada no package.json e instalada
+pelo comando bun install --frozen-lockfile.
+
+COMO USAR
+
+1. Apague completamente a pasta da versao anterior.
+2. Extraia L30-CUT-AI-source-v22.zip em uma pasta nova.
+3. Confirme que a janela mostra "Script versao 22".
+4. Execute build-windows.bat.
+
+Depois da compilacao, o script instala o programa no Windows e o abre.
