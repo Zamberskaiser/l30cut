@@ -182,6 +182,8 @@ export function PreviewMonitor() {
                   src={assetSrc}
                   muted={sequence.tracks.some((t) => t.kind === "audio" && t.muted)}
                   playsInline
+                  preload="auto"
+                  disablePictureInPicture
                   className={`size-full object-cover ${chroma ? "invisible" : ""}`}
                   crossOrigin={chroma ? "anonymous" : undefined}
                   onError={() => {
