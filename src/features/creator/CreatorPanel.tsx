@@ -9,10 +9,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ASPECT_RESOLUTIONS } from "@/core/runtime/catalog";
-import type { CreatorEngines, CreatorScene } from "@/core/runtime/types";
+import { ASPECT_RESOLUTIONS, SETUP_PROFILES } from "@/core/runtime/catalog";
+import type { ComponentStatus, CreatorEngines, CreatorScene, SetupProfile } from "@/core/runtime/types";
 import { useActiveSequence, useEditor } from "@/core/store/editorStore";
 import { insertAssetCommands, trackEndUs } from "@/features/media/insertAsset";
+import { describeGaps, missingCreatorModules } from "./modules";
 import {
   buildScriptPrompt,
   fallbackScenes,
@@ -58,9 +59,12 @@ export function CreatorPanel() {
   const [model, setModel] = useState(DEFAULT_MODEL);
   const [narrate, setNarrate] = useState(true);
   const [burnTitles, setBurnTitles] = useState(true);
+  const [useImages, setUseImages] = useState(false);
   const [scenes, setScenes] = useState<CreatorScene[]>([]);
   const [engines, setEngines] = useState<CreatorEngines | null>(null);
+  const [components, setComponents] = useState<ComponentStatus[]>([]);
   const [thinking, setThinking] = useState(false);
+  const [preparing, setPreparing] = useState(false);
   const [rendering, setRendering] = useState(false);
 
   useEffect(() => {
@@ -69,7 +73,60 @@ export function CreatorPanel() {
       .listAiEngines()
       .then(setEngines)
       .catch(() => setEngines(null));
+    void runtime
+      .listComponents()
+      .then(setComponents)
+      .catch(() => setComponents([]));
   }, [runtime]);
+
+  /**
+   * One flow, one button: work out which modules this render actually needs,
+   * download only those, then render. Nothing is installed for an option the
+   * user left switched off.
+   */
+  async function prepareModules(): Promise<boolean> {
+    const gaps = missingCreatorModules(engines, { narrate, images: useImages }, components);
+    if (gaps.length === 0) return true;
+    if (!runtime.capabilities.componentDownloads) {
+      toast.error("Faltam módulos para criar o vídeo", { description: describeGaps(gaps) });
+      return false;
+    }
+    setPreparing(true);
+    const profile = (SETUP_PROFILES[1] ?? SETUP_PROFILES[0]) as SetupProfile;
+    const controller = new AbortController();
+    try {
+      for (const gap of gaps) {
+        const { done } = enqueue({
+          kind: "export",
+          label: `Preparar ${gap.label}`,
+          run: async ({ onProgress }) =>
+            runtime.installComponent(
+              gap.id,
+              profile,
+              (event) => onProgress(event.progress, event.detail),
+              controller.signal,
+            ),
+        });
+        const status = await done;
+        setComponents((current) => {
+          const next = current.filter((item) => item.id !== status.id);
+          return [...next, status];
+        });
+        if (status.state !== "ready") {
+          toast.error(`${gap.label} não ficou pronto`, { description: status.error ?? undefined });
+          return false;
+        }
+      }
+      const refreshed = runtime.listAiEngines ? await runtime.listAiEngines() : null;
+      setEngines(refreshed);
+      return true;
+    } catch (error) {
+      toast.error("Falha ao preparar os módulos", { description: (error as Error).message });
+      return false;
+    } finally {
+      setPreparing(false);
+    }
+  }
 
   async function generateScript() {
     if (brief.trim().length === 0) {
@@ -111,6 +168,8 @@ export function CreatorPanel() {
 
   async function render() {
     if (!runtime.createVideo || scenes.length === 0) return;
+    const prepared = await prepareModules();
+    if (!prepared) return;
     const resolution = ASPECT_RESOLUTIONS[sequence.aspect] ?? { width: 1920, height: 1080 };
     const outputName = `criacao-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-")}`;
     setRendering(true);
@@ -243,6 +302,12 @@ export function CreatorPanel() {
         </div>
         <div className="flex items-center justify-between rounded-md border border-border p-2">
           <span className="flex items-center gap-1.5 text-[11px]">
+            <ImageIcon className="size-3.5" /> Gerar imagens das cenas com IA
+          </span>
+          <Switch checked={useImages} onCheckedChange={setUseImages} />
+        </div>
+        <div className="flex items-center justify-between rounded-md border border-border p-2">
+          <span className="flex items-center gap-1.5 text-[11px]">
             <ImageIcon className="size-3.5" /> Gravar títulos na imagem
           </span>
           <Switch checked={burnTitles} onCheckedChange={setBurnTitles} />
@@ -305,15 +370,15 @@ export function CreatorPanel() {
               size="sm"
               variant="secondary"
               className="h-8 gap-1.5 text-[11px]"
-              disabled={!supported || rendering}
+              disabled={!supported || rendering || preparing}
               onClick={() => void render()}
             >
-              {rendering ? (
+              {rendering || preparing ? (
                 <Loader2 className="size-3.5 animate-spin" />
               ) : (
                 <Wand2 className="size-3.5" />
               )}
-              Criar vídeo e enviar para a timeline
+              {preparing ? "Preparando módulos…" : "Criar vídeo e enviar para a timeline"}
             </Button>
             <p className="flex items-start gap-1.5 text-[10px] leading-relaxed text-muted-foreground">
               <Sparkles className="mt-0.5 size-3 shrink-0" />
