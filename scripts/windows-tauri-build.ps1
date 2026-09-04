@@ -87,10 +87,8 @@ try {
   Write-Stage "Preparando a assinatura das atualizacoes..."
   New-Item -ItemType Directory -Force -Path $KeyDirectory | Out-Null
   if (-not (Test-Path $PrivateKey) -or -not (Test-Path $PublicKey)) {
-    $escapedCli = $TauriCli.Replace('"', '""')
-    $escapedKey = $PrivateKey.Replace('"', '""')
-    $signCommand = "call `"$escapedCli`" signer generate -w `"$escapedKey`" -p `"`" --force <nul"
-    cmd.exe /d /s /c $signCommand 2>&1 | Tee-Object -FilePath $SetupLog -Append | Out-Host
+    & $TauriCli signer generate -w $PrivateKey -p "" --force 2>&1 |
+      Tee-Object -FilePath $SetupLog -Append | Out-Host
     if ($LASTEXITCODE -ne 0) { throw "Nao foi possivel gerar a chave de atualizacao." }
   }
   if (-not (Test-Path $PrivateKey) -or -not (Test-Path $PublicKey)) {
