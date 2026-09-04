@@ -206,9 +206,16 @@ if not defined MSI_FILE if defined NSIS_FILE echo   Instalador copiado para: %~d
 if not defined MSI_FILE if not defined NSIS_FILE echo   [AVISO] Nenhum instalador foi gerado. Veja %~dp0build-log.txt
 
 
+rem Sem administrador o MSI nao instala: nesse caso usamos o NSIS (por usuario).
+if defined L30_NOADMIN if defined NSIS_FILE set "MSI_FILE="
+
 if defined MSI_FILE (
   echo   Instalando via MSI: %MSI_FILE%
   msiexec /i "%MSI_FILE%" /qb /norestart
+  if errorlevel 1 if defined NSIS_FILE (
+    echo   MSI recusado; instalando somente para o seu usuario...
+    "%NSIS_FILE%" /S
+  )
 ) else (
   if defined NSIS_FILE (
     echo   Instalando via NSIS: %NSIS_FILE%
