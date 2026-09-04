@@ -11,6 +11,7 @@
 pub mod ai_ops;
 pub mod creator;
 pub mod media;
+pub mod updates;
 
 use serde::Serialize;
 use sysinfo::{Disks, System};
@@ -216,9 +217,21 @@ struct UpdateInfo {
 
 /// Checks the configured updater endpoint (GitHub Releases by default)
 /// and returns the latest version, if newer than the running build.
+fn updater_for(app: &tauri::AppHandle) -> Result<tauri_plugin_updater::Updater, String> {
+    let version = app.package_info().version.to_string();
+    let mut builder = app.updater_builder();
+    // A repository chosen in Settings wins over the endpoint baked into
+    // tauri.conf.json, so the user can point the updater at their own repo.
+    if let Some(endpoint) = updates::endpoint_for(app, &version) {
+        let url = tauri::Url::parse(&endpoint).map_err(|e| e.to_string())?;
+        builder = builder.endpoints(vec![url]).map_err(|e| e.to_string())?;
+    }
+    builder.build().map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn check_for_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, String> {
-    let updater = app.updater().map_err(|e| e.to_string())?;
+    let updater = updater_for(&app)?;
     let update = updater.check().await.map_err(|e| e.to_string())?;
     Ok(update.map(|u| UpdateInfo {
         version: u.version,
@@ -230,7 +243,7 @@ async fn check_for_update(app: tauri::AppHandle) -> Result<Option<UpdateInfo>, S
 /// Downloads and installs the pending update, then restarts the app.
 #[tauri::command]
 async fn install_update(app: tauri::AppHandle) -> Result<(), String> {
-    let updater = app.updater().map_err(|e| e.to_string())?;
+    let updater = updater_for(&app)?;
     let update = updater
         .check()
         .await
@@ -281,7 +294,13 @@ pub fn run() {
             read_project_file,
             list_projects,
             check_for_update,
-            install_update
+            install_update,
+            updates::update_settings,
+            updates::github_connect,
+            updates::github_repos,
+            updates::github_repo_has_release,
+            updates::set_update_repo,
+            updates::github_disconnect
         ])
         .run(tauri::generate_context!())
         .expect("erro ao iniciar o L30 CUT AI");
