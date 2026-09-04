@@ -149,6 +149,24 @@ export function MediaPanel() {
     run(commands, `Inserir ${asset.name}`);
   }
 
+  // Salva a imagem como PNG com título/data embutidos e nome automático.
+  async function exportPng(asset: MediaAsset) {
+    if (!runtime.exportPng) {
+      toast.error("Exportar PNG só funciona no aplicativo instalado");
+      return;
+    }
+    try {
+      const saved = await runtime.exportPng(
+        asset.kind === "image" ? asset.path : asset.path,
+        asset.name,
+        `Imagem de ${asset.name} — ${asset.width}×${asset.height} · L30 CUT AI`,
+      );
+      toast.success("PNG salvo", { description: saved });
+    } catch (error) {
+      toast.error("Não consegui salvar o PNG", { description: (error as Error).message });
+    }
+  }
+
   function analyzeSilence(asset: MediaAsset) {
     enqueue({
       kind: "analyze-silence",
