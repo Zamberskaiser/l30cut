@@ -55,7 +55,7 @@ fn sd_model(app: &tauri::AppHandle) -> Option<PathBuf> {
 
 fn sd_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
     let bin = app_dir(app, "bin").ok()?;
-    for name in ["sd", "stable-diffusion"] {
+    for name in crate::media::SD_BINARIES.iter().copied() {
         let path = bin.join(crate::media::exe_name(name));
         if path.exists() {
             return Some(path);
@@ -390,6 +390,8 @@ pub fn create_ai_video(
                 (sd.as_ref(), sd_model.as_ref(), scene.image_prompt.as_ref())
             {
                 let args: Vec<String> = vec![
+                    "-M".into(),
+                    "txt2img".into(),
                     "-m".into(),
                     model.to_string_lossy().to_string(),
                     "-p".into(),
