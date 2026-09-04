@@ -433,6 +433,73 @@ fn extract_zip(archive_path: &Path, dest: &Path, wanted: &[&str]) -> Result<Vec<
     Ok(written)
 }
 
+/// Extracts a zip into `dest` preserving its folder tree, dropping a single
+/// shared root folder. Needed by Piper (it ships `espeak-ng-data/`) and sd.cpp.
+fn extract_zip_tree(archive_path: &Path, dest: &Path) -> Result<usize, String> {
+    let file = std::fs::File::open(archive_path).map_err(|e| e.to_string())?;
+    let mut zip = zip::ZipArchive::new(file).map_err(|e| e.to_string())?;
+    // A shared first segment is only stripped when every entry agrees on it.
+    let mut root: Option<String> = None;
+    let mut shared = true;
+    for i in 0..zip.len() {
+        let entry = zip.by_index(i).map_err(|e| e.to_string())?;
+        let name = entry.name().replace('\\', "/");
+        let first = name.split('/').next().unwrap_or("").to_string();
+        if first.is_empty() || !name.contains('/') && !entry.is_dir() {
+            shared = false;
+            break;
+        }
+        match &root {
+            None => root = Some(first),
+            Some(current) if *current != first => {
+                shared = false;
+                break;
+            }
+            _ => {}
+        }
+    }
+    let strip = if shared { root } else { None };
+
+    let mut written = 0usize;
+    for i in 0..zip.len() {
+        let mut entry = zip.by_index(i).map_err(|e| e.to_string())?;
+        if entry.is_dir() {
+            continue;
+        }
+        let raw = entry.name().replace('\\', "/");
+        let relative = match &strip {
+            Some(prefix) => raw
+                .strip_prefix(&format!("{prefix}/"))
+                .unwrap_or(&raw)
+                .to_string(),
+            None => raw.clone(),
+        };
+        // Refuse traversal or absolute paths coming from the archive.
+        if relative.is_empty()
+            || relative.starts_with('/')
+            || relative.split('/').any(|part| part == "..")
+        {
+            continue;
+        }
+        let out = dest.join(&relative);
+        if let Some(parent) = out.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        let mut sink = std::fs::File::create(&out).map_err(|e| e.to_string())?;
+        std::io::copy(&mut entry, &mut sink).map_err(|e| e.to_string())?;
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let _ = std::fs::set_permissions(&out, std::fs::Permissions::from_mode(0o755));
+        }
+        written += 1;
+    }
+    if written == 0 {
+        return Err("o pacote baixado não continha arquivos".into());
+    }
+    Ok(written)
+}
+
 /// Downloads and installs a local component. Real network access, restricted to
 /// the allowlisted origins; progress is emitted on `component-progress`.
 #[tauri::command]
@@ -440,6 +507,7 @@ pub async fn install_component(
     app: tauri::AppHandle,
     component_id: String,
     model: Option<String>,
+    profile_id: Option<String>,
     cancel: Option<bool>,
 ) -> Result<ComponentStatus, String> {
     if cancel.unwrap_or(false) {
@@ -473,14 +541,62 @@ pub async fn install_component(
             let url = format!("{MODEL_BASE}/{model}");
             download_to(&app, &component_id, &url, &dest).await?;
         }
+        "llama-server" => {
+            let zip_path = cache.join("llama-bin.zip");
+            download_to(&app, &component_id, LLAMA_ZIP, &zip_path).await?;
+            // Flat layout: the server needs its DLLs next to the executable.
+            extract_zip(&zip_path, &bin, &[])?;
+            let _ = std::fs::remove_file(&zip_path);
+        }
+        "llm-model" => {
+            let (url, name) = llm_model_for(profile_id.as_deref());
+            let dest = app_dir(&app, "llm")?.join(name);
+            download_to(&app, &component_id, url, &dest).await?;
+        }
+        "piper" => {
+            let zip_path = cache.join("piper-win64.zip");
+            download_to(&app, &component_id, PIPER_ZIP, &zip_path).await?;
+            // Tree extraction: piper resolves `espeak-ng-data/` next to the exe.
+            extract_zip_tree(&zip_path, &bin)?;
+            let _ = std::fs::remove_file(&zip_path);
+        }
+        "piper-voice" => {
+            let voices = app_dir(&app, "voices")?;
+            download_to(
+                &app,
+                &component_id,
+                &format!("{PIPER_VOICE_BASE}/{PIPER_VOICE_NAME}"),
+                &voices.join(PIPER_VOICE_NAME),
+            )
+            .await?;
+            // The companion json carries the phoneme config piper requires.
+            download_to(
+                &app,
+                &component_id,
+                &format!("{PIPER_VOICE_BASE}/{PIPER_VOICE_NAME}.json"),
+                &voices.join(format!("{PIPER_VOICE_NAME}.json")),
+            )
+            .await?;
+        }
+        "stable-diffusion" => {
+            let zip_path = cache.join("stable-diffusion-win64.zip");
+            download_to(&app, &component_id, SD_ZIP, &zip_path).await?;
+            extract_zip_tree(&zip_path, &bin)?;
+            let _ = std::fs::remove_file(&zip_path);
+        }
+        "sd-model" => {
+            let dest = app_dir(&app, "diffusion")?.join(SD_MODEL_NAME);
+            download_to(&app, &component_id, SD_MODEL_URL, &dest).await?;
+        }
         "llm-provider" => {
             return Err(
-                "O provider de LLM local é externo: instale o Ollama ou o llama.cpp server e aponte o endpoint."
+                "Este item é opcional e externo: instale o Ollama ou o LM Studio e aponte o endpoint local. Para instalação automática use o componente llama.cpp server."
                     .into(),
             );
         }
         other => return Err(format!("componente desconhecido: {other}")),
     }
+
 
     let list = list_components(app)?;
     list.into_iter()
