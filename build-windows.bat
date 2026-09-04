@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 10 (2026-09-03)
+rem   Script versao 11 (2026-09-04)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem ============================================================
@@ -20,13 +20,21 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 10 (2026-09-03)
+echo   Script versao 11 (2026-09-04)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
 echo.
 
 call :addpath
+
+rem Impede compilar por engano um ZIP antigo que continha a API incorreta do updater.
+findstr /C:"tauri_plugin_updater::Builder::new().build()" "src-tauri\src\lib.rs" >nul 2>&1
+if errorlevel 1 (
+  echo   [ERRO] Este pacote esta desatualizado ^(anterior a versao 11^).
+  echo   Apague esta pasta e baixe novamente o arquivo L30-CUT-AI-source-v11.zip.
+  goto :falhou
+)
 
 echo [1/7] Verificando Bun...
 where bun >nul 2>nul

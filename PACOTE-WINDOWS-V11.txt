@@ -1,0 +1,8 @@
+L30 CUT AI — pacote Windows v11 — 04/09/2026
+
+Correções confirmadas neste pacote:
+- tauri-plugin-updater inicializado por Builder::new().build()
+- data da atualização convertida de OffsetDateTime para String
+- build-windows.bat recusa automaticamente pacotes antigos
+
+Extraia este ZIP em uma pasta nova antes de executar build-windows.bat.

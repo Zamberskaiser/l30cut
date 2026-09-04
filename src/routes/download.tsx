@@ -37,6 +37,11 @@ const BUILDS = [
   },
 ];
 
+const SOURCE_PACKAGE = {
+  file: "L30-CUT-AI-source-v11.zip",
+  version: "11 · 04/09/2026",
+};
+
 function downloadFile(path: string, filename: string) {
   fetch(path)
     .then((res) => {
@@ -115,7 +120,7 @@ function DownloadPage() {
             <Button
               size="sm"
               className="gap-1.5"
-              onClick={() => downloadFile("/l30-cut-ai-source.zip", "l30-cut-ai-source.zip")}
+              onClick={() => downloadFile(`/${SOURCE_PACKAGE.file}`, SOURCE_PACKAGE.file)}
             >
               <Download className="size-4" /> Baixar pacote (.zip)
             </Button>
@@ -130,6 +135,10 @@ function DownloadPage() {
               Como instalar
             </Button>
           </div>
+          <p className="mt-2 text-[10px] text-muted-foreground">
+            Pacote corrigido: versão {SOURCE_PACKAGE.version}. Extraia em uma pasta nova; não
+            substitua os arquivos da versão anterior.
+          </p>
         </section>
 
         <section className="grid gap-2 md:grid-cols-2">
