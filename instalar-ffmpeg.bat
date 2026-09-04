@@ -78,24 +78,47 @@ echo.
 
 :copiar
 echo [4/4] Copiando para a pasta usada pelo aplicativo...
-copy /y "%PROJ_BIN%\ffmpeg.exe" "%APP_BIN%\ffmpeg.exe" >nul
-copy /y "%PROJ_BIN%\ffprobe.exe" "%APP_BIN%\ffprobe.exe" >nul
-if errorlevel 1 (
-  echo   [ERRO] Nao foi possivel copiar para %APP_BIN%
-  goto :falhou
+set "APP_OK=1"
+if not exist "%APP_BIN%" mkdir "%APP_BIN%" 2>nul
+if not exist "%APP_BIN%" (
+  echo   [AVISO] Nao foi possivel criar a pasta %APP_BIN%
+  set "APP_OK="
 )
-echo   OK: %APP_BIN%
+if defined APP_OK (
+  taskkill /f /im ffmpeg.exe >nul 2>&1
+  taskkill /f /im ffprobe.exe >nul 2>&1
+  copy /y "%PROJ_BIN%\ffmpeg.exe" "%APP_BIN%\ffmpeg.exe" >nul 2>&1
+  if not exist "%APP_BIN%\ffmpeg.exe" (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Copy-Item -LiteralPath '%PROJ_BIN%\ffmpeg.exe' -Destination '%APP_BIN%\ffmpeg.exe' -Force } catch { exit 1 }" >nul 2>&1
+  )
+  copy /y "%PROJ_BIN%\ffprobe.exe" "%APP_BIN%\ffprobe.exe" >nul 2>&1
+  if not exist "%APP_BIN%\ffprobe.exe" (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Copy-Item -LiteralPath '%PROJ_BIN%\ffprobe.exe' -Destination '%APP_BIN%\ffprobe.exe' -Force } catch { exit 1 }" >nul 2>&1
+  )
+  if not exist "%APP_BIN%\ffmpeg.exe" set "APP_OK="
+  if not exist "%APP_BIN%\ffprobe.exe" set "APP_OK="
+)
+if defined APP_OK (
+  echo   OK: %APP_BIN%
+) else (
+  echo   [AVISO] Nao foi possivel copiar para %APP_BIN%
+  echo   Isso costuma acontecer quando o antivirus bloqueia a pasta
+  echo   ou os arquivos estao em uso. Nao tem problema: o aplicativo
+  echo   tambem aceita os programas na pasta do projeto.
+  echo   Se quiser, copie manualmente ffmpeg.exe e ffprobe.exe de
+  echo   %PROJ_BIN% para %APP_BIN%
+)
 echo.
 
 echo Conferindo as versoes instaladas:
-"%APP_BIN%\ffmpeg.exe" -version 2>nul | findstr /I /C:"ffmpeg version"
+"%PROJ_BIN%\ffmpeg.exe" -version 2>nul | findstr /I /C:"ffmpeg version"
 if errorlevel 1 (
-  echo   [ERRO] O ffmpeg instalado nao respondeu ao teste de versao.
+  echo   [ERRO] O ffmpeg baixado nao respondeu ao teste de versao.
   goto :falhou
 )
-"%APP_BIN%\ffprobe.exe" -version 2>nul | findstr /I /C:"ffprobe version"
+"%PROJ_BIN%\ffprobe.exe" -version 2>nul | findstr /I /C:"ffprobe version"
 if errorlevel 1 (
-  echo   [ERRO] O ffprobe instalado nao respondeu ao teste de versao.
+  echo   [ERRO] O ffprobe baixado nao respondeu ao teste de versao.
   goto :falhou
 )
 
