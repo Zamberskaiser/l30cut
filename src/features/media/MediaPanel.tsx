@@ -295,15 +295,27 @@ export function MediaPanel() {
                     >
                       <Wand2 className="size-3.5" />
                     </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-6"
-                      title="Analisar silêncios"
-                      onClick={() => analyzeSilence(asset)}
-                    >
-                      <Waves className="size-3.5" />
-                    </Button>
+                    {asset.kind === "image" ? (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="size-6"
+                        title="Baixar PNG com metadados"
+                        onClick={() => void exportPng(asset)}
+                      >
+                        <Download className="size-3.5" />
+                      </Button>
+                    ) : (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="size-6"
+                        title="Analisar silêncios"
+                        onClick={() => analyzeSilence(asset)}
+                      >
+                        <Waves className="size-3.5" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
