@@ -97,7 +97,7 @@ pub async fn web_search(query: String) -> Result<Vec<SearchHit>, String> {
     }
     let url = format!(
         "https://api.duckduckgo.com/?q={}&format=json&no_html=1&no_redirect=1&skip_disambig=1",
-        urlencoding::encode(&query)
+        encode_query(&query)
     );
     let body = reqwest::get(&url)
         .await
@@ -108,6 +108,21 @@ pub async fn web_search(query: String) -> Result<Vec<SearchHit>, String> {
     let value: serde_json::Value =
         serde_json::from_str(&body).map_err(|_| "a resposta da pesquisa não pôde ser lida".to_string())?;
     Ok(parse_search(&value))
+}
+
+/// Percent-encodes the query so any wording is a safe URL (no extra crates).
+fn encode_query(query: &str) -> String {
+    let mut out = String::new();
+    for byte in query.as_bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                out.push(*byte as char)
+            }
+            b' ' => out.push('+'),
+            other => out.push_str(&format!("%{other:02X}")),
+        }
+    }
+    out
 }
 
 /// Turns DuckDuckGo's answer into a flat hit list (abstract first, then topics).
@@ -162,6 +177,11 @@ mod tests {
         assert_eq!(hits[0].title, "FFmpeg");
         assert_eq!(hits[1].url, "https://a/b");
         assert_eq!(hits[2].title, "Filtro");
+    }
+
+    #[test]
+    fn queries_are_percent_encoded() {
+        assert_eq!(encode_query("como cortar vídeo?"), "como+cortar+v%C3%ADdeo%3F");
     }
 
     #[test]
