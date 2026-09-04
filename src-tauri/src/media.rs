@@ -26,7 +26,7 @@ pub const ALLOWED_ORIGINS: [&str; 3] = [
 const FFMPEG_ZIP: &str =
     "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip";
 const WHISPER_ZIP: &str =
-    "https://github.com/ggml-org/whisper.cpp/releases/download/v1.7.4/whisper-bin-x64.zip";
+    "https://github.com/ggml-org/whisper.cpp/releases/download/b4938/whisper-bin-x64.zip";
 const MODEL_BASE: &str = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main";
 
 /// Local generative stack (all CPU-capable, pinned releases).
