@@ -666,12 +666,19 @@ pub fn create_ai_video(
         ));
     }
 
+    // A written trail of what each engine did, so the Diagnóstico screen can
+    // show why a render came out as plain cards or without voice.
+    if !diary.is_empty() {
+        let _ = std::fs::write(app_dir(&app, "logs")?.join("criacao.log"), &diary);
+    }
+
     Ok(CreatorResult {
         output_path: out_path.to_string_lossy().to_string(),
         bytes: std::fs::metadata(&out_path).map(|m| m.len()).unwrap_or(0),
         used_narration,
         used_image_model,
         scene_count: scenes.len(),
+        notes,
     })
 }
 
