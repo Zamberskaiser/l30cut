@@ -264,13 +264,15 @@ export function useAssistantActions(options: { endpoint: string; model: string }
   const createAudio = useCallback(
     async (intent: ChatIntent): Promise<ActionOutcome> => {
       if (!runtime.createAudio) {
-        return { text: "Criar áudio funciona no programa instalado no Windows, onde ficam as vozes." };
+        return {
+          text: "Criar áudio funciona no programa instalado no Windows, onde ficam as vozes.",
+        };
       }
       const topic = intent.subject.trim();
       let words = (intent.spoken ?? "").trim();
       if (words.length < 3 && topic.length < 3) {
         return {
-          text: 'Diga o que a voz deve falar, por exemplo: “crie um áudio dizendo bem-vindo ao canal”.',
+          text: "Diga o que a voz deve falar, por exemplo: “crie um áudio dizendo bem-vindo ao canal”.",
         };
       }
       const ready = await prepare({ narrate: true, images: false });
