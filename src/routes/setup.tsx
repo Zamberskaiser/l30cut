@@ -98,7 +98,9 @@ function SetupPage() {
   }
 
   const missing = components.filter((c) => c.state !== "ready" && !c.optional);
-  const pendingCount = components.filter((c) => c.state !== "ready" && c.id !== "llm-provider").length;
+  const pendingCount = components.filter(
+    (c) => c.state !== "ready" && c.id !== "llm-provider",
+  ).length;
 
   return (
     <div className="min-h-screen bg-background">
