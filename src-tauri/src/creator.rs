@@ -193,6 +193,13 @@ pub fn escape_drawtext(text: &str) -> String {
         .collect()
 }
 
+/// FFmpeg filter arguments treat `:` and `\` as syntax, so a Windows font path
+/// like `C:/Windows/Fonts/segoeui.ttf` must be escaped before it reaches
+/// `drawtext=fontfile=...`, otherwise every scene fails to render.
+pub fn escape_filter_path(path: &str) -> String {
+    path.replace('\\', "/").replace(':', "\\:")
+}
+
 fn caption_font() -> Option<String> {
     for candidate in [
         "C:/Windows/Fonts/segoeui.ttf",
@@ -360,6 +367,7 @@ pub fn create_ai_video(
         if options.burn_titles {
             if let (Some(font), Some(title)) = (font.as_ref(), scene.title.as_ref()) {
                 let text = escape_drawtext(title);
+                let font = escape_filter_path(font);
                 if !text.is_empty() {
                     filter.push_str(&format!(
                         ",drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
@@ -415,7 +423,7 @@ pub fn create_ai_video(
             let log = String::from_utf8_lossy(&output.stderr).to_string();
             let _ = std::fs::write(app_dir(&app, "logs")?.join("creator.log"), &log);
             return Err(format!(
-                "falha ao montar a cena {}: {}",
+                "falha ao montar a cena {}: {} (detalhes em logs/creator.log)",
                 index + 1,
                 log.lines().last().unwrap_or("")
             ));
@@ -470,7 +478,15 @@ pub fn create_ai_video(
 
 #[cfg(test)]
 mod tests {
-    use super::{escape_drawtext, hex_to_ffmpeg_color, is_local_endpoint};
+    use super::{escape_drawtext, escape_filter_path, hex_to_ffmpeg_color, is_local_endpoint};
+
+    #[test]
+    fn windows_font_path_is_escaped_for_ffmpeg() {
+        assert_eq!(
+            escape_filter_path("C:\\Windows\\Fonts\\segoeui.ttf"),
+            "C\\:/Windows/Fonts/segoeui.ttf"
+        );
+    }
 
     #[test]
     fn only_loopback_llm_endpoints() {
