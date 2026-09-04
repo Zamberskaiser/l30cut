@@ -19,6 +19,8 @@ const MIN_CLIP_US = 200_000;
 const MAX_CLIP_US = 15 * 60 * SECOND;
 const MAX_COMMANDS = 4000;
 
+const clampGain = (db: number) => Math.max(-60, Math.min(12, Math.round(db * 10) / 10));
+
 /**
  * Compiles a validated plan into deterministic timeline commands.
  * Every id, range and runtime capability is checked BEFORE anything executes.
