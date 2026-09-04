@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { Activity, Download, Loader2 } from "lucide-react";
+import { Activity, Clipboard, Download, Image, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import type { ComponentStatus, EngineReport, SystemDiagnostics } from "@/core/runtime/types";
 import { useEditor } from "@/core/store/editorStore";
+import { readableError } from "@/features/assistant/errorMessage";
 
 export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
   const { runtime } = useEditor();
@@ -21,6 +23,7 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
   const [diagnostics, setDiagnostics] = useState<SystemDiagnostics | null>(null);
   const [components, setComponents] = useState<ComponentStatus[]>([]);
   const [engines, setEngines] = useState<EngineReport[]>([]);
+  const [testingImage, setTestingImage] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -32,6 +35,47 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
       setEngines(runtime.aiReport ? await runtime.aiReport().catch(() => []) : []);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function testImages() {
+    if (!runtime.testImageEngine) return;
+    setTestingImage(true);
+    try {
+      const report = await runtime.testImageEngine();
+      setEngines((current) => [report, ...current.filter((item) => item.id !== report.id)]);
+      if (report.ready) toast.success("Gerador de imagens testado", { description: report.detail });
+      else toast.error("O teste de imagem falhou", { description: report.detail, duration: 12_000 });
+    } catch (error) {
+      toast.error("O teste de imagem falhou", {
+        description: readableError(error),
+        duration: 12_000,
+      });
+    } finally {
+      setTestingImage(false);
+    }
+  }
+
+  async function copyReport() {
+    const body = [
+      "L30 CUT AI — relatório local",
+      diagnostics
+        ? `Sistema: ${diagnostics.os} | CPU: ${diagnostics.cpu} | GPU: ${diagnostics.gpu ?? "não detectada"}`
+        : "Sistema: indisponível",
+      ...components.map(
+        (component) =>
+          `Componente ${component.name}: ${component.state}${component.error ? ` — ${component.error}` : ""}`,
+      ),
+      ...engines.map(
+        (engine) =>
+          `Motor ${engine.label}: ${engine.ready ? "pronto" : "com problema"}\n${engine.detail}${engine.log ? `\n${engine.log}` : ""}`,
+      ),
+    ].join("\n\n");
+    try {
+      await navigator.clipboard.writeText(body);
+      toast.success("Relatório copiado", { description: "Agora você pode colar e me enviar." });
+    } catch (error) {
+      toast.error("Não consegui copiar o relatório", { description: readableError(error) });
     }
   }
 
@@ -137,6 +181,33 @@ export function DiagnosticsDialog({ trigger }: { trigger?: ReactNode }) {
                 ))}
               </div>
             ) : null}
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 text-[11px]"
+                disabled={!runtime.testImageEngine || testingImage}
+                onClick={() => void testImages()}
+              >
+                {testingImage ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                  <Image className="size-3.5" />
+                )}
+                {testingImage ? "Testando…" : "Testar imagem de verdade"}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1.5 text-[11px]"
+                onClick={() => void copyReport()}
+              >
+                <Clipboard className="size-3.5" /> Copiar relatório
+              </Button>
+            </div>
 
             {components.some((c) => c.state !== "ready") ? (
               <Button asChild size="sm" className="h-7 w-full gap-1.5 text-[11px]">
