@@ -333,6 +333,11 @@ pub fn create_ai_video(
     let mut used_image_model = false;
     let mut parts: Vec<PathBuf> = Vec::new();
 
+    // Why a scene fell back to a card / to silence, so the chat can say it out
+    // loud instead of quietly shipping an empty-looking video.
+    let mut notes: Vec<String> = Vec::new();
+    let mut diary = String::new();
+
     for (index, scene) in scenes.iter().enumerate() {
         // 1. Narration (Piper) — decides the scene length when available.
         let mut narration_wav: Option<PathBuf> = None;
@@ -341,26 +346,30 @@ pub fn create_ai_video(
             .as_ref()
             .map(|t| t.trim().to_string())
             .unwrap_or_default();
-        if let (Some(piper), Some(voice), false) =
-            (piper.as_ref(), voice.as_ref(), narration_text.is_empty())
-        {
-            let wav = work.join(format!("voz_{index:03}.wav"));
-            let args: Vec<String> = vec![
-                "--model".into(),
-                voice.to_string_lossy().to_string(),
-                "--output_file".into(),
-                wav.to_string_lossy().to_string(),
-            ];
-            let mut child = crate::media::spawn_piped(piper, &args)?;
-            if let Some(stdin) = child.stdin.as_mut() {
-                use std::io::Write;
-                let _ = stdin.write_all(narration_text.as_bytes());
-            }
-            drop(child.stdin.take());
-            let done = child.wait().map_err(|e| e.to_string())?;
-            if done.success() && wav.exists() {
-                narration_wav = Some(wav);
-                used_narration = true;
+        if !narration_text.is_empty() {
+            match (piper.as_ref(), voice.as_ref()) {
+                (Some(piper), Some(voice)) => {
+                    let wav = work.join(format!("voz_{index:03}.wav"));
+                    match speak_to_wav(piper, voice, &narration_text, &wav) {
+                        Ok(()) => {
+                            narration_wav = Some(wav);
+                            used_narration = true;
+                        }
+                        Err(problem) => {
+                            diary.push_str(&format!("cena {}: voz falhou -> {problem}\n", index + 1));
+                            if notes.iter().all(|n| !n.starts_with("A voz local")) {
+                                notes.push(format!("A voz local não gerou som: {problem}"));
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    if options.narrate && notes.iter().all(|n| !n.starts_with("A voz local")) {
+                        notes.push(
+                            "A voz local não está instalada — instale a narração na tela de Configuração.".into(),
+                        );
+                    }
+                }
             }
         }
 
@@ -379,29 +388,34 @@ pub fn create_ai_video(
             .map(PathBuf::from)
             .filter(|p| p.exists());
         if image.is_none() {
-            if let (Some(sd), Some(model), Some(prompt)) =
-                (sd.as_ref(), sd_model.as_ref(), scene.image_prompt.as_ref())
-            {
-                let args: Vec<String> = vec![
-                    "-M".into(),
-                    "txt2img".into(),
-                    "-m".into(),
-                    model.to_string_lossy().to_string(),
-                    "-p".into(),
-                    prompt.clone(),
-                    "-W".into(),
-                    width.to_string(),
-                    "-H".into(),
-                    height.to_string(),
-                    "-o".into(),
-                    still.to_string_lossy().to_string(),
-                ];
-                if run(sd, &args).map(|o| o.status.success()).unwrap_or(false) && still.exists() {
-                    image = Some(still.clone());
-                    used_image_model = true;
+            match (sd.as_ref(), sd_model.as_ref(), scene.image_prompt.as_ref()) {
+                (Some(sd), Some(model), Some(prompt)) => {
+                    match draw_still(sd, model, prompt, width, height, &still) {
+                        Ok(()) => {
+                            image = Some(still.clone());
+                            used_image_model = true;
+                        }
+                        Err(problem) => {
+                            diary.push_str(&format!(
+                                "cena {}: imagem falhou -> {problem}\n",
+                                index + 1
+                            ));
+                            if notes.iter().all(|n| !n.starts_with("O gerador de imagens")) {
+                                notes.push(format!("O gerador de imagens falhou: {problem}"));
+                            }
+                        }
+                    }
+                }
+                _ => {
+                    if notes.iter().all(|n| !n.starts_with("O gerador de imagens")) {
+                        notes.push(
+                            "O gerador de imagens não está instalado — instale-o na tela de Configuração.".into(),
+                        );
+                    }
                 }
             }
         }
+
 
         let mut args: Vec<String> = vec!["-y".into(), "-hide_banner".into()];
         let mut filter = String::new();
