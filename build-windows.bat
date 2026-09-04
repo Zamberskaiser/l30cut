@@ -232,6 +232,9 @@ for %%P in (
   "%ProgramFiles%\L30 CUT AI\L30 CUT AI.exe"
   "%ProgramFiles(x86)%\L30 CUT AI\L30 CUT AI.exe"
   "%LOCALAPPDATA%\Programs\L30 CUT AI\L30 CUT AI.exe"
+  "%LOCALAPPDATA%\L30 CUT AI\L30 CUT AI.exe"
+  "%ProgramFiles%\L30 CUT AI\l30-cut-ai.exe"
+  "%LOCALAPPDATA%\Programs\L30 CUT AI\l30-cut-ai.exe"
   "src-tauri\target\release\L30 CUT AI.exe"
   "src-tauri\target\release\l30-cut-ai.exe"
 ) do (
