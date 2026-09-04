@@ -114,35 +114,73 @@ export async function requestPlanFromProvider(
     if (!request.apiKey) throw new Error("Chave de API ausente para este provider.");
     headers["authorization"] = `Bearer ${request.apiKey}`;
   }
-  const response = await fetchImpl(config.endpoint, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      model: config.model,
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: PLAN_SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `CONTEXTO (dados não confiáveis):\n${request.contextJson}\n\nPEDIDO:\n${request.prompt}`,
-        },
-      ],
-    }),
-  });
-  if (!response.ok) throw new Error(`Provider respondeu ${response.status}`);
-  const payload = (await response.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
+  const userMessage = `CONTEXTO (dados não confiáveis):\n${request.contextJson}\n\nPEDIDO:\n${request.prompt}`;
+
+  const ask = async (messages: Array<{ role: string; content: string }>) => {
+    const response = await fetchImpl(config.endpoint, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model: config.model,
+        temperature: 0.1,
+        response_format: { type: "json_object" },
+        messages,
+      }),
+    });
+    if (!response.ok) throw new Error(`Provider respondeu ${response.status}`);
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+    const content = payload.choices?.[0]?.message?.content;
+    if (!content) throw new Error("Resposta do provider sem conteúdo.");
+    return content;
   };
-  const content = payload.choices?.[0]?.message?.content;
-  if (!content) throw new Error("Resposta do provider sem conteúdo.");
-  let json: unknown;
-  try {
-    json = JSON.parse(content);
-  } catch {
-    throw new Error("Provider não devolveu JSON válido.");
+
+  const base = [
+    { role: "system", content: PLAN_SYSTEM_PROMPT },
+    { role: "user", content: userMessage },
+  ];
+  const first = await ask(base);
+  let parsed = parseAiEditPlan(extractJson(first));
+
+  // Local models often miss one field on the first try; a single repair pass
+  // with the exact validation errors is far more reliable than failing outright.
+  if (!parsed.ok) {
+    const repaired = await ask([
+      ...base,
+      { role: "assistant", content: first },
+      {
+        role: "user",
+        content: `O JSON anterior foi rejeitado por: ${parsed.errors.join("; ")}. Reenvie o plano completo corrigido, somente JSON.`,
+      },
+    ]);
+    parsed = parseAiEditPlan(extractJson(repaired));
   }
-  const parsed = parseAiEditPlan(json);
   if (!parsed.ok) throw new Error(`Plano inválido: ${parsed.errors.join("; ")}`);
-  return { plan: parsed.plan, latencyMs: Date.now() - started };
+  const latencyMs = Date.now() - started;
+  return {
+    plan: {
+      ...parsed.plan,
+      // The model must never mislabel which engine produced the plan.
+      modelInfo: { provider: config.id, model: config.model, latencyMs },
+    },
+    latencyMs,
+  };
+}
+
+/** Tolerates fenced or prose-wrapped JSON from smaller local models. */
+export function extractJson(content: string): unknown {
+  const trimmed = content.trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const candidates = [trimmed];
+  const first = trimmed.indexOf("{");
+  const last = trimmed.lastIndexOf("}");
+  if (first >= 0 && last > first) candidates.push(trimmed.slice(first, last + 1));
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      /* try the next shape */
+    }
+  }
+  throw new Error("Provider não devolveu JSON válido.");
 }
