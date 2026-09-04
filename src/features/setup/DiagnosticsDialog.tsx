@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { Activity, Loader2 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Activity, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
