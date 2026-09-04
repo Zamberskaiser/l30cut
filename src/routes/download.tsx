@@ -38,8 +38,8 @@ const BUILDS = [
 ];
 
 const SOURCE_PACKAGE = {
-  file: "L30-CUT-AI-source-v31.zip",
-  version: "31 · 04/09/2026",
+  file: "L30-CUT-AI-source-v32.zip",
+  version: "32 · 04/09/2026",
 };
 
 function downloadFile(path: string, filename: string) {
