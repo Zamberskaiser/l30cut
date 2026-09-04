@@ -686,8 +686,26 @@ pub fn create_ai_video(
 mod tests {
     use super::{
         escape_drawtext, escape_filter_path, filter_path_is_safe, hex_to_ffmpeg_color,
-        is_local_endpoint,
+        is_local_endpoint, last_meaningful_line, still_size,
     };
+
+    #[test]
+    fn stills_are_multiples_of_64_and_never_huge() {
+        let (w, h) = still_size(1920, 1080);
+        assert_eq!(w % 64, 0);
+        assert_eq!(h % 64, 0);
+        assert!(w <= 1024 && h <= 1024);
+        assert_eq!(still_size(1080, 1920).0 % 64, 0);
+    }
+
+    #[test]
+    fn the_last_useful_log_line_is_reported() {
+        assert_eq!(
+            last_meaningful_line("carregando\nerro: modelo invalido\n\n"),
+            Some("erro: modelo invalido".to_string())
+        );
+        assert_eq!(last_meaningful_line("   \n"), None);
+    }
 
     #[test]
     fn escaped_paths_are_accepted_and_raw_ones_rejected() {
