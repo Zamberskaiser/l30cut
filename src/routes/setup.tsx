@@ -72,7 +72,8 @@ function SetupPage() {
   }
 
   async function installAll() {
-    const pending = components.filter((c) => c.state !== "ready");
+    // llm-provider has no download: it only verifies a local Ollama/LM Studio.
+    const pending = components.filter((c) => c.state !== "ready" && c.id !== "llm-provider");
     if (pending.length === 0) {
       toast.success("Tudo já está pronto");
       return;
@@ -97,7 +98,7 @@ function SetupPage() {
   }
 
   const missing = components.filter((c) => c.state !== "ready" && !c.optional);
-  const pendingCount = components.filter((c) => c.state !== "ready").length;
+  const pendingCount = components.filter((c) => c.state !== "ready" && c.id !== "llm-provider").length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -190,7 +191,7 @@ function SetupPage() {
                         ) : (
                           <Download className="size-3.5" />
                         )}
-                        Preparar
+                        {component.id === "llm-provider" ? "Verificar" : "Preparar"}
                       </Button>
                     )}
                   </div>
