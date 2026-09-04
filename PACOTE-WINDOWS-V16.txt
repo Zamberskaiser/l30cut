@@ -33,3 +33,11 @@ Atualizacao automatica
 Veja COMO-ATUALIZAR-AUTOMATICO.txt.
 Nao apague a pasta %USERPROFILE%\.l30cut - ela guarda a sua chave
 de assinatura das atualizacoes.
+
+Instaladores auxiliares
+-----------------------
+- instalar-cpp.bat: baixa e instala o compilador C++ (necessario
+  para compilar o aplicativo).
+- instalar-ffmpeg.bat: baixa o FFmpeg oficial, coloca ffmpeg.exe e
+  ffprobe.exe na pasta bin do projeto e tambem em
+  %APPDATA%\ai.l30cut.desktop\bin, conferindo a versao no final.
