@@ -1,0 +1,66 @@
+{
+  "repository": "Zamberskaiser/l30cut",
+  "ref": "b60ad7d0bb861a4258ad46396e9527cffa34d39b",
+  "review_date": "2026-09-04",
+  "type": "read_only_static_partial_audit",
+  "installed_build_verified": false,
+  "network_capture_performed": false,
+  "files": [
+    {
+      "id": "C01",
+      "path": "src-tauri/src/agent.rs",
+      "scope": "Trechos de criação local, save_text_file e web_search; leitura extensa inicial e intervalos 360–560.",
+      "blob_sha": "43f444377252439465c11b05c80f670bc82b6eb3",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src-tauri/src/agent.rs"
+    },
+    {
+      "id": "C02",
+      "path": "src/core/ai/ollama.ts",
+      "scope": "Arquivo retornado integralmente: URL padrão, normalização e pull.",
+      "blob_sha": "b87aaac9926f11e90784cb625feadd4d854c565a",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src/core/ai/ollama.ts"
+    },
+    {
+      "id": "C03",
+      "path": "src-tauri/tauri.conf.json",
+      "scope": "Arquivo retornado integralmente: CSP, assets, updater e instalador.",
+      "blob_sha": "7fff893466398b8859efe16d1de4e5a0252360f4",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src-tauri/tauri.conf.json"
+    },
+    {
+      "id": "C04",
+      "path": "src/features/assistant/AssistantPanel.tsx",
+      "scope": "Linhas 1–200: sugestões, voz, roteamento e criação de mensagens.",
+      "blob_sha": "6faad00f02cd9011694b427a3d1ba7628d1b6061",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src/features/assistant/AssistantPanel.tsx"
+    },
+    {
+      "id": "C05",
+      "path": "src/features/assistant/useAssistantActions.ts",
+      "scope": "Linhas 1–280 e 315–520: prepare, ActionOutcome, geração, busca, TXT e escolha de alvo.",
+      "blob_sha": "46e5240753b5781bc58bf7969e9dc0b2c2cbdb50",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src/features/assistant/useAssistantActions.ts"
+    },
+    {
+      "id": "C06",
+      "path": "src/core/store/editorStore.tsx",
+      "scope": "Linhas 1–440, cobrindo o arquivo retornado: AssistantMessage, estado e salvar/abrir.",
+      "blob_sha": "cdd6f1f5a2690b974e1e24906d2612bb7ba34f6c",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src/core/store/editorStore.tsx"
+    },
+    {
+      "id": "C07",
+      "path": "src/core/ai/contextBuilder.ts",
+      "scope": "Linhas 1–200, cobrindo o arquivo retornado: limites e conteúdo do contexto.",
+      "blob_sha": "9c8efd66f748cb9faaab818c0f3c068c5de1e1b5",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src/core/ai/contextBuilder.ts"
+    },
+    {
+      "id": "C08",
+      "path": "src/features/assistant/provider.ts",
+      "scope": "Linhas 1–170: provedores, prompt e requisição; leitura não cobre todo o arquivo.",
+      "blob_sha": "c51a33a906160af8e264a732dc3a7daf19f09b27",
+      "url": "https://github.com/Zamberskaiser/l30cut/blob/b60ad7d0bb861a4258ad46396e9527cffa34d39b/src/features/assistant/provider.ts"
+    }
+  ]
+}

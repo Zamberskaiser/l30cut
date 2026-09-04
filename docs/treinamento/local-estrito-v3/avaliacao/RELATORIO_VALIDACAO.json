@@ -1,0 +1,77 @@
+{
+  "created_at": "2026-09-04T23:20:42.140238+00:00",
+  "scope": "package_static_and_sql_fixture_only",
+  "installed_application_tested": false,
+  "llm_tested": false,
+  "voice_tested": false,
+  "network_isolation_tested": false,
+  "passed": 13,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "utf8",
+      "status": "passed",
+      "detail": "50 arquivos textuais lidos como UTF-8."
+    },
+    {
+      "name": "json_syntax",
+      "status": "passed",
+      "detail": "57 objetos JSON/JSONL válidos."
+    },
+    {
+      "name": "schemas",
+      "status": "passed",
+      "detail": "3 schemas locais conferidos."
+    },
+    {
+      "name": "profile_limits",
+      "status": "passed",
+      "detail": "20 regras; maior regra: 167 caracteres; 8 resumos no espelho fornecido. Não houve importação no Cut."
+    },
+    {
+      "name": "local_policy",
+      "status": "passed",
+      "detail": "Política declarativa coerente com local estrito; isso não demonstra aplicação no host."
+    },
+    {
+      "name": "examples",
+      "status": "passed",
+      "detail": "Três turnos de exemplo e um anexo validados; IDs/recibo são sintéticos."
+    },
+    {
+      "name": "questions_no_mutations",
+      "status": "passed",
+      "detail": "Schema rejeita pergunta com tarefas e mais de três perguntas no turno."
+    },
+    {
+      "name": "external_tools_rejected",
+      "status": "passed",
+      "detail": "O catálogo de exemplo não aceita ferramentas externas. Adaptadores reais ainda precisam aplicar a política."
+    },
+    {
+      "name": "txt_integrity",
+      "status": "passed",
+      "detail": "TXT real incluído: 1499 bytes, SHA-256 coerente com o exemplo."
+    },
+    {
+      "name": "synthetic_datasets",
+      "status": "passed",
+      "detail": "36 perguntas, 30 cenários de treino e 12 reservados; nenhum modelo foi avaliado."
+    },
+    {
+      "name": "sql_model_roundtrip",
+      "status": "passed",
+      "detail": "Modelo SQLite em banco temporário: reabertura, versões, duplicidade rejeitada e isolamento de vínculos. Não é teste da persistência do Cut."
+    },
+    {
+      "name": "provenance_scope",
+      "status": "passed",
+      "detail": "Oito arquivos referenciados com commit e limites da inspeção."
+    },
+    {
+      "name": "package_hashes",
+      "status": "passed",
+      "detail": "48 hashes verificados; manifesto e relatório excluídos da autoassinatura."
+    }
+  ]
+}

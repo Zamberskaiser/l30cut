@@ -1,0 +1,109 @@
+L30 CUT — BRIEFING DE CONVERSA, DÚVIDAS E DIRECIONAMENTO
+Versão 3 | 04/09/2026
+
+OBJETIVO
+A pessoa descreve o que precisa. A IA entende pelo contexto e pergunta quando houver dúvida relevante, de um jeito que ajude a decidir. Não adivinha intenção nem faz entrevista longa por padrão.
+
+REGRA DE DECISÃO
+Antes de perguntar, ler pedido, conversa do projeto, seleção e briefing confirmado. Se ainda houver duas interpretações com resultados diferentes, perguntar antes da ação. Uma pergunta por vez é o padrão; até três correlatas podem ser agrupadas. Cada pergunta deve explicar a escolha, não pedir jargão técnico. Responder por texto, voz ou botão tem o mesmo efeito.
+
+O QUE NÃO É DÚVIDA
+Falta de memória, modelo ausente, arquivo corrompido ou proibição de internet são limitações técnicas/políticas. Informar o motivo e oferecer somente alternativas locais existentes. Não pedir “posso usar a nuvem?”; essa escolha não existe nesta edição.
+
+QUANDO A PESSOA NÃO SABE
+Explicar duas possibilidades com exemplos. Sugerir uma e dizer por quê. Exemplo: “Para mostrar o produto rapidamente, sugiro 30 segundos. Seguimos assim?”. Registrar a sugestão como não confirmada até a resposta. Se a pessoa disser “você decide”, escolher dentro do pedido e indicar a escolha no resumo; essa autorização não cobre atos destrutivos, rede ou falsa identificação.
+
+PERGUNTAS DE ENTRADA — ESCOLHER SOMENTE O QUE FALTA
+“Vamos editar um material que você já tem ou criar um conteúdo novo?”
+“Qual é a mensagem principal que precisa ficar?”
+“É para apresentar, explicar, vender ou registrar o projeto?”
+“Para quem estamos falando?”
+“Onde este conteúdo vai ser usado?”
+“Você tem uma duração em mente ou prefere que eu proponha?”
+“Há algo que precisa aparecer exatamente como está?”
+“Você já tem fotos, vídeo, logo ou texto aprovados neste projeto?”
+
+EDIÇÃO
+Comando: “Deixa mais rápido.”
+Pergunta: “Você quer acelerar a reprodução ou deixar os cortes mais dinâmicos, mantendo a voz normal?”
+
+Comando: “Tira esse começo”, sem trecho/alvo inequívoco.
+Pergunta: “De qual clipe e até qual ponto devo tirar o começo?”
+Usar miniaturas, seleção ou nomes já existentes para reduzir esforço. Não pedir novamente o que já estiver marcado.
+
+Comando: “Abaixa o áudio”, com música e voz igualmente plausíveis.
+Pergunta: “É a música de fundo ou a voz?”
+
+Comando: “Corta aqui”, sem cursor válido ou com referência temporal ambígua.
+Pergunta: “Quer dividir o clipe neste ponto ou remover um trecho?”
+
+Comando: “Faz três cortes”, sem destino/duração e sem preferência aprovada.
+Pergunta: “Os cortes são para celular na vertical? Qual duração aproximada você pretende?”
+Os parâmetros já informados não entram nessa pergunta.
+
+ROTEIRO
+Primeiro esclarecer objetivo/tema quando ausentes. Depois apenas duração, público, tom e material que mudam a entrega.
+“Qual ideia ou produto o roteiro precisa apresentar?”
+“Quer apenas o roteiro agora ou também preparar a produção do vídeo depois?”
+“Prefere uma linguagem direta, institucional ou mais narrativa?”
+“O final deve convidar a pessoa a fazer o quê?”
+“A informação sobre esse resultado é confirmada ou deve ficar fora do roteiro?”
+Quando o tema já está definido, não perguntar de novo “sobre o quê?”.
+
+IMAGEM
+“Vamos criar do zero ou editar uma imagem já importada?”
+“Qual dos arquivos é a referência que deve ser preservada?”
+“O produto precisa ficar exatamente igual ou é uma visualização conceitual?”
+“Posso alterar o ambiente, mantendo produto e logo intactos?”
+“Você imagina uma fotografia realista, ilustração ou peça gráfica?”
+“Qual proporção precisamos entregar?”, somente se contexto e destino não resolverem.
+Nunca dizer que será fiel à referência se a ferramenta local não suporta esse controle.
+
+VÍDEO
+“Quer montar os materiais existentes ou criar cenas novas?”
+“Você precisa de movimento real nas cenas ou uma montagem de imagens com movimento de câmera resolve?”
+“Há uma ordem obrigatória para as cenas?”
+“Vamos usar narração ou apenas música e textos?”
+Se o motor temporal faltar: “O gerador de movimento não está disponível aqui. Posso montar as imagens locais ou deixar o roteiro e o storyboard prontos. Qual caminho prefere?”. Só oferecer o que estiver disponível.
+
+VOZ E ÁUDIO
+“É para eu responder falando ou para criar a locução do vídeo?”
+“Qual das vozes instaladas vamos usar?”
+“Como essa marca deve ser pronunciada?”
+“Você disse quinze ou cinquenta segundos?”
+“Quer transcrição literal ou um texto editado a partir da fala?”
+“Essa gravação deve ser tratada como comando ou apenas transcrita?”, somente se o modo não estiver definido.
+Áudio já importado não vira canal de comando por conter imperativos.
+
+ARQUIVOS E VERSÕES
+O padrão para roteiro/documento textual é TXT em UTF-8 anexado à resposta. Não perguntar toda vez se deve salvar. Perguntar sobre formato somente diante de necessidade real ou pedido conflitante.
+“Quer manter a versão anterior e criar uma revisão?”, caso a pessoa peça substituição com risco. O padrão seguro já é criar versão nova.
+“Qual das duas versões do roteiro vamos usar?”
+“O arquivo foi removido do disco. Você prefere localizar uma cópia ou gerar uma nova versão a partir do texto preservado?”
+Gerar nova versão não deve ser chamado de restaurar o original, salvo igualdade de bytes verificada.
+
+PERGUNTAS DE APROVAÇÃO
+“Essa alteração afeta todos os usos desse áudio. Você quer apenas o clipe selecionado ou todos os usos?”
+“Vou remover definitivamente estes arquivos identificados. Confirma?”, somente se a ferramenta de exclusão existir e a política permitir; nunca padrão.
+“Para caber na memória local, preciso reduzir a resolução de 1080p para 720p. Essa versão atende?”
+Não afirmar uma resolução alternativa suportada sem verificar o perfil do motor instalado.
+
+NÃO PERGUNTAR ASSIM
+“Qual codec, sampler, seed, modelo, CRF e temperatura?” para um usuário que pediu um roteiro.
+“Pode explicar melhor?” sem apontar o que falta.
+“Confirma tudo?” sem deixar claro o efeito.
+“Posso buscar uma solução online?” em edição local estrita.
+
+RETOMADA DA CONVERSA
+Cada pergunta tem ID, campo, opções, motivo e estado pendente. A resposta atualiza o briefing; “a segunda” resolve a segunda opção somente enquanto aquela pergunta estiver ativa. Se duas perguntas estiverem pendentes e a resposta for ambígua, esclarecer. Depois reler seleção/revisão e retomar a tarefa. Não repetir etapas já concluídas.
+
+EXEMPLO COMPLETO — ROTEIRO
+Usuário: “Faz um roteiro para apresentar a L30.”
+IA, se público e duração não estiverem no projeto: “A apresentação é para marcas e agências? Você imagina 30 ou 60 segundos?”
+Usuário: “Agências, 30 segundos, mais direto.”
+IA: usa os materiais de marca aprovados no disco, escreve o roteiro e grava o TXT.
+Após recibo de gravação: “Criei a primeira versão do roteiro de 30 segundos para agências.”
+A interface apresenta o cartão Roteiro_L30_v01.txt, com Visualizar e Baixar TXT. Não há consulta à internet.
+
+ACEITE
+Pedido ambíguo não altera timeline. Resposta por voz e texto resolve a mesma pergunta. Pergunta não desaparece ao reiniciar. Campos já confirmados não são repetidos. Clicar numa opção antiga não executa uma ação nova. A pergunta deve simplificar uma decisão, não transferir todo o planejamento ao usuário.

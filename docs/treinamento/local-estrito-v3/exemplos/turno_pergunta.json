@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 3,
+  "status": "needs_clarification",
+  "message": "Preciso confirmar o tipo de ajuste antes de alterar o vídeo.",
+  "questions": [
+    {
+      "field": "editing.speed_or_pacing",
+      "text": "Você quer acelerar a reprodução ou deixar os cortes mais dinâmicos, mantendo a voz normal?",
+      "options": [
+        "Acelerar reprodução",
+        "Mudar ritmo dos cortes"
+      ],
+      "freeTextAllowed": true
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Anexo local pronto — contrato proposto v3",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "artifactId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "documentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspaceId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projectId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "conversationId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "messageId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "fileName": {
+      "type": "string",
+      "pattern": "^[^/\\\\\\x00-\\x1f]+\\.txt$"
+    },
+    "mimeType": {
+      "const": "text/plain"
+    },
+    "encoding": {
+      "const": "utf-8"
+    },
+    "byteSize": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "previousArtifactId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "const": "ready"
+    },
+    "actions": {
+      "const": [
+        "preview",
+        "save_as",
+        "use_in_project",
+        "versions"
+      ]
+    }
+  },
+  "required": [
+    "artifactId",
+    "documentId",
+    "workspaceId",
+    "projectId",
+    "conversationId",
+    "messageId",
+    "fileName",
+    "mimeType",
+    "encoding",
+    "byteSize",
+    "sha256",
+    "version",
+    "previousArtifactId",
+    "createdAt",
+    "status",
+    "actions"
+  ]
+}

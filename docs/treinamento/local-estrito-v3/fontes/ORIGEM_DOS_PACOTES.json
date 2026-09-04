@@ -1,0 +1,16 @@
+{
+  "previous_files": [
+    {
+      "name": "L30_CUT_Treinamento_v1.zip",
+      "sha256": "ddbc07bb02eb4eb958e123812f7e3adac393b97ce95cb6ddce4c5fd0a6e13b87",
+      "role": "supplied_training_basis_not_current_runtime_policy"
+    },
+    {
+      "name": "L30_CUT_Treinamento_IA_v2.zip",
+      "sha256": "c1056712b5faa3408fa4f76e411a4c5b2dd9fda057f828ed4fedbb89f32d5d1a",
+      "role": "supplied_training_basis_not_current_runtime_policy"
+    }
+  ],
+  "replacement": "L30_CUT_LOCAL_v3",
+  "warning": "Não carregar prompts anteriores em paralelo com os prompts ativos v3."
+}

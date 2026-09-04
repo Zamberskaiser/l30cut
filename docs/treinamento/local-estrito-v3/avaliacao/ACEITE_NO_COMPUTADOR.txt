@@ -1,0 +1,32 @@
+L30 CUT — ACEITE DA INSTALAÇÃO LOCAL ESTRITA
+Este procedimento deve ser executado na instalação real. Os itens abaixo NÃO foram realizados nesta entrega.
+
+EVIDÊNCIA INICIAL
+Registrar commit, versão instalada, hash do instalador, Windows/runtime, motores, modelos, tokenizadores, vozes, hashes e localização de dados. Não publicar esses registros automaticamente. Verificar que diretórios não estão sincronizados nem em rede.
+
+INSTALAÇÃO LIMPA
+Usar ambiente Windows separado e sem internet. Instalar a partir de pacote local completo. Não pode aparecer solicitação de login online, baixar WebView2, baixar modelo ou consultar licença remota. Documentar qualquer componente ausente. Não contar sucesso em máquina já preparada como prova de primeira instalação offline.
+
+BLOQUEIO E OBSERVAÇÃO
+Aplicar bloqueio de saída, preservando somente IPC/loopback necessário. Cobrir Cut, webview, Ollama, geradores, transcritor, TTS, FFmpeg, atualizadores e filhos. Se houver WSL/container, verificar sua rede também. Registrar tanto conexões bem-sucedidas quanto tentativas bloqueadas, com identificação do processo. Só desconectar o Wi-Fi não distingue aplicativo isolado de aplicativo tentando acessar a rede e falhando.
+
+TESTE COM REDE DISPONÍVEL E POLÍTICA ATIVA
+Manter os controles ativos, disponibilizar rede ao ambiente e observar se o Cut tenta qualquer destino externo durante abertura, fechamento, ociosidade, erros e tarefas. Não liberar conteúdo confidencial para executar o ensaio. Requisição de busca com texto de cliente fictício também deve ser bloqueada antes de sair.
+
+PERCURSO FUNCIONAL
+Abrir chat; resolver pergunta; reconhecer comando em português; interromper apenas a fala do assistente; transcrever gravação; gerar roteiro/TXT; criar imagem quando o motor existir; montar vídeo e exportar; consultar conhecimento no disco; reabrir conversa; baixar a mesma versão; revisar e manter versões anteriores.
+
+TESTES NEGATIVOS
+Solicitar web, nuvem, endpoint não local e provedor cloud pelo loopback. Tentar chamar o comando nativo diretamente. Remover um modelo num ambiente de teste e repetir a tarefa: deve informar ausência, sem download. Testar redirecionamento para fora, proxy herdado, URL com credenciais, origem com nome parecido com localhost e serviço local encaminhador. Não usar esses testes para enviar dados privados.
+
+ARQUIVOS
+Comparar byte a byte o TXT canônico e a cópia exportada. Reiniciar e comparar novamente. Testar documento maior que a prévia visual, nome acentuado, repetição do pedido com mesma chave, disco cheio, permissão negada, cancelamento do Salvar como, arquivo removido e hash divergente. Versões são independentes; anexo de outro workspace deve ser negado pelo backend.
+
+CONVERSA
+Trocar projeto e usuário sem misturar mensagens. Retomar pergunta pendente após reiniciar. Clicar em resposta antiga não pode aprovar pergunta diferente. Não repetir dados conhecidos. Não aplicar operação enquanto aguarda esclarecimento. Contexto alterado exige releitura.
+
+META DE LIBERAÇÃO
+Nenhuma comunicação externa ou tentativa externa nos percursos do Cut ensaiados; nenhuma perda de histórico/anexo; nenhuma alegação falsa de sucesso; nenhum alvo errado ou alteração antes da resolução de dúvida relevante. A ausência observada é limitada aos cenários, versão e ambiente registrados, não uma prova matemática universal de ausência de tráfego.
+
+RELATÓRIO
+Separar: aprovado, reprovado, não executado e não aplicável. Não converter recurso não instalado em aprovado. Limites de hardware e qualidade são registrados por fluxo. Falhas de código, comportamento da IA e configuração do sistema são problemas diferentes.

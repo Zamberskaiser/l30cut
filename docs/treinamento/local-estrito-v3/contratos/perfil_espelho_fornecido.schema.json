@@ -1,0 +1,106 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "minSilenceUs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "paddingUs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clipMinUs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clipMaxUs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aspect": {
+          "enum": [
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:5"
+          ]
+        }
+      },
+      "required": [
+        "minSilenceUs",
+        "paddingUs",
+        "clipMinUs",
+        "clipMaxUs",
+        "aspect"
+      ],
+      "additionalProperties": false
+    },
+    "knowledge": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "addedAt": {
+            "type": "string"
+          },
+          "excerpt": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "bytes",
+          "addedAt",
+          "excerpt"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "learningEnabled": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "name",
+    "defaults"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
