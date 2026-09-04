@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
+  ChevronDown,
   ChevronRight,
   Eye,
+  FileAudio,
+  FolderOpen,
   Loader2,
   Mic,
   Pencil,
@@ -48,6 +51,16 @@ import {
 } from "@/core/ai/llmSettings";
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
 import { useDictation } from "./useDictation";
+import { useMediaTranscription } from "./useMediaTranscription";
+import { TRANSCRIBABLE_ACCEPT } from "./audioSources";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
   { value: "project", label: "Projeto inteiro" },
@@ -85,6 +98,9 @@ export function AssistantPanel() {
     toast.success("Comando ouvido", { description: spoken });
     void submit(spoken);
   });
+
+  /** Same text box, but fed by an audio/video file already on the machine. */
+  const media = useMediaTranscription((text) => setPrompt(text));
 
   // Preferences live in localStorage; read after hydration only.
   useEffect(() => setLlm(loadLlmSettings()), []);
@@ -422,31 +438,90 @@ export function AssistantPanel() {
               ? "Gravando… fale o comando e clique para parar"
               : dictation.state === "transcribing"
                 ? "Transcrevendo sua voz aqui no computador…"
-                : "Enter envia · Shift+Enter quebra linha"}
+                : media.busy
+                  ? `Ouvindo o áudio de ${media.busy}…`
+                  : "Enter envia · Shift+Enter quebra linha"}
           </span>
           <div className="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant={dictation.state === "recording" ? "destructive" : "outline"}
-              className="h-7 gap-1.5"
-              onClick={dictation.toggle}
-              disabled={thinking || dictation.state === "transcribing"}
-              aria-label={dictation.state === "recording" ? "Parar gravação" : "Falar o comando"}
-              title={
-                dictation.supported
-                  ? "Fale o comando em vez de digitar"
-                  : "Disponível no programa instalado, com microfone liberado"
-              }
-            >
-              {dictation.state === "transcribing" ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : dictation.state === "recording" ? (
-                <Square className="size-3.5" />
-              ) : (
-                <Mic className="size-3.5" />
-              )}
-              {dictation.state === "recording" ? "Parar" : "Falar"}
-            </Button>
+            <input
+              ref={media.input}
+              type="file"
+              accept={TRANSCRIBABLE_ACCEPT}
+              className="hidden"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void media.fromFile(file);
+              }}
+            />
+            <div className="flex items-center">
+              <Button
+                size="sm"
+                variant={dictation.state === "recording" ? "destructive" : "outline"}
+                className="h-7 gap-1.5 rounded-r-none border-r-0"
+                onClick={dictation.toggle}
+                disabled={thinking || dictation.state === "transcribing" || media.busy !== null}
+                aria-label={dictation.state === "recording" ? "Parar gravação" : "Falar o comando"}
+                title={
+                  dictation.supported
+                    ? "Fale o comando em vez de digitar"
+                    : "Disponível no programa instalado, com microfone liberado"
+                }
+              >
+                {dictation.state === "transcribing" ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                ) : dictation.state === "recording" ? (
+                  <Square className="size-3.5" />
+                ) : (
+                  <Mic className="size-3.5" />
+                )}
+                {dictation.state === "recording" ? "Parar" : "Falar"}
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 w-6 rounded-l-none px-0"
+                    disabled={thinking || dictation.state !== "idle" || media.busy !== null}
+                    aria-label="Outras formas de transcrever"
+                    title="Transcrever um arquivo ou uma mídia do projeto"
+                  >
+                    {media.busy ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <ChevronDown className="size-3" />
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel className="text-[11px]">De onde vem a fala</DropdownMenuLabel>
+                  <DropdownMenuItem onSelect={() => void dictation.start()}>
+                    <Mic className="size-3.5" /> Falar no microfone
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => media.pickFile()}>
+                    <FolderOpen className="size-3.5" /> Escolher áudio ou vídeo do computador…
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-[11px]">Mídias do projeto</DropdownMenuLabel>
+                  {media.assets.length === 0 ? (
+                    <DropdownMenuItem disabled>Nenhuma mídia importada</DropdownMenuItem>
+                  ) : (
+                    media.assets.slice(0, 12).map((asset) => (
+                      <DropdownMenuItem
+                        key={asset.id}
+                        onSelect={() => void media.fromAsset(asset)}
+                        className="truncate"
+                      >
+                        <FileAudio className="size-3.5 shrink-0" />
+                        <span className="truncate">{asset.name}</span>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
             <Button
               size="sm"
               className="h-7 gap-1.5"
