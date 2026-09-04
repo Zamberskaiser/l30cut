@@ -202,12 +202,28 @@ export interface RuntimeAdapter {
   listAiEngines?(): Promise<CreatorEngines>;
   /** Asks a LOCAL OpenAI-compatible endpoint for a scene script. */
   generateScript?(endpoint: string, model: string, prompt: string): Promise<string>;
+  /** Renders one still with the local diffusion model. Returns its path. */
+  createImage?(prompt: string, width: number, height: number, outputName: string): Promise<string>;
+  /** Writes a transcript/script/note file next to the exports. Returns its path. */
+  saveTextFile?(name: string, extension: string, text: string): Promise<string>;
+  /**
+   * Public web search, used only when the user asks the assistant to look
+   * something up. Sends the query text and nothing else.
+   */
+  webSearch?(query: string): Promise<SearchHit[]>;
   /** Renders the scene list into a real MP4 with FFmpeg + local engines. */
   createVideo?(
     scenes: CreatorScene[],
     options: CreatorRenderOptions,
     onProgress: ProgressSink,
   ): Promise<CreatorResult>;
+}
+
+/** One result of an assistant web search. */
+export interface SearchHit {
+  title: string;
+  url: string;
+  snippet: string;
 }
 
 /** Local engines the AI video creator can use. */

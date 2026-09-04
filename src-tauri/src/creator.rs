@@ -49,11 +49,11 @@ fn first_file(app: &tauri::AppHandle, sub: &str, ext: &str) -> Option<PathBuf> {
 }
 
 /// Diffusion checkpoint: sd.cpp reads safetensors, gguf and ckpt alike.
-fn sd_model(app: &tauri::AppHandle) -> Option<PathBuf> {
+pub fn sd_model(app: &tauri::AppHandle) -> Option<PathBuf> {
     crate::media::first_asset(app, "diffusion", &["safetensors", "gguf", "ckpt"])
 }
 
-fn sd_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
+pub fn sd_binary(app: &tauri::AppHandle) -> Option<PathBuf> {
     let bin = app_dir(app, "bin").ok()?;
     for name in crate::media::SD_BINARIES.iter().copied() {
         let path = bin.join(crate::media::exe_name(name));

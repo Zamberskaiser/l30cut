@@ -8,6 +8,7 @@
 //! [`ai_ops`] before anything acts on them. The WebView's TypeScript/Zod
 //! layer is convenience, not a security boundary.
 
+pub mod agent;
 pub mod ai_ops;
 pub mod creator;
 pub mod media;
@@ -287,6 +288,9 @@ pub fn run() {
             creator::list_ai_engines,
             creator::llm_generate,
             creator::create_ai_video,
+            agent::create_ai_image,
+            agent::save_text_file,
+            agent::web_search,
             validate_ai_transaction,
             save_project,
             load_project,

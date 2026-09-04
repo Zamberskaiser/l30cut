@@ -7,7 +7,6 @@ import { useCommandContext } from "@/core/commands/useCommandContext";
 import { useEditorShortcuts } from "@/core/shortcuts/useEditorShortcuts";
 import { useUi } from "@/core/store/uiStore";
 import { AssistantPanel } from "@/features/assistant/AssistantPanel";
-import { CreatorPanel } from "@/features/creator/CreatorPanel";
 import { EffectsPanel } from "@/features/effects/EffectsPanel";
 import { TrimDialog } from "@/features/effects/TrimDialog";
 import { PreviewMonitor } from "@/features/editor/PreviewMonitor";
@@ -60,12 +59,9 @@ function EditorPage() {
             onPointerDownCapture={() => ui.setFocused("media")}
           >
             <Tabs defaultValue="media" className="flex min-h-0 flex-1 flex-col gap-0">
-              <TabsList className={`m-2 grid ${pro ? "grid-cols-5" : "grid-cols-4"}`}>
+              <TabsList className={`m-2 grid ${pro ? "grid-cols-4" : "grid-cols-3"}`}>
                 <TabsTrigger value="media" className="text-[11px]">
                   Mídia
-                </TabsTrigger>
-                <TabsTrigger value="creator" className="text-[11px]">
-                  Criar
                 </TabsTrigger>
                 <TabsTrigger value="transcript" className="text-[11px]">
                   Fala
@@ -81,9 +77,6 @@ function EditorPage() {
               </TabsList>
               <TabsContent value="media" className="min-h-0 flex-1">
                 <MediaPanel />
-              </TabsContent>
-              <TabsContent value="creator" className="min-h-0 flex-1">
-                <CreatorPanel />
               </TabsContent>
               <TabsContent value="transcript" className="min-h-0 flex-1">
                 <TranscriptPanel />

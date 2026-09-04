@@ -51,6 +51,8 @@ import {
 } from "@/core/ai/llmSettings";
 import { ConfirmPlanDialog } from "./ConfirmPlanDialog";
 import { useDictation } from "./useDictation";
+import { detectChatIntent } from "./chatIntents";
+import { useAssistantActions } from "./useAssistantActions";
 import { useMediaTranscription } from "./useMediaTranscription";
 import { TRANSCRIBABLE_ACCEPT } from "./audioSources";
 import {
@@ -71,9 +73,11 @@ const SCOPES: Array<{ value: PlanScope["kind"]; label: string }> = [
 ];
 
 const SUGGESTIONS = [
+  "crie um vídeo com 4 cenas sobre pesca esportiva",
+  "gere uma imagem de um barco ao amanhecer",
+  "transcreva o áudio da entrevista",
+  "pesquise na internet ideias de título para esse vídeo",
   "remova pausas maiores que 700 ms",
-  "crie 6 cortes de 30 a 60 segundos para Reels",
-  "gere legendas a partir da transcrição",
   "converta a sequência para 9:16",
 ];
 
@@ -97,6 +101,15 @@ export function AssistantPanel() {
     setPrompt(spoken);
     toast.success("Comando ouvido", { description: spoken });
     void submit(spoken);
+  });
+
+  /**
+   * Creation lives in the chat: the assistant itself decides whether the request
+   * is a new video, a picture, a transcription, a web lookup or a timeline edit.
+   */
+  const actions = useAssistantActions({
+    endpoint: `${llm.baseUrl.replace(/\/+$/, "")}/v1`,
+    model: llm.model,
   });
 
   /** Same text box, but fed by an audio/video file already on the machine. */
@@ -130,6 +143,22 @@ export function AssistantPanel() {
     setThinking(true);
     const assistantId = newId("msg");
     try {
+      // Creation, transcription and research never become edit plans — the
+      // assistant performs them and files the result in the media bin.
+      const intent = detectChatIntent(text);
+      if (intent.kind !== "edit") {
+        const outcome = await actions.perform(intent);
+        if (outcome.text.length > 0) {
+          editor.pushMessage({
+            id: assistantId,
+            role: "assistant",
+            text: outcome.text,
+            at: Date.now(),
+          });
+          return;
+        }
+      }
+
       let plan: AiEditPlan | null = null;
       if (generative) {
         // Local Ollama server on the user's own machine — nothing leaves it.
@@ -412,7 +441,7 @@ export function AssistantPanel() {
           ))}
           {thinking ? (
             <p className="flex items-center gap-2 text-[11px] text-muted-foreground">
-              <Loader2 className="size-3.5 animate-spin" /> Montando plano…
+              <Loader2 className="size-3.5 animate-spin" /> {actions.busy ?? "Montando plano"}…
             </p>
           ) : null}
         </div>
@@ -440,7 +469,9 @@ export function AssistantPanel() {
                 ? "Transcrevendo sua voz aqui no computador…"
                 : media.busy
                   ? `Ouvindo o áudio de ${media.busy}…`
-                  : "Enter envia · Shift+Enter quebra linha"}
+                  : actions.busy
+                    ? `${actions.busy}…`
+                    : "Enter envia · Shift+Enter quebra linha"}
           </span>
           <div className="flex items-center gap-1.5">
             <input
