@@ -613,7 +613,7 @@ pub fn create_ai_video(
                     .collect();
                 if let Ok(second) = run(&ffmpeg, &retry) {
                     if second.status.success() {
-                        warnings.push(format!(
+                        notes.push(format!(
                             "cena {}: a legenda na tela foi ignorada porque o FFmpeg não achou uma fonte",
                             index + 1
                         ));
