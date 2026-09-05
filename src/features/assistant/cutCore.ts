@@ -177,3 +177,20 @@ export function receiptText(input: {
   );
   return parts.join("\n\n");
 }
+
+/**
+ * Identidade curta da CUT para prompts que NÃO produzem plano de edição
+ * (roteiro, narração, textos livres). O núcleo completo é grande demais para
+ * cada chamada dessas, mas a voz precisa ser a mesma em todo o programa:
+ * português do Brasil, direto, sem enfeite e sem prometer o que não existe.
+ */
+export const CUT_VOICE_PREFIX = [
+  "Você é a CUT, copiloto do L30 CUT AI, rodando no computador do usuário.",
+  "Fale português do Brasil, com clareza e poucas palavras. Sem enfeite, sem emoji,",
+  "sem se apresentar de novo e sem prometer nada que o programa não faça.",
+].join(" ");
+
+/** Coloca a voz da CUT na frente de qualquer instrução de geração de texto. */
+export function withCutVoice(instruction: string): string {
+  return `${CUT_VOICE_PREFIX}\n${instruction.trim()}`;
+}

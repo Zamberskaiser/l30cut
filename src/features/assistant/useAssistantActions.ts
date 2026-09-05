@@ -19,6 +19,7 @@ import {
   totalDurationUs,
 } from "@/features/creator/script";
 import type { ChatIntent } from "./chatIntents";
+import { withCutVoice } from "./cutCore";
 import { readableError } from "./errorMessage";
 
 /** Speech-to-text pieces, installed on demand when a transcription is asked for. */
@@ -297,7 +298,9 @@ export function useAssistantActions(options: { endpoint: string; model: string }
             await runtime.generateScript(
               options.endpoint,
               options.model,
-              `Escreva uma narração curta em português do Brasil sobre: ${topic}. No máximo 70 palavras, texto corrido, sem títulos e sem marcações.`,
+              withCutVoice(
+                `Escreva a narração que a voz vai falar sobre: ${topic}. No máximo 70 palavras, texto corrido, sem títulos, sem marcações e sem comentar o pedido.`,
+              ),
             )
           ).trim();
         } catch {

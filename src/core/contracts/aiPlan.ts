@@ -131,7 +131,8 @@ export const AiEditPlanSchema = z
     intent: z.string().min(2).max(120),
     summary: z.string().min(2).max(400),
     scope: PlanScopeSchema,
-    operations: z.array(PlanOperationSchema).min(1).max(200),
+    /** May be empty: the model answers a non-edit request with zero operations. */
+    operations: z.array(PlanOperationSchema).max(200),
     warnings: z.array(z.string().max(240)).default([]),
     estimatedImpact: EstimatedImpactSchema,
     requiresConfirmation: z.boolean(),
@@ -160,6 +161,46 @@ export function adaptPlanInput(input: unknown): unknown {
     return { ...(input as Record<string, unknown>), version: AI_PLAN_SCHEMA_VERSION };
   }
   return input;
+}
+
+
+/**
+ * Local models are small and often decorate the envelope: they invent a scope
+ * kind ("conversa"), copy context keys into `scope`, or label the provider
+ * "llama". None of that changes what will be executed — the operations do, and
+ * those stay strict. So the wrapper is normalized before validation instead of
+ * throwing the whole plan away over a cosmetic field.
+ */
+export function coerceModelPlanInput(input: unknown): unknown {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return input;
+  const plan = { ...(input as Record<string, unknown>) };
+  plan["version"] = AI_PLAN_SCHEMA_VERSION;
+
+  const rawScope = plan["scope"];
+  const scope =
+    rawScope && typeof rawScope === "object" && !Array.isArray(rawScope)
+      ? (rawScope as Record<string, unknown>)
+      : {};
+  const kinds = ["project", "sequence", "selection", "range", "transcript"];
+  const kind = typeof scope["kind"] === "string" ? (scope["kind"] as string) : "";
+  const clean: Record<string, unknown> = {
+    kind: kinds.includes(kind) ? kind : "sequence",
+    clipIds: Array.isArray(scope["clipIds"]) ? scope["clipIds"] : [],
+  };
+  if (typeof scope["sequenceId"] === "string") clean["sequenceId"] = scope["sequenceId"];
+  if (typeof scope["inUs"] === "number") clean["inUs"] = scope["inUs"];
+  if (typeof scope["outUs"] === "number") clean["outUs"] = scope["outUs"];
+  plan["scope"] = clean;
+
+  if (!Array.isArray(plan["operations"])) plan["operations"] = [];
+  if (!Array.isArray(plan["warnings"])) plan["warnings"] = [];
+  if (typeof plan["requiresConfirmation"] !== "boolean") plan["requiresConfirmation"] = false;
+  if (typeof plan["rationale"] !== "string") plan["rationale"] = "";
+  if (typeof plan["id"] !== "string" || plan["id"].length === 0) plan["id"] = `plan_${Date.now()}`;
+  if (!plan["estimatedImpact"] || typeof plan["estimatedImpact"] !== "object") {
+    plan["estimatedImpact"] = {};
+  }
+  return plan;
 }
 
 /** Strict gate for anything coming out of a model. Unknown fields are rejected. */

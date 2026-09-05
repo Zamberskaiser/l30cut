@@ -43,7 +43,7 @@ describe("creator script", () => {
 
   it("leva a personalidade da Cut ao roteirista local", () => {
     const prompt = buildScriptPrompt("um computador", 2);
-    expect(prompt).toContain("Você escreve como a Cut");
+    expect(prompt).toContain("Você é a CUT, copiloto do L30 CUT AI");
     expect(prompt).toContain("português do Brasil");
     expect(prompt).toContain("exatamente 2 cenas");
   });

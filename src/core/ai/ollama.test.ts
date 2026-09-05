@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   RECOMMENDED_OLLAMA_MODELS,
   checkOllama,
+  hasModel,
   normalizeOllamaBaseUrl,
   ollamaChatEndpoint,
   parseOllamaTags,
   parsePullLine,
   pullOllamaModel,
+  verifyGenerativeSetup,
   type PullProgress,
 } from "./ollama";
 import { DEFAULT_LLM_SETTINGS, LlmSettingsSchema, isGenerativeReady } from "./llmSettings";
@@ -156,5 +158,29 @@ describe("llm settings", () => {
 
   it("recommends only local models with ids", () => {
     expect(RECOMMENDED_OLLAMA_MODELS.every((m) => m.id.includes(":"))).toBe(true);
+  });
+});
+
+describe("verificação do motor generativo", () => {
+  it("exige servidor aberto e modelo instalado", async () => {
+    const reply = (body: unknown) => new Response(JSON.stringify(body), { status: 200 });
+    const withModels = (async (url: string) =>
+      String(url).includes("/api/tags")
+        ? reply({ models: [{ name: "llama3.1:8b", size: 1 }] })
+        : reply({ version: "0.5.0" })) as unknown as typeof fetch;
+    const offline = (async () => {
+      throw new Error("fetch failed");
+    }) as unknown as typeof fetch;
+
+    expect((await verifyGenerativeSetup("http://127.0.0.1:11434", "llama3.1:8b", withModels)).ok).toBe(true);
+    expect((await verifyGenerativeSetup("http://127.0.0.1:11434", "qwen2.5:7b", withModels)).ok).toBe(false);
+    const down = await verifyGenerativeSetup("http://127.0.0.1:11434", "llama3.1:8b", offline);
+    expect(down.ok).toBe(false);
+    expect(down.reason).toContain("Ollama não respondeu");
+  });
+
+  it("aceita o modelo mesmo sem a etiqueta exata", () => {
+    expect(hasModel([{ name: "llama3.1:8b", sizeBytes: 0, parameterSize: null, quantization: null }], "llama3.1")).toBe(true);
+    expect(hasModel([], "llama3.1")).toBe(false);
   });
 });

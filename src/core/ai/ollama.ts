@@ -208,3 +208,57 @@ export async function pullOllamaModel(
   const tail = parsePullLine(buffer, last);
   if (tail) onProgress(tail);
 }
+
+export interface GenerativeReadiness {
+  ok: boolean;
+  /** Plain-language reason, ready to show in the interface. */
+  reason: string;
+  health: OllamaHealth;
+}
+
+/** True when an installed model matches the chosen name (tag optional). */
+export function hasModel(models: readonly OllamaModel[], model: string): boolean {
+  const wanted = model.trim().toLowerCase();
+  if (!wanted) return false;
+  const bare = wanted.split(":")[0]!;
+  return models.some((m) => {
+    const name = m.name.toLowerCase();
+    return name === wanted || name.split(":")[0] === bare;
+  });
+}
+
+/**
+ * Checked before the generative mode is allowed to answer: the server must be
+ * up on this machine AND the chosen model must actually be installed. Without
+ * this the assistant only fails later, in the middle of a request.
+ */
+export async function verifyGenerativeSetup(
+  baseUrl: string,
+  model: string,
+  fetchImpl: typeof fetch = fetch,
+  signal?: AbortSignal,
+): Promise<GenerativeReadiness> {
+  const health = await checkOllama(baseUrl, fetchImpl, signal);
+  if (!health.reachable) {
+    return {
+      ok: false,
+      reason: `O Ollama não respondeu em ${normalizeOllamaBaseUrl(baseUrl)}. Abra o Ollama no computador e tente de novo.`,
+      health,
+    };
+  }
+  if (health.models.length === 0) {
+    return {
+      ok: false,
+      reason: "O Ollama está aberto, mas nenhum modelo está baixado neste computador.",
+      health,
+    };
+  }
+  if (!hasModel(health.models, model)) {
+    return {
+      ok: false,
+      reason: `O modelo “${model}” não está instalado. Escolha um dos modelos da lista ou baixe-o.`,
+      health,
+    };
+  }
+  return { ok: true, reason: `Pronto: ${model} rodando no seu computador.`, health };
+}
