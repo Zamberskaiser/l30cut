@@ -83,3 +83,4 @@
 - [x] Gerador local de imagens compatível com sd-cli atual (`img_gen`), erros legíveis e histórico em `imagens.log`
 - [x] Diagnóstico com teste real do gerador e relatório copiável; avisos do assistente exibidos no topo
 - [x] Pacote Windows v40 recompilável com `img_gen`, sem caminho `C:/...` no drawtext e versão 0.1.1
+- [x] Pacote v41: `drawtext` com fonte real do Windows escapada (`C\:/Windows/Fonts/arial.ttf`) e cena remontada sem legenda quando falta fonte

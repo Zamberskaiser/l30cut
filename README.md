@@ -14,7 +14,7 @@ A versão web disponível no preview é uma **demonstração navegável** com pr
 
 ## Build e instalação rápida
 
-1. Baixe o pacote-fonte **v40 ou mais recente** em `/download` ou clone este repositório. Versões anteriores ainda enviavam `txt2img` ao gerador de imagens e devem ser descartadas.
+1. Baixe o pacote-fonte **v41 ou mais recente** em `/download` ou clone este repositório. Versões anteriores ainda enviavam `txt2img` ao gerador de imagens e devem ser descartadas.
 2. Extraia e abra a pasta no Windows Explorer.
 3. Execute `build-windows.bat` com dois cliques.
 
