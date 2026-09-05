@@ -690,7 +690,7 @@ pub fn create_ai_video(
 #[cfg(test)]
 mod tests {
     use super::{
-        drawtext_filter, escape_drawtext, hex_to_ffmpeg_color, is_local_endpoint,
+        drawtext_filter, escape_drawtext, escape_font_path, hex_to_ffmpeg_color, is_local_endpoint,
         last_meaningful_line, still_size,
     };
 
@@ -737,10 +737,15 @@ mod tests {
     }
 
     #[test]
-    fn drawtext_never_embeds_a_windows_font_path() {
-        let filter = drawtext_filter("Person walking on the beach", 1080).unwrap_or_default();
-        assert!(filter.starts_with(",drawtext=text='Person walking on the beach'"));
-        assert!(!filter.contains("fontfile="));
+    fn drawtext_escapes_the_windows_font_path() {
+        let font = escape_font_path("C:\\Windows\\Fonts\\arial.ttf");
+        assert_eq!(font, "C\\:/Windows/Fonts/arial.ttf");
+        let filter = drawtext_filter("Person walking on the beach", 1080, Some(&font)).unwrap_or_default();
+        assert!(filter.starts_with(",drawtext=fontfile='C\\:/Windows/Fonts/arial.ttf':text='Person walking on the beach'"));
         assert!(!filter.contains("C:/"));
+
+        // Without a font on disk the filter stays valid and simply has no fontfile.
+        let bare = drawtext_filter("Sem fonte", 1080, None).unwrap_or_default();
+        assert!(bare.starts_with(",drawtext=text='Sem fonte'"));
     }
 }
