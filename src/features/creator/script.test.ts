@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { estimateDurationUs, fallbackScenes, parseScriptJson, totalDurationUs } from "./script";
+import {
+  buildScriptPrompt,
+  estimateDurationUs,
+  fallbackScenes,
+  parseScriptJson,
+  totalDurationUs,
+} from "./script";
 
 describe("creator script", () => {
   it("cria uma cena por bloco do briefing sem depender de IA", () => {
@@ -33,5 +39,12 @@ describe("creator script", () => {
   it("rejeita resposta sem cenas utilizáveis", () => {
     expect(parseScriptJson("desculpe, não sei")).toBeNull();
     expect(parseScriptJson('{"scenes":[]}')).toBeNull();
+  });
+
+  it("leva a personalidade da Cut ao roteirista local", () => {
+    const prompt = buildScriptPrompt("um computador", 2);
+    expect(prompt).toContain("Você escreve como a Cut");
+    expect(prompt).toContain("português do Brasil");
+    expect(prompt).toContain("exatamente 2 cenas");
   });
 });
