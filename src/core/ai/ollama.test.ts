@@ -2,11 +2,13 @@ import { describe, expect, it } from "vitest";
 import {
   RECOMMENDED_OLLAMA_MODELS,
   checkOllama,
+  hasModel,
   normalizeOllamaBaseUrl,
   ollamaChatEndpoint,
   parseOllamaTags,
   parsePullLine,
   pullOllamaModel,
+  verifyGenerativeSetup,
   type PullProgress,
 } from "./ollama";
 import { DEFAULT_LLM_SETTINGS, LlmSettingsSchema, isGenerativeReady } from "./llmSettings";
