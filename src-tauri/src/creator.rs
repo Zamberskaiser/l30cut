@@ -299,19 +299,46 @@ pub fn escape_drawtext(text: &str) -> String {
         .collect()
 }
 
-/// Uses FFmpeg's default font lookup instead of embedding a Windows drive path
-/// in the filter expression. A value such as `C:/Windows/...` contains `:`,
-/// which has changed escaping behaviour across FFmpeg builds and broke renders.
-fn drawtext_filter(title: &str, height: u32) -> Option<String> {
+/// Windows FFmpeg builds have no fontconfig configuration, so `drawtext` without
+/// an explicit `fontfile` dies with "Cannot load default config file". We point at
+/// a font that really exists on disk and escape the drive colon for the filter
+/// parser (`C:/...` -> `C\:/...`), which is what breaks when it is passed raw.
+pub fn default_font_file() -> Option<String> {
+    const CANDIDATES: [&str; 8] = [
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+        "C:/Windows/Fonts/tahoma.ttf",
+        "C:/Windows/Fonts/verdana.ttf",
+        "C:/Windows/Fonts/calibri.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+    ];
+    CANDIDATES
+        .iter()
+        .find(|path| std::path::Path::new(path).is_file())
+        .map(|path| escape_font_path(path))
+}
+
+/// A filter-graph value may not contain a bare `:` or `\`.
+pub fn escape_font_path(path: &str) -> String {
+    path.replace('\\', "/").replace(':', "\\:")
+}
+
+fn drawtext_filter(title: &str, height: u32, font: Option<&str>) -> Option<String> {
     let text = escape_drawtext(title);
     if text.is_empty() {
         return None;
     }
+    let font_part = font
+        .map(|path| format!("fontfile='{path}':"))
+        .unwrap_or_default();
     Some(format!(
-        ",drawtext=text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
+        ",drawtext={font_part}text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
         size = (height / 18).max(18)
     ))
 }
+
 
 fn wav_duration_us(app: &tauri::AppHandle, wav: &std::path::Path) -> Option<i64> {
     let ffprobe = tool(app, "ffprobe").ok()?;
@@ -522,14 +549,18 @@ pub fn create_ai_video(
         }
 
         // 3. Titles burned into the picture.
+        let mut title_filter: Option<String> = None;
         if options.burn_titles {
             if let Some(title) = scene.title.as_ref() {
-                if let Some(title_filter) = drawtext_filter(title, height) {
-                    filter.push_str(&title_filter);
-                }
+                title_filter = drawtext_filter(title, height, default_font_file().as_deref());
             }
         }
+        if let Some(overlay) = title_filter.as_ref() {
+            filter.push_str(overlay);
+        }
+
         filter.push_str("[v]");
+
 
         let audio_index = 1;
         match narration_wav.as_ref() {
@@ -547,7 +578,7 @@ pub fn create_ai_video(
         let part = work.join(format!("parte_{index:03}.mp4"));
         args.extend([
             "-filter_complex".into(),
-            filter,
+            filter.clone(),
             "-map".into(),
             "[v]".into(),
             "-map".into(),
@@ -571,7 +602,27 @@ pub fn create_ai_video(
             part.to_string_lossy().to_string(),
         ]);
 
-        let output = run(&ffmpeg, &args).map_err(|_| missing_tool("FFmpeg"))?;
+        let mut output = run(&ffmpeg, &args).map_err(|_| missing_tool("FFmpeg"))?;
+        // A font problem must never lose the whole video: retry the scene with the
+        // burned-in title dropped, and keep the picture and the narration.
+        if !output.status.success() {
+            if let Some(title_part) = title_filter.as_ref() {
+                let plain = filter.replace(title_part.as_str(), "");
+                let retry: Vec<String> = args
+                    .iter()
+                    .map(|arg| if arg == &filter { plain.clone() } else { arg.clone() })
+                    .collect();
+                if let Ok(second) = run(&ffmpeg, &retry) {
+                    if second.status.success() {
+                        notes.push(format!(
+                            "cena {}: a legenda na tela foi ignorada porque o FFmpeg não achou uma fonte",
+                            index + 1
+                        ));
+                        output = second;
+                    }
+                }
+            }
+        }
         if !output.status.success() {
             let log = String::from_utf8_lossy(&output.stderr).to_string();
             let _ = std::fs::write(app_dir(&app, "logs")?.join("creator.log"), &log);
@@ -581,6 +632,7 @@ pub fn create_ai_video(
                 log.lines().last().unwrap_or("")
             ));
         }
+
         parts.push(part);
     }
 
@@ -639,7 +691,7 @@ pub fn create_ai_video(
 #[cfg(test)]
 mod tests {
     use super::{
-        drawtext_filter, escape_drawtext, hex_to_ffmpeg_color, is_local_endpoint,
+        drawtext_filter, escape_drawtext, escape_font_path, hex_to_ffmpeg_color, is_local_endpoint,
         last_meaningful_line, still_size,
     };
 
@@ -686,10 +738,15 @@ mod tests {
     }
 
     #[test]
-    fn drawtext_never_embeds_a_windows_font_path() {
-        let filter = drawtext_filter("Person walking on the beach", 1080).unwrap_or_default();
-        assert!(filter.starts_with(",drawtext=text='Person walking on the beach'"));
-        assert!(!filter.contains("fontfile="));
+    fn drawtext_escapes_the_windows_font_path() {
+        let font = escape_font_path("C:\\Windows\\Fonts\\arial.ttf");
+        assert_eq!(font, "C\\:/Windows/Fonts/arial.ttf");
+        let filter = drawtext_filter("Person walking on the beach", 1080, Some(&font)).unwrap_or_default();
+        assert!(filter.starts_with(",drawtext=fontfile='C\\:/Windows/Fonts/arial.ttf':text='Person walking on the beach'"));
         assert!(!filter.contains("C:/"));
+
+        // Without a font on disk the filter stays valid and simply has no fontfile.
+        let bare = drawtext_filter("Sem fonte", 1080, None).unwrap_or_default();
+        assert!(bare.starts_with(",drawtext=text='Sem fonte'"));
     }
 }
