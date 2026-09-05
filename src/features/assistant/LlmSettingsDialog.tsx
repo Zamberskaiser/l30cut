@@ -20,6 +20,7 @@ import {
   DEFAULT_OLLAMA_BASE_URL,
   RECOMMENDED_OLLAMA_MODELS,
   checkOllama,
+  hasModel,
   normalizeOllamaBaseUrl,
   pullOllamaModel,
   type OllamaHealth,
@@ -115,6 +116,27 @@ export function LlmSettingsDialog({
   }
 
   const installed = health?.models ?? [];
+  // A IA generativa só pode ser ligada quando o motor local responde E o modelo
+  // escolhido está de fato baixado — senão o pedido só falharia mais tarde.
+  const modelInstalled = hasModel(installed, settings.model);
+  const canEnable = Boolean(health?.reachable) && modelInstalled;
+  const blockedReason = !health
+    ? "Testando a conexão com o Ollama…"
+    : !health.reachable
+      ? "O Ollama não está respondendo neste computador."
+      : installed.length === 0
+        ? "Nenhum modelo baixado ainda."
+        : !modelInstalled
+          ? `O modelo “${settings.model}” não está instalado.`
+          : "";
+
+  function toggleEnabled(enabled: boolean) {
+    if (enabled && !canEnable) {
+      toast.error("Ainda não é possível ligar a IA generativa", { description: blockedReason });
+      return;
+    }
+    onChange({ ...settings, enabled });
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,11 +160,21 @@ export function LlmSettingsDialog({
                   Quando ativa, o pedido em linguagem natural é interpretado pelo modelo local e
                   validado pelo mesmo schema fechado das regras.
                 </p>
+                {blockedReason ? (
+                  <p className="mt-1 text-[11px] leading-relaxed text-amber-500">
+                    {blockedReason}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[11px] leading-relaxed text-primary">
+                    Motor local verificado: {settings.model}.
+                  </p>
+                )}
               </div>
               <Switch
                 id="llm-enabled"
-                checked={settings.enabled}
-                onCheckedChange={(enabled) => onChange({ ...settings, enabled })}
+                checked={settings.enabled && canEnable}
+                disabled={!canEnable}
+                onCheckedChange={toggleEnabled}
               />
             </div>
 
