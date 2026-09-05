@@ -299,19 +299,46 @@ pub fn escape_drawtext(text: &str) -> String {
         .collect()
 }
 
-/// Uses FFmpeg's default font lookup instead of embedding a Windows drive path
-/// in the filter expression. A value such as `C:/Windows/...` contains `:`,
-/// which has changed escaping behaviour across FFmpeg builds and broke renders.
-fn drawtext_filter(title: &str, height: u32) -> Option<String> {
+/// Windows FFmpeg builds have no fontconfig configuration, so `drawtext` without
+/// an explicit `fontfile` dies with "Cannot load default config file". We point at
+/// a font that really exists on disk and escape the drive colon for the filter
+/// parser (`C:/...` -> `C\:/...`), which is what breaks when it is passed raw.
+pub fn default_font_file() -> Option<String> {
+    const CANDIDATES: [&str; 8] = [
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+        "C:/Windows/Fonts/tahoma.ttf",
+        "C:/Windows/Fonts/verdana.ttf",
+        "C:/Windows/Fonts/calibri.ttf",
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/System/Library/Fonts/Supplemental/Arial.ttf",
+    ];
+    CANDIDATES
+        .iter()
+        .find(|path| std::path::Path::new(path).is_file())
+        .map(|path| escape_font_path(path))
+}
+
+/// A filter-graph value may not contain a bare `:` or `\`.
+pub fn escape_font_path(path: &str) -> String {
+    path.replace('\\', "/").replace(':', "\\:")
+}
+
+fn drawtext_filter(title: &str, height: u32, font: Option<&str>) -> Option<String> {
     let text = escape_drawtext(title);
     if text.is_empty() {
         return None;
     }
+    let font_part = font
+        .map(|path| format!("fontfile='{path}':"))
+        .unwrap_or_default();
     Some(format!(
-        ",drawtext=text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
+        ",drawtext={font_part}text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
         size = (height / 18).max(18)
     ))
 }
+
 
 fn wav_duration_us(app: &tauri::AppHandle, wav: &std::path::Path) -> Option<i64> {
     let ffprobe = tool(app, "ffprobe").ok()?;
