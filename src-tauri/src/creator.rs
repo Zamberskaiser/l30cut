@@ -577,7 +577,7 @@ pub fn create_ai_video(
         let part = work.join(format!("parte_{index:03}.mp4"));
         args.extend([
             "-filter_complex".into(),
-            filter,
+            filter.clone(),
             "-map".into(),
             "[v]".into(),
             "-map".into(),
@@ -601,7 +601,27 @@ pub fn create_ai_video(
             part.to_string_lossy().to_string(),
         ]);
 
-        let output = run(&ffmpeg, &args).map_err(|_| missing_tool("FFmpeg"))?;
+        let mut output = run(&ffmpeg, &args).map_err(|_| missing_tool("FFmpeg"))?;
+        // A font problem must never lose the whole video: retry the scene with the
+        // burned-in title dropped, and keep the picture and the narration.
+        if !output.status.success() {
+            if let Some(title_part) = title_filter.as_ref() {
+                let plain = filter.replace(title_part.as_str(), "");
+                let retry: Vec<String> = args
+                    .iter()
+                    .map(|arg| if arg == &filter { plain.clone() } else { arg.clone() })
+                    .collect();
+                if let Ok(second) = run(&ffmpeg, &retry) {
+                    if second.status.success() {
+                        warnings.push(format!(
+                            "cena {}: a legenda na tela foi ignorada porque o FFmpeg não achou uma fonte",
+                            index + 1
+                        ));
+                        output = second;
+                    }
+                }
+            }
+        }
         if !output.status.success() {
             let log = String::from_utf8_lossy(&output.stderr).to_string();
             let _ = std::fs::write(app_dir(&app, "logs")?.join("creator.log"), &log);
@@ -611,6 +631,7 @@ pub fn create_ai_video(
                 log.lines().last().unwrap_or("")
             ));
         }
+
         parts.push(part);
     }
 
