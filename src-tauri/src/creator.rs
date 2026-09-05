@@ -555,9 +555,10 @@ pub fn create_ai_video(
                 title_filter = drawtext_filter(title, height, default_font_file().as_deref());
             }
         }
-        if let Some(part) = title_filter.as_ref() {
-            filter.push_str(part);
+        if let Some(overlay) = title_filter.as_ref() {
+            filter.push_str(overlay);
         }
+
         filter.push_str("[v]");
 
 
