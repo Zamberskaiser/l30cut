@@ -34,7 +34,7 @@ import { compilePlan } from "./planExecutor";
 import { previewPlan, type PlanPreview, type PlanPreviewFailure } from "./planPreview";
 import { requestPlanFromProvider, type ProviderConfig } from "./provider";
 import { LlmSettingsDialog } from "./LlmSettingsDialog";
-import { ollamaChatEndpoint } from "@/core/ai/ollama";
+import { ollamaChatEndpoint, verifyGenerativeSetup } from "@/core/ai/ollama";
 import {
   DEFAULT_LLM_SETTINGS,
   isGenerativeReady,
@@ -201,6 +201,15 @@ export function AssistantPanel() {
           requiresKey: false,
         };
         try {
+          // Confere de verdade se o motor local está aberto e se o modelo
+          // escolhido está baixado. Sem isso, o pedido só falharia no meio.
+          const ready = await verifyGenerativeSetup(
+            llm.baseUrl,
+            llm.model,
+            fetch,
+            controller.signal,
+          );
+          if (!ready.ok) throw new Error(ready.reason);
           const { context } = buildAssistantContext(
             editor.project,
             scope,
@@ -276,6 +285,17 @@ export function AssistantPanel() {
           id: assistantId,
           role: "assistant",
           text: "Não consegui transformar esse pedido em um plano seguro. Tente algo como “remova pausas maiores que 700 ms” ou “crie 6 cortes de 30 a 60 segundos”.",
+          at: Date.now(),
+        });
+        return;
+      }
+      if (plan.operations.length === 0) {
+        // O modelo entendeu, mas não há edição a fazer (pedido de criação,
+        // dúvida ou fora do escopo). Vale como resposta, não como plano.
+        editor.pushMessage({
+          id: assistantId,
+          role: "assistant",
+          text: [plan.summary, ...plan.warnings].filter(Boolean).join("\n"),
           at: Date.now(),
         });
         return;
