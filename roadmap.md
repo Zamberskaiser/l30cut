@@ -82,3 +82,4 @@
 - [x] Build Tauri Windows restaurado ao método estável da v13: CLI local chamada diretamente pelo BAT, sem PowerShell intermediário nem cargo install
 - [x] Gerador local de imagens compatível com sd-cli atual (`img_gen`), erros legíveis e histórico em `imagens.log`
 - [x] Diagnóstico com teste real do gerador e relatório copiável; avisos do assistente exibidos no topo
+- [x] Pacote Windows v40 recompilável com `img_gen`, sem caminho `C:/...` no drawtext e versão 0.1.1

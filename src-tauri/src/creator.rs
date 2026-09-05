@@ -299,47 +299,6 @@ pub fn escape_drawtext(text: &str) -> String {
         .collect()
 }
 
-/// FFmpeg filter arguments treat `:` and `\` as syntax, so a Windows font path
-/// like `C:/Windows/Fonts/segoeui.ttf` must be escaped before it reaches
-/// `drawtext=fontfile=...`, otherwise every scene fails to render.
-pub fn escape_filter_path(path: &str) -> String {
-    path.replace('\\', "/").replace(':', "\\:")
-}
-
-/// True when an already-escaped path is safe inside an FFmpeg filter argument:
-/// every `:` must be escaped and no raw backslash separators may remain.
-pub fn filter_path_is_safe(escaped: &str) -> bool {
-    if escaped.is_empty() {
-        return false;
-    }
-    let bytes: Vec<char> = escaped.chars().collect();
-    for (index, ch) in bytes.iter().enumerate() {
-        if *ch == ':' && (index == 0 || bytes[index - 1] != '\\') {
-            return false;
-        }
-        if *ch == '\\' && bytes.get(index + 1) != Some(&':') {
-            return false;
-        }
-        if *ch == '\'' {
-            return false;
-        }
-    }
-    true
-}
-
-fn caption_font() -> Option<String> {
-    for candidate in [
-        "C:/Windows/Fonts/segoeui.ttf",
-        "C:/Windows/Fonts/arial.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ] {
-        if std::path::Path::new(candidate).exists() {
-            return Some(candidate.to_string());
-        }
-    }
-    None
-}
-
 fn wav_duration_us(app: &tauri::AppHandle, wav: &std::path::Path) -> Option<i64> {
     let ffprobe = tool(app, "ffprobe").ok()?;
     let args: Vec<String> = vec![
@@ -360,8 +319,8 @@ fn wav_duration_us(app: &tauri::AppHandle, wav: &std::path::Path) -> Option<i64>
 
 /// Pre-flight check that runs before a single frame is rendered: FFmpeg/ffprobe
 /// must be launchable, every supplied still must exist and be readable, and the
-/// caption font path must survive FFmpeg's filter escaping. Failing here gives a
-/// clear message instead of an opaque FFmpeg error halfway through the montage.
+    /// supplied still must exist and be readable. Failing here gives a clear
+    /// message instead of an opaque FFmpeg error halfway through the montage.
 pub fn preflight_render(
     app: &tauri::AppHandle,
     scenes: &[SceneInput],
@@ -390,21 +349,6 @@ pub fn preflight_render(
         }
         if std::fs::File::open(&path).is_err() {
             problems.push(format!("cena {}: imagem sem permissão de leitura ({raw})", index + 1));
-        }
-    }
-
-    if options.burn_titles {
-        match caption_font() {
-            Some(font) => {
-                if !std::path::Path::new(&font).is_file() {
-                    problems.push(format!("fonte de títulos ilegível: {font}"));
-                } else if !filter_path_is_safe(&escape_filter_path(&font)) {
-                    problems.push(format!("caminho da fonte inválido para o FFmpeg: {font}"));
-                }
-            }
-            None => problems.push(
-                "nenhuma fonte de sistema encontrada para escrever os títulos — desligue \"Escrever títulos\"".into(),
-            ),
         }
     }
 
@@ -440,7 +384,6 @@ pub fn create_ai_video(
     let voice = first_file(&app, "voices", "onnx");
     let sd = sd_binary(&app);
     let sd_model = sd_model(&app);
-    let font = caption_font();
 
     let mut used_narration = false;
     let mut used_image_model = false;
@@ -566,12 +509,11 @@ pub fn create_ai_video(
 
         // 3. Titles burned into the picture.
         if options.burn_titles {
-            if let (Some(font), Some(title)) = (font.as_ref(), scene.title.as_ref()) {
+            if let Some(title) = scene.title.as_ref() {
                 let text = escape_drawtext(title);
-                let font = escape_filter_path(font);
                 if !text.is_empty() {
                     filter.push_str(&format!(
-                        ",drawtext=fontfile='{font}':text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
+                        ",drawtext=text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
                         size = (height / 18).max(18)
                     ));
                 }
@@ -687,8 +629,7 @@ pub fn create_ai_video(
 #[cfg(test)]
 mod tests {
     use super::{
-        escape_drawtext, escape_filter_path, filter_path_is_safe, hex_to_ffmpeg_color,
-        is_local_endpoint, last_meaningful_line, still_size,
+        escape_drawtext, hex_to_ffmpeg_color, is_local_endpoint, last_meaningful_line, still_size,
     };
 
     #[test]
@@ -712,22 +653,6 @@ mod tests {
     #[test]
     fn installed_sd_cli_uses_the_supported_image_mode() {
         assert_eq!(super::SD_IMAGE_MODE, "img_gen");
-    }
-
-    #[test]
-    fn escaped_paths_are_accepted_and_raw_ones_rejected() {
-        assert!(filter_path_is_safe(&escape_filter_path("C:/Windows/Fonts/arial.ttf")));
-        assert!(!filter_path_is_safe("C:/Windows/Fonts/arial.ttf"));
-        assert!(!filter_path_is_safe("C:\\Windows\\Fonts\\arial.ttf"));
-        assert!(!filter_path_is_safe(""));
-    }
-
-    #[test]
-    fn windows_font_path_is_escaped_for_ffmpeg() {
-        assert_eq!(
-            escape_filter_path("C:\\Windows\\Fonts\\segoeui.ttf"),
-            "C\\:/Windows/Fonts/segoeui.ttf"
-        );
     }
 
     #[test]

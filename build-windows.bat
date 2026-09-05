@@ -5,7 +5,7 @@ cd /d "%~dp0"
 
 rem ============================================================
 rem   L30 CUT AI - script unico e automatico
-rem   Script versao 35 (2026-09-04)
+rem   Script versao 40 (2026-09-05)
 rem   Faz tudo sozinho: dependencias -> build -> instalador ->
 rem   instalacao silenciosa -> abre o app. Sem perguntas.
 rem   v20: restaura a chamada direta do Tauri usada na versao 13.
@@ -35,7 +35,7 @@ if errorlevel 1 (
 
 echo ============================================
 echo   L30 CUT AI - instalacao automatica
-echo   Script versao 35 (2026-09-04)
+echo   Script versao 40 (2026-09-05)
 echo ============================================
 echo   Nao e preciso fazer nada: o script instala
 echo   dependencias, gera o app, instala e abre.
@@ -43,6 +43,21 @@ echo   Esta janela so fecha quando voce apertar uma tecla.
 echo.
 
 call :addpath
+
+rem Impede instalar novamente uma fonte antiga: estes marcadores corrigem
+rem exatamente o modo do sd-cli e o filtro de titulos no FFmpeg.
+findstr /C:"pub const SD_IMAGE_MODE: &str = \"img_gen\";" "src-tauri\src\creator.rs" >nul 2>&1
+if errorlevel 1 (
+  echo   [ERRO] Este pacote ainda usa o comando de imagem antigo ^(txt2img^).
+  echo   Apague esta pasta e baixe L30-CUT-AI-source-v40.zip.
+  goto :falhou
+)
+findstr /C:",drawtext=text='" "src-tauri\src\creator.rs" >nul 2>&1
+if errorlevel 1 (
+  echo   [ERRO] Este pacote ainda usa o caminho de fonte que quebra o FFmpeg no Windows.
+  echo   Apague esta pasta e baixe L30-CUT-AI-source-v40.zip.
+  goto :falhou
+)
 
 rem Impede compilar por engano um ZIP antigo que continha a API incorreta do updater.
 findstr /C:"tauri_plugin_updater::Builder::new().build()" "src-tauri\src\lib.rs" >nul 2>&1
