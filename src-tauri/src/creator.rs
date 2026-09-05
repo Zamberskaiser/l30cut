@@ -338,7 +338,7 @@ fn wav_duration_us(app: &tauri::AppHandle, wav: &std::path::Path) -> Option<i64>
 pub fn preflight_render(
     app: &tauri::AppHandle,
     scenes: &[SceneInput],
-    options: &CreatorOptions,
+    _options: &CreatorOptions,
 ) -> Result<(), String> {
     let mut problems: Vec<String> = Vec::new();
 
