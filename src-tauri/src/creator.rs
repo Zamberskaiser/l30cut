@@ -299,6 +299,20 @@ pub fn escape_drawtext(text: &str) -> String {
         .collect()
 }
 
+/// Uses FFmpeg's default font lookup instead of embedding a Windows drive path
+/// in the filter expression. A value such as `C:/Windows/...` contains `:`,
+/// which has changed escaping behaviour across FFmpeg builds and broke renders.
+fn drawtext_filter(title: &str, height: u32) -> Option<String> {
+    let text = escape_drawtext(title);
+    if text.is_empty() {
+        return None;
+    }
+    Some(format!(
+        ",drawtext=text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
+        size = (height / 18).max(18)
+    ))
+}
+
 fn wav_duration_us(app: &tauri::AppHandle, wav: &std::path::Path) -> Option<i64> {
     let ffprobe = tool(app, "ffprobe").ok()?;
     let args: Vec<String> = vec![
@@ -318,9 +332,9 @@ fn wav_duration_us(app: &tauri::AppHandle, wav: &std::path::Path) -> Option<i64>
 }
 
 /// Pre-flight check that runs before a single frame is rendered: FFmpeg/ffprobe
-/// must be launchable, every supplied still must exist and be readable, and the
-    /// supplied still must exist and be readable. Failing here gives a clear
-    /// message instead of an opaque FFmpeg error halfway through the montage.
+/// must be launchable and every supplied still must exist and be readable.
+/// Failing here gives a clear message instead of an opaque FFmpeg error halfway
+/// through the montage.
 pub fn preflight_render(
     app: &tauri::AppHandle,
     scenes: &[SceneInput],
@@ -510,12 +524,8 @@ pub fn create_ai_video(
         // 3. Titles burned into the picture.
         if options.burn_titles {
             if let Some(title) = scene.title.as_ref() {
-                let text = escape_drawtext(title);
-                if !text.is_empty() {
-                    filter.push_str(&format!(
-                        ",drawtext=text='{text}':fontcolor=white:fontsize={size}:box=1:boxcolor=black@0.45:boxborderw=18:x=(w-text_w)/2:y=h-(h/6)",
-                        size = (height / 18).max(18)
-                    ));
+                if let Some(title_filter) = drawtext_filter(title, height) {
+                    filter.push_str(&title_filter);
                 }
             }
         }
@@ -629,7 +639,8 @@ pub fn create_ai_video(
 #[cfg(test)]
 mod tests {
     use super::{
-        escape_drawtext, hex_to_ffmpeg_color, is_local_endpoint, last_meaningful_line, still_size,
+        drawtext_filter, escape_drawtext, hex_to_ffmpeg_color, is_local_endpoint,
+        last_meaningful_line, still_size,
     };
 
     #[test]
@@ -672,5 +683,13 @@ mod tests {
     #[test]
     fn drawtext_is_sanitized() {
         assert_eq!(escape_drawtext("Cena 1: 'teste'\\"), "Cena 1 teste");
+    }
+
+    #[test]
+    fn drawtext_never_embeds_a_windows_font_path() {
+        let filter = drawtext_filter("Person walking on the beach", 1080).unwrap_or_default();
+        assert!(filter.starts_with(",drawtext=text='Person walking on the beach'"));
+        assert!(!filter.contains("fontfile="));
+        assert!(!filter.contains("C:/"));
     }
 }

@@ -27,6 +27,7 @@ export function estimateDurationUs(text: string): number {
 
 export function buildScriptPrompt(brief: string, sceneCount: number): string {
   return [
+    "Você escreve como a Cut, copiloto do L30 CUT AI: português do Brasil, direto, claro e sem texto decorativo.",
     `Crie o roteiro de um vídeo curto com exatamente ${sceneCount} cenas sobre: "${brief}".`,
     "Responda SOMENTE com JSON no formato:",
     '{"scenes":[{"title":"texto curto na tela","narration":"fala da cena","imagePrompt":"descrição visual em inglês"}]}',
