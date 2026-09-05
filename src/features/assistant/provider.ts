@@ -1,4 +1,4 @@
-import { parseAiEditPlan, type AiEditPlan } from "@/core/contracts/aiPlan";
+import { coerceModelPlanInput, parseAiEditPlan, type AiEditPlan } from "@/core/contracts/aiPlan";
 import { CUT_CORE_PROMPT, capabilityCatalogText } from "./cutCore";
 
 export type ProviderId = "deterministic" | "local-openai" | "ollama" | "llama.cpp" | "openai";
@@ -164,8 +164,17 @@ export async function requestPlanFromProvider(
     { role: "system", content: PLAN_SYSTEM_PROMPT },
     { role: "user", content: userMessage },
   ];
+  const normalize = (content: string) => {
+    const raw = coerceModelPlanInput(extractJson(content));
+    // The engine label is decided here, never by the model.
+    if (raw && typeof raw === "object") {
+      (raw as Record<string, unknown>)["modelInfo"] = { provider: config.id, model: config.model };
+    }
+    return raw;
+  };
+
   const first = await ask(base);
-  let parsed = parseAiEditPlan(extractJson(first));
+  let parsed = parseAiEditPlan(normalize(first));
 
   // Local models often miss one field on the first try; a single repair pass
   // with the exact validation errors is far more reliable than failing outright.
@@ -178,7 +187,7 @@ export async function requestPlanFromProvider(
         content: `O JSON anterior foi rejeitado por: ${parsed.errors.join("; ")}. Reenvie o plano completo corrigido, somente JSON.`,
       },
     ]);
-    parsed = parseAiEditPlan(extractJson(repaired));
+    parsed = parseAiEditPlan(normalize(repaired));
   }
   if (!parsed.ok) throw new Error(`Plano inválido: ${parsed.errors.join("; ")}`);
   const latencyMs = Date.now() - started;
