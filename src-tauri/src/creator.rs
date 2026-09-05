@@ -549,14 +549,17 @@ pub fn create_ai_video(
         }
 
         // 3. Titles burned into the picture.
+        let mut title_filter: Option<String> = None;
         if options.burn_titles {
             if let Some(title) = scene.title.as_ref() {
-                if let Some(title_filter) = drawtext_filter(title, height) {
-                    filter.push_str(&title_filter);
-                }
+                title_filter = drawtext_filter(title, height, default_font_file().as_deref());
             }
         }
+        if let Some(part) = title_filter.as_ref() {
+            filter.push_str(part);
+        }
         filter.push_str("[v]");
+
 
         let audio_index = 1;
         match narration_wav.as_ref() {
