@@ -46,7 +46,7 @@ call :addpath
 
 rem Impede instalar novamente uma fonte antiga: estes marcadores corrigem
 rem exatamente o modo do sd-cli e o filtro de titulos no FFmpeg.
-findstr /C:"pub const SD_IMAGE_MODE: &str = \"img_gen\";" "src-tauri\src\creator.rs" >nul 2>&1
+findstr /C:"SD_IMAGE_MODE" "src-tauri\src\creator.rs" | findstr /C:"img_gen" >nul 2>&1
 if errorlevel 1 (
   echo   [ERRO] Este pacote ainda usa o comando de imagem antigo ^(txt2img^).
   echo   Apague esta pasta e baixe L30-CUT-AI-source-v40.zip.
